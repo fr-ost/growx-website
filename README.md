@@ -2,7 +2,7 @@
 
 Marketing site, accounts and Premium-readiness backend for the **GrowX** Chrome extension (auto-follow and cleanup tools for X/Twitter).
 
-**Status: foundation phase.** Public pages, email/Google auth, protected dashboard/account, database schema with RLS, a 14-day trial action and an entitlement API are implemented. **Payments are not integrated** (no checkout, no webhooks), the extension is **not** connected to this site yet, and nothing has been deployed or configured on Supabase/Vercel by this repo's authors.
+**Status: foundation phase** (product decisions in [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md)). Public pages, email/Google auth, protected dashboard/account, database schema with RLS, a 14-day trial action and an entitlement API are implemented. **Payments are not integrated** (no checkout, no webhooks), the extension is **not** connected to this site yet, and nothing has been deployed or configured on Supabase/Vercel by this repo's authors.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (Postgres + Auth, `@supabase/ssr`) · Vercel.
 
@@ -18,7 +18,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 
 ## Supabase setup
 1. Create a project at supabase.com.
-2. **Database:** apply `supabase/migrations/20261009000000_init.sql` (SQL Editor, or `supabase db push` with the Supabase CLI linked to your project).
+2. **Database:** apply every file in `supabase/migrations/` in order (`..._init.sql`, then `..._billing_grace_and_early_adopter.sql`) (SQL Editor, or `supabase db push` with the Supabase CLI linked to your project).
 3. **Auth > Providers > Email:** enable, and turn **Confirm email** ON.
 4. **Auth > URL Configuration:** Site URL = your site URL; add Redirect URLs `http://localhost:3000/auth/callback` and `https://YOUR-DOMAIN/auth/callback`.
 5. **Google (optional):** create an OAuth client in Google Cloud, set its redirect URI to the callback URL shown in Supabase > Auth > Providers > Google, enable the provider, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
@@ -41,12 +41,14 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | no | public | `true` only after enabling Google in Supabase |
 | `NEXT_PUBLIC_CHROME_STORE_URL` | no | public | defaults to the official listing |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | no | public | shown on /contact |
+| `BILLING_GRACE_DAYS_CARD` / `BILLING_GRACE_DAYS_CRYPTO` | no | server | grace after failed recurring payment; defaults 3 / 0 |
 | `ALLOWED_EXTENSION_ORIGINS` | later | server | comma-separated `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh` |
 | Paddle / NOWPayments keys | later | server secret | reserved, unused |
 
 ## Documentation
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): structure and design decisions
 - [`docs/API.md`](docs/API.md): API contract (`/api/entitlement`)
+- [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md): owner-approved product decisions
 - [`docs/FEATURE_SPLIT.md`](docs/FEATURE_SPLIT.md): extension feature inventory and proposed Free/Premium split
 - [`docs/EXTENSION_INTEGRATION.md`](docs/EXTENSION_INTEGRATION.md): how the extension will authenticate and what must change in it
 - [`docs/PAYMENTS.md`](docs/PAYMENTS.md): Paddle/NOWPayments design (not implemented)
@@ -55,7 +57,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 
 ## Known limitations
 - Legal pages are unreviewed drafts (owner name and city are filled in; governing law, retention and refund terms are still placeholders).
-- No password reset, account deletion, rate limiting or CSP yet (listed in `docs/SECURITY.md`).
+- No account deletion, rate limiting or CSP yet (listed in `docs/SECURITY.md`).
 - Trial abuse is mitigated, not eliminated (self-reported usernames cannot prove ownership).
 - RLS/migration tests run on PGlite, not a real Supabase instance.
 - The Free/Premium split is a proposal and is not enforced anywhere.

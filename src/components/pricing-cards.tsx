@@ -1,6 +1,6 @@
 import { Badge, Card } from "@/components/ui/primitives";
 import { Button, LinkButton } from "@/components/ui/button";
-import { CHECKOUT_AVAILABLE, EARLY_ADOPTER_PURCHASABLE, pricingTiers, type PricingTier } from "@/config/pricing";
+import { CHECKOUT_AVAILABLE, EARLY_ADOPTER_PURCHASABLE, visibleTiers, type PricingTier } from "@/config/pricing";
 
 function isPurchasable(t: PricingTier) {
   if (t.id === "FREE") return false;
@@ -11,7 +11,7 @@ function isPurchasable(t: PricingTier) {
 export function PricingCards() {
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-      {pricingTiers.map((t) => (
+      {visibleTiers().map((t) => (
         <li key={t.id}>
           <Card className={`flex h-full flex-col ${t.highlight ? "border-accent ring-1 ring-accent" : ""}`}>
             <div className="flex items-center justify-between gap-2">
@@ -25,7 +25,7 @@ export function PricingCards() {
             <p className="mt-3 flex-1 text-sm text-text-2">{t.blurb}</p>
             {t.purchaseLimit ? (
               <p className="mt-3 text-xs text-muted">
-                Planned limit: first {t.purchaseLimit} successful purchases. Not on sale; no slots are being counted yet.
+                Planned limit: first {t.purchaseLimit} successful, verified purchases. Not on sale yet; nothing has been sold.
               </p>
             ) : null}
             <div className="mt-5">

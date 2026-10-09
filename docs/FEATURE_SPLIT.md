@@ -1,34 +1,40 @@
-# Proposed Free / Premium split
+# Free / Premium split
 
-**Status: proposal, not enforced by this website.** The shipped extension (v2.3.0) has no accounts and no paywall. The owner has confirmed a freemium model with a 14-day trial and no grandfathering; the extension is being updated separately.
-Every feature below was found in the extension source. The same data lives in `src/config/features.ts`.
+**Product decision (owner):** freemium with a 14-day Premium trial. Useful core functionality stays free indefinitely (including basic scanning, basic account insights and reasonable manual account selection). Premium focuses on advanced automation, higher-volume bulk operations, advanced filtering and future premium tools. No grandfathering: after the extension update every user gets the same experience.
+
+**Enforcement status:** this website does not enforce anything inside the extension yet. The split below is the specification for the extension update (see `EXTENSION_INTEGRATION.md`). The same data feeds the site in `src/config/features.ts`. The extension repository was not modified.
 
 ## Principles
-1. Free must stay genuinely useful for daily use (the strategy you set).
-2. Premium = higher volume, advanced filtering, bulk operations.
-3. Safety features are **never** paywalled (emergency stop, adaptive slow-down, verification, active hours, warm-up).
-4. No grandfathering: after the extension update all users get the same Free/Premium experience (owner decision). Announce the change clearly.
+1. Free must stay genuinely useful for daily use.
+2. Premium = advanced automation, higher volume, bulk operations, advanced filters, future tools.
+3. Safety features are never paywalled (emergency stop, adaptive slow-down, verification, active hours, warm-up, health check).
+4. Manual, user-driven actions stay free at a reasonable volume; Premium gates volume and automation, not access to your own data.
+5. Never delete or silently discard a user's saved settings when they lose Premium; preserve them and clamp at runtime.
 
-## Inventory and proposed placement
+## Inventory (from extension v2.3.0 source) and placement
 
-| Area | Feature (extension source) | Proposed |
-|---|---|---|
-| Autopilot | Safe pace (~150/day), Balanced pace (~280/day) (`PRESETS` in `shared/config.js`) | Free |
-| Autopilot | Turbo (~390/day) and "Premium" X-Premium pace (~800/day) | Premium |
-| Autopilot | Custom delays/caps above Balanced limits | Premium |
-| Safety | Active hours, warm-up, adaptive slow-down, follow verification, Alt+Shift+S stop, health check | Free |
-| Sources/queue | Source profiles, scored queue, never-follow list | Free (a source-count cap is a business decision, see `DECISIONS_NEEDED.md`) |
-| Targeting | Score, audience size, ratio, tweets, avatar, protected, boost keywords | Free |
-| Targeting | Include/exclude/location keywords, verified filters, account age, last-active | Premium |
-| Targeting | Bulk list import ("Import a list to follow") | Premium |
-| Insight | History, growth chart, source stats, goal planner, backup/restore | Free |
-| Cleanup | Account scan + review (inactive / not following back) | Free |
-| Cleanup | Bulk unfollow runner | Premium |
+| Area | Feature | Source | Tier |
+|---|---|---|---|
+| Autopilot | Safe (~150/day) and Balanced (~280/day) paces | `PRESETS` in `shared/config.js` | Free |
+| Autopilot | Turbo (~390/day) and X Premium pace (~800/day) | `PRESETS.turbo`, `PRESETS.premium` | Premium |
+| Autopilot | Custom delays/caps above Balanced | `LIMITS`, `normalizeSettings` | Premium |
+| Autopilot | Active hours, warm-up, adaptive slow-down, follow verification, auto-resume, emergency stop | settings + `background.js` | Free |
+| Sources/queue | Source profiles, scored queue, never-follow list, manual queue review | `addSources`, `poolCmd` | Free |
+| Targeting | Score, audience size, follow ratio, posts, avatar, protected, boost keywords | `rejectReason`, `scoreUser` | Free |
+| Targeting | Include/exclude/location keywords, verified filters, account age, last-active window | `rejectReason` | Premium |
+| Targeting | Bulk "Import a list to follow" | dashboard modal | Premium |
+| Insight | History, growth chart, source stats, monthly goal planner, backup/restore | analytics, history, settings pages | Free |
+| Cleanup | Account scan and review (inactive / not following back) with filters, search, sort | `startScan`, `shared/cleanup.js` | Free |
+| Cleanup | Manual selection and unfollow at a safe pace, up to a reasonable daily amount | `unfStart` | Free (limit TBD) |
+| Cleanup | Select-all bulk unfollow, Balanced pace (320/day), large batches (up to 5,000 selected) | `UNF_PACES.balanced`, `UNF_MAX_ITEMS` | Premium |
+| Future | New advanced automation/analytics tools | not built | Premium |
 
-Note: the extension's `normalizeSettings` currently accepts all of these values. Gating them requires an extension release (see `EXTENSION_INTEGRATION.md`).
+## Open numbers (need your decision, not invented here)
+- Free daily manual-unfollow allowance (suggested: keep it near the Safe unfollow pace's hourly cap so it feels usable; Safe is 200/day in the extension, so a lower free cap such as 50-100/day is one option).
+- Whether Free limits the number of source profiles (currently proposed: no limit).
 
 ## Naming collision
-The extension already has a speed preset literally named **"premium"** meaning *X Premium accounts* (the paid X subscription), unrelated to GrowX Premium. Use "X Premium pace" in UI copy to avoid confusion; consider renaming the preset in a later extension release.
+The extension's speed preset named **"premium"** means *X Premium accounts*, not GrowX Premium. Website copy says "X Premium pace"; consider renaming the preset in the extension.
 
 ## Enforcement reality
-Extension code runs on the user's machine and can be modified. Server-side entitlements decide *who is entitled*; the extension can only honour that decision. Hard enforcement is possible only for things that need a server round-trip. This is documented honestly in `EXTENSION_INTEGRATION.md`.
+Extension code runs on the user's machine and can be modified. The server decides who is entitled; the extension honours it. Do not describe client-side restrictions as tamper-proof.

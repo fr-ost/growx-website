@@ -83,13 +83,29 @@ export const pricingTiers: readonly PricingTier[] = [
     interval: "once",
     priceLabel: "$0.99",
     cadence: "one-time",
-    blurb: "Planned launch offer for the first 100 successful purchases.",
+    blurb: "Planned launch offer: permanent Premium for the first 100 successful, verified purchases.",
     purchaseLimit: 100,
   },
 ] as const;
 
-/** The early-adopter offer is never purchasable until server-side enforcement ships. */
-export const EARLY_ADOPTER_PURCHASABLE = false;
+/**
+ * Early-adopter offer lifecycle:
+ *   planned   - not on sale (current state; no checkout, no enforcement yet)
+ *   available - on sale; set only once checkout + verified webhooks exist and
+ *               the DB function `early_adopter_available()` backs this value
+ *   sold_out  - all 100 verified purchases claimed: the tier is hidden and the
+ *               regular prices apply
+ * No remaining-slot count is ever shown; only this status.
+ */
+export type EarlyAdopterStatus = "planned" | "available" | "sold_out";
+export const EARLY_ADOPTER_STATUS: EarlyAdopterStatus = "planned";
+
+export const EARLY_ADOPTER_PURCHASABLE = CHECKOUT_AVAILABLE && (EARLY_ADOPTER_STATUS as EarlyAdopterStatus) === "available";
+
+/** Tiers to display, honouring the early-adopter lifecycle. */
+export function visibleTiers(status: EarlyAdopterStatus = EARLY_ADOPTER_STATUS): readonly PricingTier[] {
+  return status === "sold_out" ? pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME") : pricingTiers;
+}
 
 export const TRIAL_DAYS = 14;
 

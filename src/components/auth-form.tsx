@@ -36,6 +36,13 @@ export function AuthForm({
         hint={isLogin ? undefined : "At least 8 characters."}
         error={state.fieldErrors?.password}
       />
+      {isLogin ? (
+        <p className="text-right text-sm">
+          <Link href="/forgot-password" className="text-accent underline underline-offset-2">
+            Forgot password?
+          </Link>
+        </p>
+      ) : null}
       <Button type="submit" className="w-full" disabled={pending || disabled} aria-busy={pending}>
         {pending ? (isLogin ? "Signing in..." : "Creating account...") : isLogin ? "Log in" : "Create account"}
       </Button>

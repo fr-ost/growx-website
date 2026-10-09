@@ -10,7 +10,7 @@ export const site = {
   chromeStoreUrl:
     trim(process.env.NEXT_PUBLIC_CHROME_STORE_URL) ||
     "https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh",
-  supportEmail: trim(process.env.NEXT_PUBLIC_SUPPORT_EMAIL) || null,
+  supportEmail: trim(process.env.NEXT_PUBLIC_SUPPORT_EMAIL) || "support@growxapp.net",
   /** Contact channels already published by the extension itself (shared/config.js). */
   telegram: [
     { label: "Shahriar Ahmed", href: "https://t.me/igfrostt" },

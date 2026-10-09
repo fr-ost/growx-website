@@ -110,13 +110,19 @@ export const featureGroups: readonly FeatureGroup[] = [
       {
         id: "cleanup-scan",
         title: "Account scan and review",
-        description: "Scan who you follow and who follows you, and review the results.",
+        description: "Scan who you follow and who follows you, then filter, search and sort the results.",
         tier: "free",
       },
       {
-        id: "cleanup-unfollow",
-        title: "Bulk unfollow runner",
-        description: "Unfollow selected accounts at a conservative pace with rolling caps.",
+        id: "cleanup-manual",
+        title: "Manual selection and unfollow",
+        description: "Pick accounts yourself and unfollow them at a safe pace, up to a reasonable daily amount (exact limit to be decided).",
+        tier: "free",
+      },
+      {
+        id: "cleanup-bulk",
+        title: "High-volume bulk unfollow",
+        description: "Select all matching accounts and run large unfollow batches with the higher Balanced pace and caps.",
         tier: "premium",
       },
     ],

@@ -1,4 +1,9 @@
-import type { Entitlement, Plan, SubscriptionRecord, TrialRecord } from "./types";
+import type { Entitlement, GracePolicy, Plan, SubscriptionRecord, TrialRecord } from "./types";
+
+const DAY_MS = 86_400_000;
+
+/** Default policy: 3 days for card subscriptions (Paddle); none assumed for crypto. */
+export const DEFAULT_GRACE: GracePolicy = { paddle: 3, nowpayments: 0 };
 
 /** Higher wins when several entitlements are valid at once. */
 const PRIORITY: Record<Plan, number> = {
@@ -22,8 +27,23 @@ function isTrialActive(t: TrialRecord, now: number): boolean {
 }
 
 /** Returns the plan a subscription row grants right now, or null. Fails closed. */
-function subscriptionGrant(s: SubscriptionRecord, now: number): { plan: Plan; expiresAt: number | null } | null {
-  if (s.status !== "active") return null; // past_due, canceled, expired, refunded, unknown => no Premium
+function subscriptionGrant(
+  s: SubscriptionRecord,
+  now: number,
+  grace: GracePolicy,
+): { plan: Plan; expiresAt: number | null; graceEndsAt?: number } | null {
+  if (s.status === "past_due") {
+    // Grace applies to recurring plans only (lifetime is never past_due) and
+    // only when we know when the failure started. Fails closed otherwise.
+    if (s.plan !== "PRO_MONTHLY" && s.plan !== "PRO_YEARLY") return null;
+    const days = s.provider === "paddle" ? grace.paddle : s.provider === "nowpayments" ? grace.nowpayments : 0;
+    const since = ts(s.past_due_since);
+    if (!(days > 0) || since === null) return null;
+    const graceEnd = since + days * DAY_MS;
+    if (graceEnd <= now) return null;
+    return { plan: s.plan, expiresAt: graceEnd, graceEndsAt: graceEnd };
+  }
+  if (s.status !== "active") return null; // canceled, expired, refunded, unknown => no Premium
   switch (s.plan) {
     case "PRO_LIFETIME":
       return { plan: "PRO_LIFETIME", expiresAt: null };
@@ -46,6 +66,7 @@ function subscriptionGrant(s: SubscriptionRecord, now: number): { plan: Plan; ex
 export function resolveEntitlement(
   input: { trials: TrialRecord[]; subscriptions: SubscriptionRecord[] },
   nowDate: Date = new Date(),
+  grace: GracePolicy = DEFAULT_GRACE,
 ): Entitlement {
   const now = nowDate.getTime();
 
@@ -55,6 +76,7 @@ export function resolveEntitlement(
   let plan: Plan = "FREE";
   let expiresAt: number | null = null;
   let source: Entitlement["source"] = "none";
+  let graceEndsAt: number | null = null;
 
   if (activeTrial) {
     plan = "TRIAL";
@@ -63,7 +85,7 @@ export function resolveEntitlement(
   }
 
   for (const s of input.subscriptions) {
-    const g = subscriptionGrant(s, now);
+    const g = subscriptionGrant(s, now, grace);
     if (!g) continue;
     const better =
       PRIORITY[g.plan] > PRIORITY[plan] ||
@@ -72,6 +94,7 @@ export function resolveEntitlement(
       plan = g.plan;
       expiresAt = g.expiresAt;
       source = "subscription";
+      graceEndsAt = g.graceEndsAt ?? null;
     }
   }
 
@@ -80,6 +103,7 @@ export function resolveEntitlement(
     isPremium: plan !== "FREE",
     expiresAt: expiresAt === null ? null : new Date(expiresAt).toISOString(),
     source,
+    paymentWarning: graceEndsAt === null ? null : { type: "past_due", graceEndsAt: new Date(graceEndsAt).toISOString() },
     trial: {
       used: input.trials.length > 0,
       active: !!activeTrial,

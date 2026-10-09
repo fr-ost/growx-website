@@ -177,3 +177,57 @@ describe("billing constraints", () => {
     await as("authenticated", B, async () => expect((await db.query("select * from public.payments")).rows).toHaveLength(0));
   });
 });
+
+describe("past_due constraint", () => {
+  it("requires past_due_since when status is past_due", async () => {
+    await expect(
+      db.exec(`insert into public.subscriptions (user_id, provider, plan, status, current_period_end) values ('${B}','paddle','PRO_MONTHLY','past_due', now())`),
+    ).rejects.toThrow(/subscriptions_past_due_requires_since/);
+    await db.exec(`insert into public.subscriptions (user_id, provider, plan, status, current_period_end, past_due_since) values ('${B}','paddle','PRO_MONTHLY','past_due', now(), now())`);
+  });
+});
+
+describe("early adopter slots", () => {
+  let n = 0;
+  const pay = async (status: string, product = "PRO_LIFETIME_EARLY") => {
+    const r = await db.query<{ id: string }>(
+      `insert into public.payments (user_id, provider, provider_payment_id, product, amount_minor, currency, status) values ('${B}','paddle','ea_${++n}','${product}',99,'USD','${status}') returning id`,
+    );
+    return r.rows[0].id;
+  };
+  const claim = async (id: string) => (await db.query<{ s: number | null }>(`select public.claim_early_adopter_slot('${id}') as s`)).rows[0].s;
+
+  it("is not callable by users or anon", async () => {
+    const id = await pay("succeeded");
+    await as("authenticated", B, async () => {
+      await expect(db.query(`select public.claim_early_adopter_slot('${id}')`)).rejects.toThrow(/permission denied/);
+      await expect(db.query("select public.early_adopter_available()")).rejects.toThrow(/permission denied/);
+      await expect(db.query("select * from public.early_adopter_slots")).rejects.toThrow(/permission denied/);
+    });
+  });
+
+  it("never gives a slot to failed, pending, canceled-like or non-early payments", async () => {
+    for (const st of ["pending", "failed", "refunded", "disputed"]) expect(await claim(await pay(st))).toBeNull();
+    expect(await claim(await pay("succeeded", "PRO_LIFETIME"))).toBeNull();
+    expect(await claim("99999999-9999-9999-9999-999999999999")).toBeNull();
+  });
+
+  it("is idempotent per payment, allocates 1..100 and sells out at exactly 100", async () => {
+    await as("service_role", null, async () => {
+      const first = await pay("succeeded");
+      expect(await claim(first)).toBe(1);
+      expect(await claim(first)).toBe(1); // duplicate webhook
+      for (let i = 2; i <= 100; i++) expect(await claim(await pay("succeeded"))).toBe(i);
+      expect((await db.query<{ a: boolean }>("select public.early_adopter_available() as a")).rows[0].a).toBe(false);
+      expect(await claim(await pay("succeeded"))).toBeNull(); // 101st
+      expect(await claim(first)).toBe(1); // earlier buyers keep their slot
+    });
+    const c = await db.query<{ n: number }>("select count(*)::int as n from public.early_adopter_slots");
+    expect(c.rows[0].n).toBe(100);
+  });
+
+  it("slots survive a later refund (no reuse)", async () => {
+    await db.exec("update public.payments set status = 'refunded' where provider_payment_id = 'ea_8'");
+    expect((await db.query<{ a: boolean }>("select public.early_adopter_available() as a")).rows[0].a).toBe(false);
+  });
+});

@@ -16,8 +16,8 @@ const faqs = [
   { q: "Can I buy Premium today?", a: "No. Checkout is not available yet. The prices shown are the planned launch prices and may change before launch." },
   { q: "Will the free version stay useful?", a: "That is the intention: core features such as the Safe and Balanced autopilot, sources, queue, history, analytics and backup are planned to remain free." },
   { q: `What about the ${TRIAL_DAYS}-day trial?`, a: `A ${TRIAL_DAYS}-day Premium trial is being prepared for signed-in accounts. It starts only when you choose to start it from your dashboard, and each account can start one.` },
-  { q: "What is the Early Adopter Lifetime offer?", a: "A planned $0.99 lifetime price limited to the first 100 successful purchases. It is not on sale, and there is no countdown or slot counter because nothing has been sold." },
-  { q: "Which payment methods are planned?", a: "Cards and other methods through Paddle, and cryptocurrency (USDT and USDC first) through NOWPayments. Neither is connected yet." },
+  { q: "What is the Early Adopter Lifetime offer?", a: "A planned $0.99 lifetime price with permanent Premium access, limited to the first 100 successful, verified purchases. It is not on sale yet. Once the 100 are sold the offer ends and the regular prices apply; no slot counter or countdown is shown." },
+  { q: "Which payment methods are planned?", a: "Cards and other methods through Paddle, and cryptocurrency (USDT and USDC first) through NOWPayments. Neither is connected yet. Failed card renewals are planned to keep Premium for a 3-day grace period; lifetime purchases are unaffected." },
 ];
 
 export default function PricingPage() {

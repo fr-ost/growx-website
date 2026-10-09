@@ -61,3 +61,30 @@ export async function googleAction(formData: FormData): Promise<void> {
   if (error || !data.url) redirect("/login?error=google_failed");
   redirect(data.url);
 }
+
+const emailOnly = credentialsSchema.pick({ email: true });
+const passwordOnly = credentialsSchema.pick({ password: true });
+
+export async function forgotPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
+  const parsed = emailOnly.safeParse({ email: formData.get("email") });
+  if (!parsed.success) return { fieldErrors: { email: parsed.error.flatten().fieldErrors.email?.[0] } };
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${site.url}/auth/callback?next=${encodeURIComponent("/reset-password")}`,
+  });
+  // Same answer whether or not the account exists (no email enumeration).
+  return { success: "If an account exists for that email, a reset link is on its way." };
+}
+
+export async function resetPasswordAction(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  if (!isSupabaseConfigured()) return NOT_CONFIGURED;
+  const parsed = passwordOnly.safeParse({ password: formData.get("password") });
+  if (!parsed.success) return { fieldErrors: { password: parsed.error.flatten().fieldErrors.password?.[0] } };
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser(); // must hold a verified recovery session
+  if (!data.user) return { error: "This reset link is invalid or has expired. Request a new one." };
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) return { error: "We could not update the password. Try a different one." };
+  redirect("/dashboard");
+}

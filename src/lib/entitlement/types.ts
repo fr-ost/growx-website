@@ -11,6 +11,16 @@ export interface SubscriptionRecord {
   plan: string;
   status: string;
   current_period_end: string | null;
+  /** 'paddle' (card etc.) or 'nowpayments' (crypto). Optional for backwards compatibility. */
+  provider?: string;
+  /** When a recurring payment first failed; required for any past_due grace. */
+  past_due_since?: string | null;
+}
+
+/** Grace days after a failed recurring payment, by provider. 0 = no grace. */
+export interface GracePolicy {
+  paddle: number;
+  nowpayments: number;
 }
 
 export interface Entitlement {
@@ -22,6 +32,8 @@ export interface Entitlement {
   expiresAt: string | null;
   /** Where the effective plan came from. */
   source: "none" | "trial" | "subscription";
+  /** Set while Premium is retained only because of a payment grace period. */
+  paymentWarning: { type: "past_due"; graceEndsAt: string } | null;
   trial: {
     /** An account can start only one trial, ever. */
     used: boolean;

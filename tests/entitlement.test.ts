@@ -41,7 +41,7 @@ describe("resolveEntitlement", () => {
     expect(y.plan).toBe("PRO_YEARLY");
   });
 
-  it.each(["past_due", "canceled", "expired", "refunded", "weird"])("status %s never grants Premium", (status) => {
+  it.each(["canceled", "expired", "refunded", "weird"])("status %s never grants Premium", (status) => {
     const e = resolveEntitlement({ trials: [], subscriptions: [{ plan: "PRO_YEARLY", status, current_period_end: iso(100 * DAY) }] }, NOW);
     expect(e.isPremium).toBe(false);
   });
@@ -91,5 +91,52 @@ describe("resolveEntitlement", () => {
       NOW,
     );
     expect(e.plan).toBe("TRIAL");
+  });
+
+  describe("past_due grace period", () => {
+    const sub = (over: Record<string, unknown>) => ({
+      plan: "PRO_MONTHLY",
+      status: "past_due",
+      current_period_end: iso(-DAY),
+      provider: "paddle",
+      past_due_since: iso(-DAY),
+      ...over,
+    });
+
+    it("keeps Premium during the 3-day card grace and exposes a warning", () => {
+      const e = resolveEntitlement({ trials: [], subscriptions: [sub({})] }, NOW);
+      expect(e).toMatchObject({ plan: "PRO_MONTHLY", isPremium: true, expiresAt: iso(2 * DAY) });
+      expect(e.paymentWarning).toEqual({ type: "past_due", graceEndsAt: iso(2 * DAY) });
+    });
+
+    it("reverts to Free once the grace period has passed", () => {
+      const e = resolveEntitlement({ trials: [], subscriptions: [sub({ past_due_since: iso(-3 * DAY - 1) })] }, NOW);
+      expect(e).toMatchObject({ plan: "FREE", isPremium: false, paymentWarning: null });
+    });
+
+    it("grace is configurable", () => {
+      const s = sub({ past_due_since: iso(-2 * DAY) });
+      expect(resolveEntitlement({ trials: [], subscriptions: [s] }, NOW, { paddle: 1, nowpayments: 0 }).isPremium).toBe(false);
+      expect(resolveEntitlement({ trials: [], subscriptions: [s] }, NOW, { paddle: 7, nowpayments: 0 }).isPremium).toBe(true);
+    });
+
+    it("crypto subscriptions get no card-style grace by default", () => {
+      const e = resolveEntitlement({ trials: [], subscriptions: [sub({ provider: "nowpayments" })] }, NOW);
+      expect(e.isPremium).toBe(false);
+    });
+
+    it("fails closed without past_due_since, with an unknown provider, or with grace 0", () => {
+      expect(resolveEntitlement({ trials: [], subscriptions: [sub({ past_due_since: null })] }, NOW).isPremium).toBe(false);
+      expect(resolveEntitlement({ trials: [], subscriptions: [sub({ provider: undefined })] }, NOW).isPremium).toBe(false);
+      expect(resolveEntitlement({ trials: [], subscriptions: [sub({})] }, NOW, { paddle: 0, nowpayments: 0 }).isPremium).toBe(false);
+    });
+
+    it("never applies to lifetime, and a verified successful payment (active again) clears the warning", () => {
+      expect(resolveEntitlement({ trials: [], subscriptions: [sub({ plan: "PRO_LIFETIME", past_due_since: iso(-DAY) })] }, NOW).isPremium).toBe(false);
+      const life = resolveEntitlement({ trials: [], subscriptions: [{ plan: "PRO_LIFETIME", status: "active", current_period_end: null }] }, NOW);
+      expect(life.paymentWarning).toBeNull();
+      const restored = resolveEntitlement({ trials: [], subscriptions: [sub({ status: "active", current_period_end: iso(20 * DAY), past_due_since: null })] }, NOW);
+      expect(restored).toMatchObject({ plan: "PRO_MONTHLY", paymentWarning: null });
+    });
   });
 });

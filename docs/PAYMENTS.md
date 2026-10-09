@@ -24,15 +24,22 @@ No checkout, webhook or payment endpoint exists. `CHECKOUT_AVAILABLE=false` in `
 | Payment succeeded (subscription) | upsert subscription `active`, set `current_period_end` from provider |
 | Payment succeeded (lifetime) | insert payment `succeeded`; create `PRO_LIFETIME` subscription (`current_period_end` null) linked via `source_payment_id` |
 | Renewal | extend `current_period_end` |
-| Payment failed | payment `failed`; subscription `past_due` (no Premium; a grace period is a business decision) |
+| Payment failed (card) | payment `failed`; subscription `past_due` with `past_due_since = now()` (only if not already past_due). Premium is retained for `BILLING_GRACE_DAYS_CARD` (default 3) days from `past_due_since`, then Free. Paddle's own retry schedule may differ: confirm in the Paddle dashboard and align this value with it. A later verified successful payment sets `active`, clears `past_due_since`, and updates `current_period_end` |
+| Renewal failure (crypto) | NOWPayments has no card-style automatic retries. Policy: no grace by default (`BILLING_GRACE_DAYS_CRYPTO=0`); the user keeps Premium until `current_period_end`, a renewal invoice is issued by us, and only a verified `finished` payment extends access. Revisit once the real NOWPayments recurring/invoice behaviour is confirmed |
 | Cancellation | set `cancel_at_period_end=true`; access continues until `current_period_end`, then `canceled`/`expired` |
 | Expiry | status `expired`; the resolver already denies access when the period end has passed |
 | Refund / chargeback | payment `refunded`/`disputed`; subscription `refunded` => no Premium |
 | Duplicate / out-of-order events | `webhook_events` unique key + compare provider timestamps before overwriting |
 | Crypto underpayment / expiry (NOWPayments) | stay `pending`; grant only on `finished` status with full amount |
 
-## First-100 early-adopter lifetime
-Enforce in a single SQL function (service role) that, under an advisory lock, counts `payments` with `product='PRO_LIFETIME_EARLY' and status='succeeded'` and refuses when >= 100; call it both at checkout creation and when a webhook confirms payment (a refunded purchase frees a slot only if you decide so). No frontend counter, countdown or "slots left" UI exists or should be added until this is built. Because payment may complete after the 100th slot is taken by someone else, decide the over-cap policy (refund vs. honour) up front.
+## First-100 early-adopter lifetime (database part implemented)
+- Table `early_adopter_slots(slot 1..100 primary key, payment_id unique)` and service-role-only function `claim_early_adopter_slot(payment_id)`. It takes an advisory lock, returns the existing slot for a repeated payment (idempotent), returns NULL unless the payment is `product='PRO_LIFETIME_EARLY' and status='succeeded'`, and allocates the lowest free slot or NULL when sold out. The 1..100 primary key makes overselling impossible even under concurrency. Tested.
+- `early_adopter_available()` returns a boolean only. The UI never shows a count.
+- Future webhook: after a **verified** successful early payment, call `claim_early_adopter_slot`; if it returns a slot create the `PRO_LIFETIME` subscription; if NULL (sold out) apply the over-cap policy below. Pending/failed/canceled/abandoned checkouts never reach this call.
+- At checkout creation, call `early_adopter_available()` and fall back to the regular $29.99 lifetime when false. Because several buyers can pass this check at once, the claim at payment confirmation is the real enforcement.
+- **Over-cap policy (default, owner may change):** if a paid early purchase cannot get a slot, refund automatically and offer regular pricing; do not grant the early price.
+- **Refunds do not free a slot** (the slot stays consumed) so the count of "first 100 purchases" is stable and cannot be gamed.
+- `EARLY_ADOPTER_STATUS` in `src/config/pricing.ts` is `planned` until checkout exists; `sold_out` hides the tier.
 
 ## Provider notes
 - Paddle: merchant-of-record handles tax; requires approval of the business/product. Sandbox first.

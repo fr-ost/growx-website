@@ -17,6 +17,7 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
   "isPremium": true,
   "expiresAt": "2026-10-23T12:00:00.000Z",
   "source": "trial",
+  "paymentWarning": null,
   "trial": { "used": true, "active": true, "startedAt": "2026-10-09T12:00:00.000Z", "expiresAt": "2026-10-23T12:00:00.000Z" },
   "checkedAt": "2026-10-09T12:05:00.000Z"
 }
@@ -24,14 +25,16 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
 - `plan`: `FREE | TRIAL | PRO_MONTHLY | PRO_YEARLY | PRO_LIFETIME`
 - `expiresAt`: `null` for `FREE` and `PRO_LIFETIME`.
 - `source`: `none | trial | subscription`.
+- `paymentWarning`: `null`, or `{ "type": "past_due", "graceEndsAt": ISO }` while Premium is retained only because of the grace period (default 3 days for card subscriptions; `expiresAt` equals `graceEndsAt` then). After it passes the plan becomes `FREE`.
 - `checkedAt` is server time; clients must not use their own clock to decide expiry.
 
 **Errors:** `401 unauthenticated`, `503 unavailable` (database error: *never* treated as Premium; clients should keep a cached value), `503 not_configured`.
 
 **Rules implemented** (`src/lib/entitlement/resolve.ts`, covered by tests)
 - Trial grants Premium only if `status='active'` and `started_at <= now < expires_at`.
-- Subscription grants only if `status='active'`; monthly/yearly additionally need a future `current_period_end` (missing/invalid fails closed); lifetime needs no end date and never expires.
-- `past_due`, `canceled`, `expired`, `refunded`, unknown statuses/plans never grant.
+- `past_due` grants only for recurring plans with a known `past_due_since`, within the provider's grace window (card 3 days by default, crypto 0). Lifetime is never affected.
+- Subscription grants if `status='active'`; monthly/yearly additionally need a future `current_period_end` (missing/invalid fails closed); lifetime needs no end date and never expires.
+- `canceled`, `expired`, `refunded`, unknown statuses/plans never grant.
 - Highest valid plan wins: lifetime > yearly > monthly > trial.
 - No rows (new user, missing profile) => `FREE`.
 

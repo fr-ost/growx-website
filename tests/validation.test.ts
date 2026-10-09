@@ -50,3 +50,24 @@ describe("pricing config", () => {
     expect(EARLY_ADOPTER_PURCHASABLE).toBe(false);
   });
 });
+
+import { getGracePolicy } from "@/lib/billing/grace";
+import { visibleTiers } from "@/config/pricing";
+
+describe("grace policy config", () => {
+  it("defaults to 3 days card / 0 crypto and ignores invalid values", () => {
+    expect(getGracePolicy({})).toEqual({ paddle: 3, nowpayments: 0 });
+    expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "5", BILLING_GRACE_DAYS_CRYPTO: "1" })).toEqual({ paddle: 5, nowpayments: 1 });
+    expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "-1", BILLING_GRACE_DAYS_CRYPTO: "abc" })).toEqual({ paddle: 3, nowpayments: 0 });
+    expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "99" }).paddle).toBe(3);
+  });
+});
+
+describe("early adopter visibility", () => {
+  it("is shown while planned/available and hidden when sold out, regular prices remain", () => {
+    expect(visibleTiers("planned").some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(true);
+    const sold = visibleTiers("sold_out");
+    expect(sold.some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(false);
+    expect(sold.map((t) => t.priceLabel)).toEqual(["$0", "$1.99", "$14.99", "$29.99"]);
+  });
+});

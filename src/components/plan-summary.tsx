@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/primitives";
+import { Badge, Notice } from "@/components/ui/primitives";
 import type { Entitlement, Plan } from "@/lib/entitlement/types";
 
 export const PLAN_LABEL: Record<Plan, string> = {
@@ -14,7 +14,14 @@ export const formatDate = (iso: string | null) =>
 
 export function PlanSummary({ e }: { e: Entitlement }) {
   return (
-    <dl className="grid gap-4 sm:grid-cols-3">
+    <div className="space-y-4">
+      {e.paymentWarning ? (
+        <Notice tone="warn" title="Payment problem">
+          Your latest payment failed. Premium stays active until {formatDate(e.paymentWarning.graceEndsAt)}. Update your
+          payment method to keep it; after that your account returns to Free.
+        </Notice>
+      ) : null}
+      <dl className="grid gap-4 sm:grid-cols-3">
       <div>
         <dt className="text-sm text-muted">Current plan</dt>
         <dd className="mt-1 flex items-center gap-2 text-lg font-semibold">
@@ -33,6 +40,7 @@ export function PlanSummary({ e }: { e: Entitlement }) {
           {e.trial.active ? "Active" : e.trial.used ? "Used" : "Not started"}
         </dd>
       </div>
-    </dl>
+      </dl>
+    </div>
   );
 }
