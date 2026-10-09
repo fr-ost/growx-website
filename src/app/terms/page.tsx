@@ -1,3 +1,4 @@
+import { site } from "@/config/site";
 import { LegalPage } from "@/components/legal";
 import { pageMetadata } from "@/lib/seo";
 
@@ -11,7 +12,7 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service (draft)" updated="October 2026">
       <h2>1. Who we are</h2>
-      <p>GrowX is provided by [LEGAL ENTITY NAME AND ADDRESS - to be provided]. These terms cover the GrowX website, accounts and the GrowX Chrome extension.</p>
+      <p>GrowX is provided by {site.legalName}, {site.legalAddress}. These terms cover the GrowX website, accounts and the GrowX Chrome extension.</p>
       <h2>2. Not affiliated with X</h2>
       <p>GrowX is independent and is not affiliated with, endorsed by or sponsored by X Corp. &quot;X&quot; and &quot;Twitter&quot; belong to their owners.</p>
       <h2>3. Your responsibility</h2>
@@ -23,7 +24,7 @@ export default function TermsPage() {
       <h2>4. Accounts</h2>
       <p>You must provide accurate information and keep your credentials secure. Entering an X username does not prove ownership and grants no rights over that X account.</p>
       <h2>5. Free plan and trial</h2>
-      <p>The Free plan is intended to remain available. A 14-day Premium trial may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
+      <p>GrowX uses a freemium model: a Free plan plus paid Premium plans. A 14-day Premium trial may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
       <h2>6. Premium and payments (planned)</h2>
       <p>
         Premium plans (monthly, yearly, lifetime) are planned and cannot be purchased yet. [Billing terms, taxes,

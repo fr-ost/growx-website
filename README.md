@@ -34,14 +34,14 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 ## Configuration checklist
 | Variable | Required | Scope | Notes |
 |---|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | yes | public | canonical URL, no trailing slash |
+| `NEXT_PUBLIC_SITE_URL` | yes | public | `https://www.growxapp.net` in production |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | public | |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | public | anon/publishable key |
 | `SUPABASE_SERVICE_ROLE_KEY` | for trials | **server secret** | only used by trial activation |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | no | public | `true` only after enabling Google in Supabase |
-| `NEXT_PUBLIC_CHROME_STORE_URL` | no | public | enables the "Add to Chrome" button |
+| `NEXT_PUBLIC_CHROME_STORE_URL` | no | public | defaults to the official listing |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | no | public | shown on /contact |
-| `ALLOWED_EXTENSION_ORIGINS` | later | server | comma-separated `chrome-extension://<id>` |
+| `ALLOWED_EXTENSION_ORIGINS` | later | server | comma-separated `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh` |
 | Paddle / NOWPayments keys | later | server secret | reserved, unused |
 
 ## Documentation
@@ -54,7 +54,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 - [`docs/DECISIONS_NEEDED.md`](docs/DECISIONS_NEEDED.md): business details I need from you
 
 ## Known limitations
-- Legal pages are unreviewed drafts with placeholders.
+- Legal pages are unreviewed drafts (owner name and city are filled in; governing law, retention and refund terms are still placeholders).
 - No password reset, account deletion, rate limiting or CSP yet (listed in `docs/SECURITY.md`).
 - Trial abuse is mitigated, not eliminated (self-reported usernames cannot prove ownership).
 - RLS/migration tests run on PGlite, not a real Supabase instance.

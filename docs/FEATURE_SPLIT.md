@@ -1,13 +1,13 @@
 # Proposed Free / Premium split
 
-**Status: proposal. Nothing is enforced.** The shipped extension (v2.3.0) has no accounts and no paywall; its own text says "100% free".
+**Status: proposal, not enforced by this website.** The shipped extension (v2.3.0) has no accounts and no paywall. The owner has confirmed a freemium model with a 14-day trial and no grandfathering; the extension is being updated separately.
 Every feature below was found in the extension source. The same data lives in `src/config/features.ts`.
 
 ## Principles
 1. Free must stay genuinely useful for daily use (the strategy you set).
 2. Premium = higher volume, advanced filtering, bulk operations.
 3. Safety features are **never** paywalled (emergency stop, adaptive slow-down, verification, active hours, warm-up).
-4. No existing capability is removed silently; any change needs a release and honest messaging because the current store listing/UI says "100% free, no limits".
+4. No grandfathering: after the extension update all users get the same Free/Premium experience (owner decision). Announce the change clearly.
 
 ## Inventory and proposed placement
 

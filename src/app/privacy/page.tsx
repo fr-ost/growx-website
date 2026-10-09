@@ -1,3 +1,4 @@
+import { site } from "@/config/site";
 import { LegalPage } from "@/components/legal";
 import { pageMetadata } from "@/lib/seo";
 
@@ -15,7 +16,7 @@ export default function PrivacyPage() {
         privacy policy inside the extension; this page covers the website and the optional account system.
       </p>
       <h2>Who is responsible</h2>
-      <p>[LEGAL ENTITY NAME AND CONTACT ADDRESS - to be provided by the owners]. Contact: see the Contact page.</p>
+      <p>{site.legalName}, {site.legalAddress}. Contact: see the Contact page.</p>
       <h2>What the website collects</h2>
       <ul>
         <li>Account data: your email address and a password hash or Google sign-in identifier, handled by Supabase Auth.</li>

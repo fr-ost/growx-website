@@ -1,21 +1,20 @@
-# Decisions and business details needed from you
+# Decisions and business details
 
-## Required before launch
-- [ ] **Legal entity name, address and jurisdiction** for Privacy/Terms (placeholders are in the drafts). The extension currently says "Unique Labs"; confirm whether that is the entity.
-- [ ] **Lawyer review** of `/privacy` and `/terms`; refund policy; definition of "lifetime" (lifetime of the product vs. the user); early-adopter terms.
-- [ ] **Production domain** (`NEXT_PUBLIC_SITE_URL`).
-- [ ] **Chrome Web Store URL** for GrowX (`NEXT_PUBLIC_CHROME_STORE_URL`); the "Add to Chrome" button stays hidden until set.
-- [ ] **Support email** (`NEXT_PUBLIC_SUPPORT_EMAIL`); only Telegram contacts from the extension are shown today.
-- [ ] **Extension ID** (for `ALLOWED_EXTENSION_ORIGINS` and the OAuth redirect `https://<id>.chromiumapp.org/`).
+## Decided by the owner
+- Legal name: **Shahriar Ahmed Tushar**; address: **Rajshahi, Bangladesh** (used in the privacy/terms drafts).
+- Production domain: **https://www.growxapp.net** (default `site.url`; still set `NEXT_PUBLIC_SITE_URL` in Vercel).
+- Chrome Web Store: https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh (extension ID `ofiancichfcakbdgekhcahflpoglfgbh`; origin `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh`; OAuth redirect `https://ofiancichfcakbdgekhcahflpoglfgbh.chromiumapp.org/`).
+- Business model: **freemium with a 14-day trial**. Not 100% free any more; **no grandfathering**: all users get the same experience after the extension update.
+- The trial **requires an X username** (abuse reduction) and a confirmed email.
 
-## Product decisions
-- [ ] **Approve or change the Free/Premium split** (`docs/FEATURE_SPLIT.md`). Note the extension and its listing say "100% free, no limits"; moving features behind Premium is a visible change for existing users. Do you grandfather existing users?
-- [ ] Cap on number of **source profiles** or queue size for Free?
-- [ ] Is an **X username required to start a trial** (current behaviour, for abuse reduction)? Trade-off: friction vs. abuse.
-- [ ] Trial: should it require a confirmed email (current: yes)? Allow trial after a paid plan ended (current: one trial per account ever)?
-- [ ] **Grace period** for `past_due` payments (current: none).
-- [ ] Early adopter: over-cap policy, whether refunds free a slot, and whether it needs a distinct entitlement label.
-- [ ] Google sign-in: create the Google OAuth client and enable it.
-- [ ] Merchant of record / paying provider approvals (Paddle business verification, NOWPayments account), supported crypto networks.
-- [ ] Should telemetry/analytics be added to the website? (none today; affects privacy policy).
-- [ ] Rename the extension's "premium" speed preset to avoid confusion with GrowX Premium.
+## Still open
+- [ ] Lawyer review of `/privacy` and `/terms`; governing law/venue; refund policy; meaning of "lifetime"; early-adopter terms; data retention periods.
+- [ ] Support email (`NEXT_PUBLIC_SUPPORT_EMAIL`); only Telegram contacts are shown today.
+- [ ] Confirm the Free/Premium split in `docs/FEATURE_SPLIT.md` (you said details are given and the extension is being updated aside; keep both in sync) and any cap on source profiles.
+- [ ] Grace period for `past_due` payments (current: none).
+- [ ] Early adopter: over-cap policy and whether refunds free a slot.
+- [ ] Create the Google OAuth client and enable it, if wanted.
+- [ ] Paddle business verification, NOWPayments account, supported crypto networks.
+- [ ] Whether to add website analytics (affects the privacy policy).
+- [ ] Rename the extension's "premium" speed preset (means X Premium) to avoid confusion.
+- [ ] Update the extension's store listing/privacy text, which currently says 100% free and that nothing but anonymous counts is sent.
