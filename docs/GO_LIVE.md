@@ -11,7 +11,7 @@ The build environment that produced this code cannot reach your live site or das
 - [ ] **Redeploy** after changing any `NEXT_PUBLIC_*` variable (they are baked in at build time).
 
 ## 2. Supabase
-- [ ] **SQL Editor:** run both files in `supabase/migrations/` in order (`..._init.sql`, then `..._billing_grace_and_early_adopter.sql`). The Vercel integration does **not** do this for you.
+- [ ] **SQL Editor:** run all three files in `supabase/migrations/` in order, then the read-only `supabase/verify.sql` (every row `ok = true`). The Vercel integration does **not** do this for you. Details and troubleshooting: `SUPABASE_PRODUCTION.md`.
 - [ ] **Auth > URL Configuration:**
   - Site URL: `https://www.growxapp.org`
   - Redirect URLs: `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**` (plus your `*.vercel.app` preview URL if you test there). Remove any growxapp.net entries.
@@ -30,7 +30,7 @@ The build environment that produced this code cannot reach your live site or das
 ## 4. Verify
 1. `https://www.growxapp.org/api/health` returns `{"ok":true,"auth":"ok","database":"ok"}`.
    - `auth: "not_configured"`: Supabase URL/key env vars missing; redeploy after adding them.
-   - `database: "failed"`: migrations not run, or the service-role key is wrong.
+   - `database: "failed"`: the `tables` / `functions` entries name what is missing (migrations not run, wrong project, or a bad service-role key).
 2. Sign up with a real email, open the confirmation link, log in.
 3. Dashboard: save your X username, start the trial; the plan card shows "Premium trial" with 14 days left. Pressing start again (or using the same username on a second account) is refused.
 4. `https://www.growxapp.org/api/entitlement` in the same browser returns `"plan":"TRIAL"`; in a private window it returns 401.

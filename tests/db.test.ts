@@ -2,6 +2,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { COLUMNS } from "@/lib/db/queries";
 
 /**
  * Runs the REAL migration against an in-process Postgres (PGlite) with minimal
@@ -229,5 +230,50 @@ describe("early adopter slots", () => {
   it("slots survive a later refund (no reuse)", async () => {
     await db.exec("update public.payments set status = 'refunded' where provider_payment_id = 'ea_8'");
     expect((await db.query<{ a: boolean }>("select public.early_adopter_available() as a")).rows[0].a).toBe(false);
+  });
+});
+
+describe("app queries match the migrated schema", () => {
+  it.each(Object.entries(COLUMNS))("authenticated can run the app's %s query", async (table, cols) => {
+    const ownerCol = table === "profiles" ? "id" : "user_id";
+    await as("authenticated", A, async () => {
+      await expect(db.query(`select ${cols} from public.${table} where ${ownerCol} = '${A}'`)).resolves.toBeDefined();
+    });
+  });
+
+  it("supabase/verify.sql reports every check ok", async () => {
+    const sql = readFileSync(path.resolve(import.meta.dirname, "../supabase/verify.sql"), "utf8");
+    const r = await db.query<{ item: string; ok: boolean }>(sql);
+    const bad = r.rows.filter((x) => !x.ok).map((x) => x.item);
+    expect(bad).toEqual([]);
+    expect(r.rows.length).toBeGreaterThan(25);
+  });
+});
+
+describe("production hardening migration", () => {
+  it("backfills profiles for users created before the trigger existed", async () => {
+    // Simulate a pre-trigger user, then re-run the (idempotent) migration.
+    await db.exec("alter table auth.users disable trigger on_auth_user_created");
+    await db.exec("insert into auth.users (id, email) values ('44444444-4444-4444-4444-444444444444', 'old@example.com')");
+    await db.exec("alter table auth.users enable trigger on_auth_user_created");
+    expect((await db.query("select 1 from public.profiles where id = '44444444-4444-4444-4444-444444444444'")).rows).toHaveLength(0);
+    const dir = path.resolve(import.meta.dirname, "../supabase/migrations");
+    await db.exec(readFileSync(path.join(dir, "20261010000000_production_hardening.sql"), "utf8"));
+    expect((await db.query("select 1 from public.profiles where id = '44444444-4444-4444-4444-444444444444'")).rows).toHaveLength(1);
+  });
+
+  it("ensure_my_profile creates only the caller's own profile and needs a session", async () => {
+    await db.exec("alter table auth.users disable trigger on_auth_user_created");
+    await db.exec("insert into auth.users (id, email) values ('55555555-5555-5555-5555-555555555555', 'late@example.com')");
+    await db.exec("alter table auth.users enable trigger on_auth_user_created");
+    await as("anon", null, async () => {
+      await expect(db.query("select public.ensure_my_profile()")).rejects.toThrow(/permission denied/);
+    });
+    await as("authenticated", "55555555-5555-5555-5555-555555555555", async () => {
+      await db.query("select public.ensure_my_profile()");
+      await db.query("select public.ensure_my_profile()"); // idempotent
+      const r = await db.query<{ email: string }>("select email from public.profiles");
+      expect(r.rows).toEqual([{ email: "late@example.com" }]);
+    });
   });
 });

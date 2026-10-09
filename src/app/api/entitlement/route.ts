@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { apiError, bearerToken, corsHeaders, json } from "@/lib/api/http";
-import { loadEntitlement } from "@/lib/entitlement/load";
+import { EntitlementLoadError, loadEntitlement } from "@/lib/entitlement/load";
 import { getSupabasePublicConfig } from "@/lib/env";
 import { createClient as createCookieClient } from "@/lib/supabase/server";
 
@@ -40,8 +40,10 @@ export async function GET(request: NextRequest) {
 
     const entitlement = await loadEntitlement(supabase, data.user.id);
     return json(entitlement, { origin });
-  } catch {
-    // Never leak internals; never fall back to granting Premium.
-    return apiError(503, "unavailable", "Entitlement could not be determined. Try again.", origin);
+  } catch (e) {
+    // Never leak internals; never fall back to granting Premium. The cause is
+    // logged server-side (without user data) by loadEntitlement.
+    const reason = e instanceof EntitlementLoadError ? e.issues[0]?.kind : undefined;
+    return apiError(503, "unavailable", `Entitlement could not be determined. Try again.${reason ? ` (${reason})` : ""}`, origin);
   }
 }

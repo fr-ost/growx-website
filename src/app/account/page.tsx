@@ -2,10 +2,12 @@ import { AppShell, Panel } from "@/components/app-shell";
 import { IconLock, IconMail, IconStar, IconUser } from "@/components/icons";
 import { PlanSummary, formatDate } from "@/components/plan-summary";
 import { LinkButton } from "@/components/ui/button";
-import { Badge, Notice } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import { site } from "@/config/site";
-import { loadEntitlement } from "@/lib/entitlement/load";
-import type { Entitlement } from "@/lib/entitlement/types";
+import { DataIssue } from "@/components/data-issue";
+import { logDbIssue, toDbIssue } from "@/lib/db/errors";
+import { COLUMNS } from "@/lib/db/queries";
+import { tryLoadEntitlement } from "@/lib/entitlement/load";
 import { pageMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/require-user";
@@ -17,21 +19,17 @@ export default async function AccountPage() {
   const user = await requireUser("/account");
   const supabase = await createClient();
 
-  let entitlement: Entitlement | null = null;
-  try {
-    entitlement = await loadEntitlement(supabase, user.id);
-  } catch {
-    entitlement = null;
-  }
-  const [x, payments] = await Promise.all([
-    supabase.from("x_profiles").select("x_username").eq("user_id", user.id).maybeSingle(),
-    supabase
-      .from("payments")
-      .select("id, product, amount_minor, currency, status, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20),
+  const [ent, x, payments] = await Promise.all([
+    tryLoadEntitlement(supabase, user.id),
+    supabase.from("x_profiles").select(COLUMNS.x_profiles).eq("user_id", user.id).maybeSingle(),
+    supabase.from("payments").select(COLUMNS.payments).eq("user_id", user.id).order("created_at", { ascending: false }).limit(20),
   ]);
+  const entitlement = ent.entitlement;
+  const xIssue = x.error ? toDbIssue("x_profiles", x.error) : null;
+  const payIssue = payments.error ? toDbIssue("payments", payments.error) : null;
+  if (xIssue) logDbIssue(xIssue, x.error);
+  if (payIssue) logDbIssue(payIssue, payments.error);
+  const xUsername = (x.data as { x_username?: string } | null)?.x_username ?? null;
   const provider = (user.app_metadata?.provider as string | undefined) ?? "email";
 
   return (
@@ -53,7 +51,7 @@ export default async function AccountPage() {
           </div>
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wider text-muted">X username</dt>
-            <dd className="mt-1.5 font-semibold">{x.data?.x_username ? `@${x.data.x_username}` : "Not set"}</dd>
+            <dd className="mt-1.5 font-semibold">{xIssue ? <span className="text-danger">Could not load</span> : xUsername ? `@${xUsername}` : "Not set"}</dd>
           </div>
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wider text-muted">Member since</dt>
@@ -63,12 +61,12 @@ export default async function AccountPage() {
       </Panel>
 
       <Panel title="Plan" icon={<IconStar size={17} />}>
-        {entitlement ? <PlanSummary e={entitlement} /> : <Notice tone="error">Could not load your plan. Please refresh.</Notice>}
+        {entitlement ? <PlanSummary e={entitlement} /> : <DataIssue title="Could not load your plan" issues={ent.issues} />}
       </Panel>
 
       <Panel title="Payments" icon={<IconMail size={17} />}>
-        {payments.error ? (
-          <Notice tone="error">Could not load payments.</Notice>
+        {payIssue ? (
+          <DataIssue title="Could not load payments" issues={[payIssue]} />
         ) : payments.data && payments.data.length > 0 ? (
           <ul className="divide-y divide-border">
             {payments.data.map((p) => (
