@@ -38,6 +38,6 @@ describe("startTrial", () => {
 
   it("returns a generic error for anything else", async () => {
     const { client } = fakeAdmin({ error: { code: "XX000", message: "boom" } });
-    expect(await startTrial(client, { id: "u1", emailConfirmed: true })).toEqual({ ok: false, reason: "error" });
+    expect(await startTrial(client, { id: "u1", emailConfirmed: true })).toEqual({ ok: false, reason: "error", detail: "unknown" });
   });
 });

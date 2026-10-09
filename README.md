@@ -18,7 +18,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` 
 
 ## Supabase setup
 1. Create a project at supabase.com.
-2. **Database:** apply every file in `supabase/migrations/` in order (`..._init.sql`, then `..._billing_grace_and_early_adopter.sql`) (SQL Editor, or `supabase db push` with the Supabase CLI linked to your project).
+2. **Database:** apply every file in `supabase/migrations/` in order (init, billing grace/early adopter, production hardening), then run `supabase/verify.sql` (SQL Editor, or `supabase db push` with the Supabase CLI linked to your project).
 3. **Auth > Providers > Email:** enable, and turn **Confirm email** ON.
 4. **Auth > URL Configuration:** Site URL `https://www.growxapp.org`; Redirect URLs `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**`. For cross-device email links, use the email templates in `docs/GO_LIVE.md`.
 5. **Google (optional):** create an OAuth client in Google Cloud, set its redirect URI to the callback URL shown in Supabase > Auth > Providers > Google, enable the provider, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
@@ -48,6 +48,7 @@ See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification c
 | Paddle / NOWPayments keys | later | server secret | reserved, unused |
 
 ## Documentation
+- [`docs/SUPABASE_PRODUCTION.md`](docs/SUPABASE_PRODUCTION.md): production errors, root causes, required Supabase/Vercel settings
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): structure and design decisions
 - [`docs/API.md`](docs/API.md): API contract (`/api/entitlement`)
 - [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md): owner-approved product decisions

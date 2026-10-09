@@ -5,6 +5,7 @@ import { startTrial } from "@/lib/trial/start";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/user";
+import { logDbIssue, toDbIssue } from "@/lib/db/errors";
 import { xUsernameSchema } from "@/lib/validation/xUsername";
 
 export interface FormState {
@@ -23,12 +24,30 @@ export async function saveXUsernameAction(_prev: FormState, formData: FormData):
   // comes from the verified session, never from the form.
   const supabase = await createClient();
   const existing = await supabase.from("x_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
-  if (existing.error) return { message: "Could not save your username. Please try again." };
+  if (existing.error) {
+    const issue = toDbIssue("x_profiles", existing.error);
+    logDbIssue(issue, existing.error);
+    return { message: `Could not save your username (${issue.kind}${issue.code ? ` ${issue.code}` : ""}). Please try again or contact support.` };
+  }
 
-  const res = existing.data
-    ? await supabase.from("x_profiles").update({ x_username: parsed.data.username }).eq("user_id", user.id)
-    : await supabase.from("x_profiles").insert({ user_id: user.id, x_username: parsed.data.username });
-  if (res.error) return { message: "Could not save your username. Please try again." };
+  const write = () =>
+    existing.data
+      ? supabase.from("x_profiles").update({ x_username: parsed.data.username }).eq("user_id", user.id)
+      : supabase.from("x_profiles").insert({ user_id: user.id, x_username: parsed.data.username });
+  let res = await write();
+  // 23503 = foreign key violation: this account has no profile row (it signed
+  // up before the database trigger existed). Create the caller's OWN profile
+  // via a narrow SECURITY DEFINER function, then retry once.
+  if (res.error?.code === "23503") {
+    const fix = await supabase.rpc("ensure_my_profile");
+    if (fix.error) logDbIssue(toDbIssue("ensure_my_profile", fix.error), fix.error);
+    else res = await write();
+  }
+  if (res.error) {
+    const issue = toDbIssue("x_profiles.write", res.error);
+    logDbIssue(issue, res.error);
+    return { message: `Could not save your username (${issue.kind}${issue.code ? ` ${issue.code}` : ""}). Please try again or contact support.` };
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/account");
@@ -50,10 +69,12 @@ export async function startTrialAction(): Promise<FormState> {
   let result;
   try {
     result = await startTrial(createAdminClient(), { id: user.id, emailConfirmed: !!user.email_confirmed_at });
-  } catch {
-    return { message: TRIAL_MESSAGES.error };
+  } catch (e) {
+    // Most likely SUPABASE_SERVICE_ROLE_KEY is not set in this deployment.
+    console.error(JSON.stringify({ event: "start_trial_unavailable", message: e instanceof Error ? e.message.slice(0, 120) : "unknown" }));
+    return { message: `${TRIAL_MESSAGES.error} (reference: start_trial/not_configured)` };
   }
-  if (!result.ok) return { message: TRIAL_MESSAGES[result.reason] };
+  if (!result.ok) return { message: TRIAL_MESSAGES[result.reason] + (result.detail ? ` (reference: start_trial/${result.detail})` : "") };
 
   revalidatePath("/dashboard");
   revalidatePath("/account");

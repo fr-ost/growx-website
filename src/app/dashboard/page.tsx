@@ -7,8 +7,10 @@ import { ExternalButton, LinkButton } from "@/components/ui/button";
 import { Notice } from "@/components/ui/primitives";
 import { TRIAL_DAYS } from "@/config/pricing";
 import { site } from "@/config/site";
-import { loadEntitlement } from "@/lib/entitlement/load";
-import type { Entitlement } from "@/lib/entitlement/types";
+import { DataIssue } from "@/components/data-issue";
+import { logDbIssue, toDbIssue, type DbIssue } from "@/lib/db/errors";
+import { COLUMNS } from "@/lib/db/queries";
+import { tryLoadEntitlement } from "@/lib/entitlement/load";
 import { pageMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/require-user";
@@ -36,27 +38,25 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams;
   const supabase = await createClient();
 
-  let entitlement: Entitlement | null = null;
-  try {
-    entitlement = await loadEntitlement(supabase, user.id);
-  } catch {
-    entitlement = null;
-  }
-  const x = await supabase.from("x_profiles").select("x_username").eq("user_id", user.id).maybeSingle();
-  const username = x.data?.x_username ?? null;
+  // Independent loads: one failing section must not blank the others.
+  const [ent, x] = await Promise.all([
+    tryLoadEntitlement(supabase, user.id),
+    supabase.from("x_profiles").select(COLUMNS.x_profiles).eq("user_id", user.id).maybeSingle(),
+  ]);
+  const entitlement = ent.entitlement;
+  const xIssue: DbIssue | null = x.error ? toDbIssue("x_profiles", x.error) : null;
+  if (xIssue) logDbIssue(xIssue, x.error);
+  const issues = [...ent.issues, ...(xIssue ? [xIssue] : [])];
+  // No row is a normal state (username not added yet), not an error.
+  const username = (x.data as { x_username?: string } | null)?.x_username ?? null;
   const emailConfirmed = !!user.email_confirmed_at;
-  const dataProblem = !entitlement || !!x.error;
   const canStart = !!entitlement && !entitlement.trial.used && !!username && emailConfirmed;
   const name = user.email?.split("@")[0] ?? "there";
 
   return (
     <AppShell active="/dashboard" email={user.email}>
       {sp.password === "updated" ? <Notice tone="success">Your password was updated.</Notice> : null}
-      {dataProblem ? (
-        <Notice tone="error" title="We couldn't load all of your account data">
-          Please refresh in a moment. If this keeps happening, contact {site.supportEmail}.
-        </Notice>
-      ) : null}
+      <DataIssue title="Some of your account data could not be loaded" issues={issues} />
 
       <section className="bg-brand animate-fade-up relative overflow-hidden rounded-3xl p-6 text-white shadow-[0_30px_60px_-30px_rgba(159,18,57,0.8)] sm:p-8">
         <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(rgba(255,255,255,.6)_1px,transparent_1px)] [background-size:22px_22px]" aria-hidden="true" />
@@ -79,11 +79,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
       </section>
 
       <Panel title="Your plan" icon={<IconStar size={17} />} action={<LinkButton href="/pricing" variant="ghost" size="sm">View plans</LinkButton>}>
-        {entitlement ? <PlanSummary e={entitlement} /> : <div className="skeleton h-24 rounded-xl" />}
+        {entitlement ? <PlanSummary e={entitlement} /> : <p className="text-sm text-text-2">Your plan could not be loaded, so Premium status is not shown. See the message above.</p>}
       </Panel>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="X username" icon={<IconAt size={17} />}>
+          {xIssue ? <p className="mb-4 text-sm text-danger">Your saved username could not be loaded.</p> : null}
           <XUsernameForm current={username} />
         </Panel>
 
@@ -101,14 +102,20 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           ) : (
             <div className="space-y-4">
               <p className="text-sm leading-relaxed text-text-2">
-                Unlock every Premium feature for {TRIAL_DAYS} days. No card needed. The trial starts only when you press the
-                button, and each account and X username can use it once.
+                A {TRIAL_DAYS}-day Premium trial, no card needed. It starts only when you press the button, and each account
+                and X username can use it once.
               </p>
               {!emailConfirmed ? <Notice tone="warn">Confirm your email address first (check your inbox).</Notice> : null}
               {!username ? <Notice tone="warn">Save your X username first.</Notice> : null}
               <StartTrialForm disabled={!canStart} />
             </div>
           )}
+          {entitlement ? (
+            <p className="mt-4 text-xs text-muted">
+              Your plan and trial are recorded on your GrowX account. The extension will read them once account linking ships;
+              until then it works as before.
+            </p>
+          ) : null}
         </Panel>
       </div>
 

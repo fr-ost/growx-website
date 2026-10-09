@@ -25,6 +25,8 @@ function session(u) {
 mkUser("demo@example.com", true);
 mkUser("unconfirmed@example.com", false);
 mkUser("other@example.com", true);
+mkUser("brokendb@example.com", true); // simulates a project without migrations
+mkUser("nopay@example.com", true); // only the payments table is missing
 
 const send = (res, status, body) => { res.writeHead(status, { "content-type": "application/json" }); res.end(body === undefined ? "" : JSON.stringify(body)); };
 const authUser = (req) => { const m = (req.headers.authorization || "").match(/^Bearer (.+)$/); const e = m && tokens.get(m[1]); return e ? users.get(e) : null; };
@@ -70,7 +72,11 @@ http.createServer(async (req, res) => {
     trials.set(uid, row); trialNames.add(norm); return send(res, 200, row);
   }
   const table = p.replace("/rest/v1/", "");
+  if (isService && req.method === "GET") return send(res, 200, []); // health-check probes
   if (!u) return send(res, 401, { code: "PGRST301", message: "JWT required" });
+  const missing = (t) => send(res, 404, { code: "PGRST205", message: `Could not find the table 'public.${t}' in the schema cache` });
+  if (u.email.startsWith("brokendb")) return missing(table);
+  if (u.email.startsWith("nopay") && table === "payments") return missing(table);
   const eqUser = (url.searchParams.get("user_id") || "").replace("eq.", "");
   if (eqUser && eqUser !== u.id) return send(res, 200, []); // RLS
   if (table === "trials") return send(res, 200, trials.has(u.id) ? [trials.get(u.id)] : []);

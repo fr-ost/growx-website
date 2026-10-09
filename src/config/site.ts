@@ -1,11 +1,29 @@
 const trim = (v: string | undefined) => (v ?? "").trim();
 
+export const PRODUCTION_URL = "https://www.growxapp.org";
+
+const isLocal = (u: string) => /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(\/|$)/i.test(u);
+
+/**
+ * Canonical site URL. In a Vercel production deployment a localhost value
+ * (e.g. copied from .env.example) is ignored, so production metadata and auth
+ * links can never point at localhost. Local development keeps localhost.
+ */
+export function resolveSiteUrl(raw: string | undefined, vercelEnv: string | undefined): string {
+  const v = trim(raw).replace(/\/$/, "");
+  if (!v || !/^https?:\/\//i.test(v)) return PRODUCTION_URL;
+  if (vercelEnv === "production" && isLocal(v)) return PRODUCTION_URL;
+  return v;
+}
+
+export const isLocalUrl = isLocal;
+
 export const site = {
   name: "GrowX",
   tagline: "Auto follow for X (Twitter), at a human pace",
   description:
     "GrowX is a Chrome extension that helps you grow on X with targeted auto-follow, follow-back scoring, safe pacing and account cleanup tools. Core features are free.",
-  url: trim(process.env.NEXT_PUBLIC_SITE_URL).replace(/\/$/, "") || "https://www.growxapp.org",
+  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, process.env.VERCEL_ENV ?? process.env.NEXT_PUBLIC_VERCEL_ENV),
   /** Official Chrome Web Store listing (provided by the owner); override with the env var if it changes. */
   chromeStoreUrl:
     trim(process.env.NEXT_PUBLIC_CHROME_STORE_URL) ||
