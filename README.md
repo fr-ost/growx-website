@@ -26,6 +26,8 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 7. Review `docs/SECURITY.md` (SMTP, CAPTCHA, password rules) before inviting real users.
 
 ## Deploy to Vercel
+See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification checklist; `GET /api/health` reports whether Supabase Auth, the service key and the migrations are working.
+
 1. Import the repo into Vercel (framework: Next.js; defaults are fine).
 2. Add the environment variables below for Production (and Preview if wanted). Mark `SUPABASE_SERVICE_ROLE_KEY` as sensitive.
 3. Set `NEXT_PUBLIC_SITE_URL` to the final https URL, update Supabase Site/Redirect URLs, redeploy.
@@ -57,8 +59,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 
 ## Known limitations
 - Legal pages are unreviewed drafts (owner name and city are filled in; governing law, retention and refund terms are still placeholders).
-- No account deletion, rate limiting or CSP yet (listed in `docs/SECURITY.md`).
+- Account deletion is manual (deliberate: deleting would also delete trial records and allow repeat trials, and payment records must be retained). No app-level rate limiting yet: use Vercel Firewall (see GO_LIVE.md). A production CSP is set but allows inline scripts (Next.js hydration) (listed in `docs/SECURITY.md`).
 - Trial abuse is mitigated, not eliminated (self-reported usernames cannot prove ownership).
 - RLS/migration tests run on PGlite, not a real Supabase instance.
 - The Free/Premium split is a proposal and is not enforced anywhere.
-- The OG image is the 128px logo; a dedicated 1200x630 image is not made yet.

@@ -13,7 +13,7 @@
 1. **Test against a real Supabase project**: apply migrations, then verify RLS with two real users using the anon key (PGlite is only an approximation).
 2. Supabase Auth settings: enable **Confirm email**; set Site URL and Redirect URLs; set minimum password length/strength and leaked-password protection; configure a real SMTP provider (the built-in mailer is heavily rate limited); enable CAPTCHA (Turnstile/hCaptcha) on sign-up to limit trial farming.
 3. **Rate limiting** on `/api/entitlement`, `/login`, `/signup` (Vercel Firewall or an edge limiter). Not implemented.
-4. **Content-Security-Policy**: not set (Next.js inline scripts need nonces). Add a nonce-based CSP via the proxy and test.
+4. **Content-Security-Policy**: a production CSP is set in `next.config.ts` (`script-src 'self' 'unsafe-inline'`). A nonce-based CSP would be stricter but makes every page dynamic; revisit.
 5. Password reset is implemented (`/forgot-password`, `/reset-password`): add `https://www.growxapp.net/auth/callback` to Supabase Redirect URLs and test the email template. Email-change handling is not built.
 6. Decide account deletion/data export procedure (GDPR/CCPA); privacy policy and terms need legal review.
 7. Trial abuse is only mitigated: self-reported usernames and throwaway emails can't be fully prevented. Consider CAPTCHA, disposable-email blocking, or IP/device signals; review privacy implications first.
