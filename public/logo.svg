@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="gx128bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF5A68"/><stop offset=".5" stop-color="#E11D2E"/><stop offset="1" stop-color="#9F1239"/>
+    </linearGradient>
+    <linearGradient id="gx128sh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".26"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="gx128bd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FF4757"/><stop offset="1" stop-color="#C8102E"/>
+    </linearGradient>
+    <clipPath id="gx128clip"><rect x="0" y="0" width="128" height="128" rx="33.28"/></clipPath>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="33.28" fill="url(#gx128bg)"/>
+  <g clip-path="url(#gx128clip)">
+    <path d="M15.36 89.6 L46.08 60.16 L64 74.24 L102.4 34.56" fill="none" stroke="#fff" stroke-opacity=".34" stroke-width="9.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M84.48 30.72 L107.52 28.16 L104.96 51.2 Z" fill="#fff" fill-opacity=".34" stroke="#fff" stroke-opacity=".34" stroke-width="3.84" stroke-linejoin="round"/>
+    <circle cx="53.76" cy="57.6" r="17.92" fill="#fff"/>
+       <path d="M20.48 120.32 C20.48 94.72 34.56 80.64 53.76 80.64 C72.96 80.64 87.04 94.72 87.04 120.32 Z" fill="#fff"/>
+    <rect x="0" y="0" width="128" height="64" fill="url(#gx128sh)"/>
+  </g>
+  <circle cx="97.28" cy="97.28" r="21.12" fill="#fff"/>
+  <rect x="85.45" y="95.3" width="23.65" height="3.97" rx="1.98" fill="url(#gx128bd)"/>
+  <rect x="95.3" y="85.45" width="3.97" height="23.65" rx="1.98" fill="url(#gx128bd)"/>
+</svg>
