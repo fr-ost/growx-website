@@ -20,19 +20,21 @@ export const isLocalUrl = isLocal;
 
 export const site = {
   name: "GrowX",
-  tagline: "Auto follow for X (Twitter), at a human pace",
+  tagline: "X (Twitter) Auto Follow Chrome Extension",
+  /** Person shown in copyright, About and structured data. */
+  author: "Shahriar Ahmed",
+  authorUrl: "https://www.shahriarahmed.net",
   description:
-    "GrowX is a Chrome extension that helps you grow on X with targeted auto-follow, follow-back scoring, safe pacing and account cleanup tools. Core features are free.",
+    "GrowX is a free X (Twitter) auto follow Chrome extension. Find people likely to follow back, follow at a human pace with safety limits, track growth and clean up your account.",
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, process.env.VERCEL_ENV ?? process.env.NEXT_PUBLIC_VERCEL_ENV),
   /** Official Chrome Web Store listing (provided by the owner); override with the env var if it changes. */
   chromeStoreUrl:
     trim(process.env.NEXT_PUBLIC_CHROME_STORE_URL) ||
     "https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh",
   supportEmail: trim(process.env.NEXT_PUBLIC_SUPPORT_EMAIL) || "support@growxapp.org",
-  /** Contact channels already published by the extension itself (shared/config.js). */
+  /** Contact channel published by the extension itself (shared/config.js). */
   telegram: [
     { label: "Shahriar Ahmed", href: "https://t.me/igfrostt" },
-    { label: "Mahfuz Allum", href: "https://t.me/mahfuzallum" },
   ],
   /** Shown in legal drafts. Provided by the owner. */
   legalName: "Shahriar Ahmed Tushar",

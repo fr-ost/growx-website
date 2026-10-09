@@ -5,16 +5,25 @@ import { Container } from "@/components/ui/primitives";
 import { site } from "@/config/site";
 
 const cols = [
-  { title: "Product", links: [{ href: "/features", label: "Features" }, { href: "/pricing", label: "Pricing" }, { href: "/signup", label: "Start free" }] },
+  { title: "Product", links: [{ href: "/features", label: "Features" }, { href: "/how-it-works", label: "How it works" }, { href: "/pricing", label: "Pricing" }, { href: "/signup", label: "Start free" }] },
+  {
+    title: "Resources",
+    links: [
+      { href: "/blog", label: "Blog" },
+      { href: "/blog/how-growx-auto-follow-works", label: "How auto follow works" },
+      { href: "/blog/growx-features-guide-scoring-filters-cleanup", label: "Features guide" },
+      { href: "/blog/growx-potential-best-practices-roadmap", label: "Roadmap" },
+    ],
+  },
   { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/dashboard", label: "Dashboard" }, { href: "/account", label: "Account" }] },
-  { title: "Company", links: [{ href: "/contact", label: "Support" }, { href: "/privacy", label: "Privacy policy" }, { href: "/terms", label: "Terms of service" }] },
+  { title: "Company", links: [{ href: "/about", label: "About" }, { href: "/contact", label: "Support" }, { href: "/privacy", label: "Privacy policy" }, { href: "/terms", label: "Terms of service" }] },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="relative mt-auto border-t border-border bg-surface-2">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" aria-hidden="true" />
-      <Container className="grid gap-10 py-14 md:grid-cols-[1.6fr_repeat(3,1fr)]">
+      <Container className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
@@ -56,7 +65,7 @@ export function SiteFooter() {
       </Container>
       <div className="border-t border-border">
         <Container className="flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} GrowX · {site.legalName}</p>
+          <p>&copy; {new Date().getFullYear()} GrowX · {site.author}</p>
           <p>Premium checkout is not available yet. Prices shown are planned.</p>
         </Container>
       </div>

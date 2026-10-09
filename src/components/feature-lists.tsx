@@ -38,6 +38,9 @@ export function FeatureGroups() {
                 {g.title}
               </h2>
               <p className="mt-3 text-lg leading-relaxed text-text-2">{g.summary}</p>
+              {g.detail.map((d) => (
+                <p key={d} className="mt-4 leading-relaxed text-text-2">{d}</p>
+              ))}
             </div>
             <ul className="grid gap-4 sm:grid-cols-2">
               {g.features.map((f) => (

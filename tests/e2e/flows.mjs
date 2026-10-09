@@ -11,7 +11,7 @@ const ok = (name, cond, extra = "") => { results.push(`${cond ? "PASS" : "FAIL"}
 const b = await chromium.launch({ executablePath });
 
 // ---------- public crawl, desktop + mobile
-const pages = ["/", "/features", "/pricing", "/contact", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/does-not-exist"];
+const pages = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/does-not-exist"];
 const links = new Set();
 for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile", { width: 375, height: 780 }]]) {
   const ctx = await b.newContext({ viewport: vp });
@@ -37,6 +37,68 @@ for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile",
 for (const l of links) {
   const r = await fetch(BASE + l, { redirect: "manual" });
   ok(`link ${l}`, [200, 307, 308].includes(r.status), String(r.status));
+}
+
+
+// ---------- SEO audit (rendered HTML, as a crawler sees it)
+{
+  const SEO_PAGES = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact"];
+  const titles = new Set(), descs = new Set();
+  const sp = await b.newPage();
+  for (const path of SEO_PAGES) {
+    await sp.goto(BASE + path, { waitUntil: "networkidle" });
+    const m = await sp.evaluate(() => {
+      const q = (s, a) => document.querySelector(s)?.getAttribute(a) ?? null;
+      const ld = [...document.querySelectorAll('script[type="application/ld+json"]')].map((n) => { try { return JSON.parse(n.textContent); } catch { return null; } });
+      return {
+        title: document.title, desc: q('meta[name="description"]', "content"), canonical: q('link[rel="canonical"]', "href"),
+        ogTitle: q('meta[property="og:title"]', "content"), ogDesc: q('meta[property="og:description"]', "content"), ogImage: q('meta[property="og:image"]', "content"),
+        ogUrl: q('meta[property="og:url"]', "content"), twCard: q('meta[name="twitter:card"]', "content"), robots: q('meta[name="robots"]', "content"),
+        lang: document.documentElement.lang, h1: document.querySelectorAll("h1").length, h2: document.querySelectorAll("h2").length,
+        imgsNoAlt: [...document.images].filter((i) => !i.hasAttribute("alt")).length,
+        ld: ld.flat().map((x) => x && x["@type"]),
+        ldBad: ld.some((x) => x === null),
+        words: (document.querySelector("main")?.innerText ?? "").split(/\s+/).length,
+      };
+    });
+    const t = `SEO ${path}`;
+    ok(`${t}: title 20-65 chars`, m.title.length >= 20 && m.title.length <= 65, `${m.title.length}: ${m.title}`);
+    ok(`${t}: description 110-165 chars`, m.desc && m.desc.length >= 110 && m.desc.length <= 165, String(m.desc?.length));
+    ok(`${t}: canonical is absolute https www.growxapp.org`, m.canonical?.startsWith("https://www.growxapp.org"), String(m.canonical));
+    ok(`${t}: canonical matches path`, new URL(m.canonical).pathname === path, m.canonical);
+    ok(`${t}: Open Graph title/description/url/image`, !!(m.ogTitle && m.ogDesc && m.ogUrl && m.ogImage), JSON.stringify([!!m.ogTitle, !!m.ogDesc, !!m.ogUrl, !!m.ogImage]));
+    ok(`${t}: twitter large card`, m.twCard === "summary_large_image", String(m.twCard));
+    ok(`${t}: indexable`, !/noindex/.test(m.robots ?? ""), String(m.robots));
+    ok(`${t}: html lang=en, one h1, h2s present`, m.lang === "en" && m.h1 === 1 && m.h2 >= 1, JSON.stringify([m.lang, m.h1, m.h2]));
+    ok(`${t}: images have alt`, m.imgsNoAlt === 0, String(m.imgsNoAlt));
+    ok(`${t}: JSON-LD parses and includes Organization`, !m.ldBad && m.ld.includes("Organization"), JSON.stringify(m.ld));
+    ok(`${t}: unique title and description`, !titles.has(m.title) && !descs.has(m.desc), m.title);
+    titles.add(m.title); descs.add(m.desc);
+    if (path.startsWith("/blog/") ) ok(`${t}: article has BlogPosting + breadcrumb + 900+ words`, m.ld.includes("BlogPosting") && m.ld.includes("BreadcrumbList") && m.words > 900, `${m.words} words`);
+    if (path === "/") ok(`${t}: SoftwareApplication + FAQPage`, m.ld.includes("SoftwareApplication") && m.ld.includes("FAQPage"));
+    if (path === "/how-it-works") ok(`${t}: HowTo + FAQPage`, m.ld.includes("HowTo") && m.ld.includes("FAQPage"));
+  }
+  const noidx = await b.newPage();
+  for (const path of ["/login", "/signup", "/forgot-password"]) {
+    await noidx.goto(BASE + path, { waitUntil: "networkidle" });
+    ok(`SEO ${path}: noindex`, /noindex/.test(await noidx.locator('meta[name="robots"]').getAttribute("content")));
+  }
+  const txt = async (p) => (await fetch(BASE + p)).text();
+  const robots = await txt("/robots.txt");
+  ok("robots.txt allows crawling and lists sitemap", /Allow: \//.test(robots) && /Sitemap: https:\/\/www\.growxapp\.org\/sitemap\.xml/.test(robots) && /Disallow: \/dashboard/.test(robots), robots.slice(0, 160));
+  const sm = await txt("/sitemap.xml");
+  ok("sitemap.xml lists pages and all posts", ["/how-it-works", "/about", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap"].every((u) => sm.includes("https://www.growxapp.org" + u)) && !sm.includes("/dashboard") && !sm.includes("/login"));
+  const feed = await fetch(BASE + "/blog/feed.xml");
+  ok("RSS feed served as XML", feed.status === 200 && (feed.headers.get("content-type") ?? "").includes("xml"));
+  const og = await fetch(BASE + "/blog/how-growx-auto-follow-works/opengraph-image");
+  ok("per-post Open Graph image renders (png)", og.status === 200 && (og.headers.get("content-type") ?? "").includes("image/png"), og.status + " " + og.headers.get("content-type"));
+  const mf = await fetch(BASE + "/manifest.webmanifest");
+  ok("web manifest served", mf.status === 200);
+  // Mahfuz removed from every rendered page
+  let leftovers = [];
+  for (const path of ["/", "/contact", "/about", "/privacy", "/terms", "/blog"]) { if (/mahfuz|allum/i.test(await txt(path))) leftovers.push(path); }
+  ok("no mention of removed contributor on any page", leftovers.length === 0, leftovers.join(","));
+  await sp.close(); await noidx.close();
 }
 
 // ---------- mobile menu

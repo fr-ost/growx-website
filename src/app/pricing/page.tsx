@@ -3,15 +3,17 @@ import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
 import { IconCheck, IconInfo } from "@/components/icons";
 import { PricingCards } from "@/components/pricing-cards";
+import { JsonLd, breadcrumbLd, faqLd } from "@/components/json-ld";
 import { Container, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { featureGroups } from "@/config/features";
 import { TRIAL_DAYS } from "@/config/pricing";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Pricing",
-  description: "GrowX is free forever, with Premium at $1.99/month, $14.99/year or $29.99 lifetime and a 14-day trial. Checkout is coming soon.",
+  title: "GrowX Pricing: Free Plan, Premium & 14-Day Trial",
+  description: "GrowX is free forever. Planned Premium: $1.99/month, $14.99/year or $29.99 lifetime, with a 14-day trial. Compare Free vs Premium; checkout is coming soon.",
   path: "/pricing",
+  keywords: ["GrowX pricing", "GrowX Premium", "free X auto follow", "Twitter growth tool pricing"],
 });
 
 const faqs = [
@@ -26,6 +28,7 @@ const faqs = [
 export default function PricingPage() {
   return (
     <>
+      <JsonLd data={[breadcrumbLd([{ name: "Home", path: "/" }, { name: "Pricing", path: "/pricing" }]), faqLd(faqs)]} />
       <PageHero eyebrow="Pricing" title={<>Simple pricing. <span className="text-gradient">Free forever.</span></>}>
         Start free, try Premium for {TRIAL_DAYS} days, upgrade when it makes sense.
       </PageHero>

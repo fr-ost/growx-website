@@ -43,11 +43,13 @@ See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification c
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | no | public | `true` only after enabling Google in Supabase |
 | `NEXT_PUBLIC_CHROME_STORE_URL` | no | public | defaults to the official listing |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | no | public | shown on /contact |
+| `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | no | public | search-console verification tokens (see `docs/SEO.md`) |
 | `BILLING_GRACE_DAYS_CARD` / `BILLING_GRACE_DAYS_CRYPTO` | no | server | grace after failed recurring payment; defaults 3 / 0 |
 | `ALLOWED_EXTENSION_ORIGINS` | later | server | comma-separated `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh` |
 | Paddle / NOWPayments keys | later | server secret | reserved, unused |
 
 ## Documentation
+- [`docs/SEO.md`](docs/SEO.md): keyword strategy, what is implemented, search-console steps
 - [`docs/SUPABASE_PRODUCTION.md`](docs/SUPABASE_PRODUCTION.md): production errors, root causes, required Supabase/Vercel settings
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): structure and design decisions
 - [`docs/API.md`](docs/API.md): API contract (`/api/entitlement`)

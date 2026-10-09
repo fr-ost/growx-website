@@ -17,6 +17,8 @@ export interface FeatureGroup {
   id: string;
   title: string;
   summary: string;
+  /** Longer, factual explanation shown on the features page (from extension v2.3.0). */
+  detail: string[];
   features: Feature[];
 }
 
@@ -25,6 +27,10 @@ export const featureGroups: readonly FeatureGroup[] = [
     id: "autopilot",
     title: "Autopilot follow engine",
     summary: "Follows one account at a time with randomised delays, breaks and rolling caps.",
+    detail: [
+      "The autopilot runs inside the extension's background service worker, so it keeps going when you close the popup or switch tabs, and resumes after Chrome restarts. It uses your own signed-in x.com session and one open or pinned x.com tab, never your X password.",
+      "Four pace presets set the delay between follows, how often it takes a break and the rolling hourly and daily caps. On top of that it adds occasional longer pauses, optional active hours and days, a warm-up that raises the daily cap day by day, a following-cap guard, and an automatic slow-down after any warning from X.",
+    ],
     features: [
       {
         id: "pace-safe-balanced",
@@ -56,6 +62,10 @@ export const featureGroups: readonly FeatureGroup[] = [
     id: "targeting",
     title: "Sources, queue and targeting",
     summary: "Reads the newest followers of profiles in your niche and scores each one for follow-back likelihood.",
+    detail: [
+      "You add source profiles in your niche; GrowX reads their newest followers every few hours and keeps a queue of the best candidates. Each candidate gets a follow-back score from 1 to 99 based on follow ratio, audience size, recent activity, profile quality and follow-back language.",
+      "Hard filters remove accounts before scoring: already followed, already following you, private, no profile photo, too new, inactive, too small or too large. You can review the queue, keep a never-follow list and follow your own imported list first.",
+    ],
     features: [
       {
         id: "sources-queue",
@@ -87,6 +97,9 @@ export const featureGroups: readonly FeatureGroup[] = [
     id: "insight",
     title: "History and analytics",
     summary: "Measures who follows back and which sources work.",
+    detail: [
+      "GrowX checks on a schedule who followed back, then shows follow history, the follow-back rate of each source, a growth chart of followers and following, and a monthly goal planner. Everything is computed in your browser and can be exported as a backup file.",
+    ],
     features: [
       {
         id: "history-analytics",
@@ -106,6 +119,10 @@ export const featureGroups: readonly FeatureGroup[] = [
     id: "cleanup",
     title: "Cleanup tools",
     summary: "Finds inactive accounts and people who do not follow back.",
+    detail: [
+      "The Cleanup scan reads who you follow and your followers, then classifies accounts as inactive (latest post older than 30, 90, 180 or 365 days) or not following back. Missing information is never guessed: unknown activity stays \"unknown\" and partial follower scans are flagged as \"unverified\".",
+      "You review, filter and select accounts yourself; the unfollow runner only touches what you confirmed, at a safe pace with rolling caps, re-checking each account with X first.",
+    ],
     features: [
       {
         id: "cleanup-scan",

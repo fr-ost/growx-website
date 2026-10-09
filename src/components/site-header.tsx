@@ -9,8 +9,10 @@ import { LinkButton } from "@/components/ui/button";
 
 const links = [
   { href: "/features", label: "Features" },
+  { href: "/how-it-works", label: "How it works" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/contact", label: "Support" },
+  { href: "/blog", label: "Blog" },
+  { href: "/about", label: "About" },
 ];
 
 /**
@@ -55,7 +57,7 @@ export function SiteHeader() {
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Logo />
-        <nav aria-label="Main" className="hidden items-center gap-1 rounded-full border border-border bg-white/70 p-1 shadow-sm md:flex">
+        <nav aria-label="Main" className="hidden items-center gap-1 rounded-full border border-border bg-white/70 p-1 shadow-sm lg:flex">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -69,7 +71,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           {signedIn ? (
             <LinkButton href="/dashboard" size="sm">
               Dashboard
@@ -90,7 +92,7 @@ export function SiteHeader() {
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((v) => !v)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white shadow-sm md:hidden"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white shadow-sm lg:hidden"
         >
           <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
           <span aria-hidden="true" className="relative block h-3.5 w-5">
@@ -103,7 +105,7 @@ export function SiteHeader() {
       <div
         id={panelId}
         hidden={!open}
-        className="animate-fade-in border-t border-border bg-white px-4 pb-6 pt-2 md:hidden"
+        className="animate-fade-in border-t border-border bg-white px-4 pb-6 pt-2 lg:hidden"
       >
         <nav aria-label="Mobile" className="flex flex-col" onClick={(e) => (e.target as HTMLElement).closest("a") && setOpen(false)}>
           {links.map((l) => (

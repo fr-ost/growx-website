@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
+import { JsonLd, faqLd, softwareLd } from "@/components/json-ld";
+import { PostCard } from "@/components/blog";
+import { latestFirst } from "@/content/posts";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
 import { HeroPreview } from "@/components/home/hero-preview";
@@ -28,9 +31,11 @@ import { site } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "GrowX - Auto follow for X (Twitter), at a human pace",
-  description: "A Chrome extension for targeted auto-follow, follow-back scoring, safe pacing and account cleanup on X. Free core features and a 14-day Premium trial.",
+  title: "GrowX: X (Twitter) Auto Follow Chrome Extension",
+  absoluteTitle: true,
+  description: "Free X (Twitter) auto follow Chrome extension. Find people likely to follow back, follow at a human pace with safety limits, track growth and clean up your account.",
   path: "/",
+  keywords: ["X auto follow Chrome extension", "Twitter auto follow tool", "increase X followers", "follow back score", "Twitter unfollow tool", "X follower growth"],
 });
 
 type Icon = ComponentType<{ size?: number; className?: string }>;
@@ -89,6 +94,7 @@ export default function HomePage() {
   const yearly = getTier("PRO_YEARLY");
   return (
     <>
+      <JsonLd data={[softwareLd, faqLd(faqs)]} />
       {/* HERO */}
       <section className="relative overflow-hidden">
         <div className="bg-grid absolute inset-0" aria-hidden="true" />
@@ -96,14 +102,14 @@ export default function HomePage() {
         <Container className="relative grid items-center gap-14 pb-16 pt-14 sm:pb-24 sm:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
           <div className="text-center lg:text-left">
             <div className="animate-fade-up">
-              <Eyebrow>Chrome extension for X (Twitter)</Eyebrow>
+              <Eyebrow>X (Twitter) auto follow Chrome extension</Eyebrow>
             </div>
             <h1 className="animate-fade-up mt-6 text-[2.6rem] font-extrabold leading-[1.05] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-[4.2rem]">
               Grow your X audience <span className="text-gradient">on autopilot.</span>
             </h1>
             <p className="animate-fade-up mx-auto mt-6 max-w-xl text-lg leading-relaxed text-text-2 [animation-delay:160ms] lg:mx-0">
-              GrowX finds people likely to follow you back, follows them one at a time at a human pace, and shows you exactly
-              what is working. Safety limits are built in.
+              GrowX is a free <strong className="font-semibold text-text">X auto follow</strong> Chrome extension: it finds people likely to
+              follow you back, follows them one at a time at a human pace, and shows you what is working. Safety limits are built in.
             </p>
             <div className="animate-fade-up mt-9 flex flex-col justify-center gap-3 [animation-delay:240ms] sm:flex-row lg:justify-start">
               {site.chromeStoreUrl ? (
@@ -302,6 +308,27 @@ export default function HomePage() {
               </div>
             </div>
           </div>
+        </Container>
+      </Section>
+
+      {/* BLOG */}
+      <Section className="bg-surface-2">
+        <Container>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <SectionHeading eyebrow="Learn more" title="Guides from the developer" />
+            <LinkButton href="/blog" variant="secondary">
+              All articles <IconArrowRight size={16} />
+            </LinkButton>
+          </div>
+          <ul className="mt-10 grid gap-6 md:grid-cols-3">
+            {latestFirst().map((p) => (
+              <li key={p.slug} className="relative"><PostCard post={p} /></li>
+            ))}
+          </ul>
+          <p className="mt-8 text-center text-text-2">
+            New to GrowX? Start with <Link href="/how-it-works" className="font-semibold text-accent hover:underline">how it works</Link> or{" "}
+            <Link href="/about" className="font-semibold text-accent hover:underline">about the project</Link>.
+          </p>
         </Container>
       </Section>
 

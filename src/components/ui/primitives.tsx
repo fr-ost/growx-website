@@ -2,7 +2,9 @@ import type { ComponentProps, ReactNode } from "react";
 import { IconAlert, IconCheck, IconInfo, IconX } from "@/components/icons";
 
 export function Container({ className = "", ...props }: ComponentProps<"div">) {
-  return <div className={`mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 ${className}`} {...props} />;
+  // A caller-supplied max-w-* replaces the default width (both classes would otherwise fight on CSS order).
+  const width = /(^|\s)max-w-/.test(className) ? "" : "max-w-6xl";
+  return <div className={`mx-auto w-full ${width} px-4 sm:px-6 lg:px-8 ${className}`} {...props} />;
 }
 
 export function Section({ className = "", ...props }: ComponentProps<"section">) {
