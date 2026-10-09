@@ -258,7 +258,7 @@ describe("production hardening migration", () => {
     await db.exec("alter table auth.users enable trigger on_auth_user_created");
     expect((await db.query("select 1 from public.profiles where id = '44444444-4444-4444-4444-444444444444'")).rows).toHaveLength(0);
     const dir = path.resolve(import.meta.dirname, "../supabase/migrations");
-    await db.exec(readFileSync(path.join(dir, "20261010000000_production_hardening.sql"), "utf8"));
+    await db.exec(readFileSync(path.join(dir, "20261009193016_production_hardening.sql"), "utf8"));
     expect((await db.query("select 1 from public.profiles where id = '44444444-4444-4444-4444-444444444444'")).rows).toHaveLength(1);
   });
 
@@ -275,5 +275,18 @@ describe("production hardening migration", () => {
       const r = await db.query<{ email: string }>("select email from public.profiles");
       expect(r.rows).toEqual([{ email: "late@example.com" }]);
     });
+  });
+});
+
+describe("advisor follow-ups", () => {
+  it("API roles cannot execute trigger functions, but the signup trigger still works", async () => {
+    for (const role of ["anon", "authenticated"] as const) {
+      for (const fn of ["handle_new_user", "handle_user_email_change", "record_x_username", "touch_updated_at"]) {
+        const r = await db.query<{ ok: boolean }>(`select has_function_privilege('${role}', 'public.${fn}()', 'EXECUTE') as ok`);
+        expect(r.rows[0].ok, `${role} -> ${fn}`).toBe(false);
+      }
+    }
+    await db.exec("insert into auth.users (id, email) values ('66666666-6666-6666-6666-666666666666', 'post@example.com')");
+    expect((await db.query("select 1 from public.profiles where id = '66666666-6666-6666-6666-666666666666'")).rows).toHaveLength(1);
   });
 });

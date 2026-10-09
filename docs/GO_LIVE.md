@@ -11,7 +11,7 @@ The build environment that produced this code cannot reach your live site or das
 - [ ] **Redeploy** after changing any `NEXT_PUBLIC_*` variable (they are baked in at build time).
 
 ## 2. Supabase
-- [ ] **SQL Editor:** run all three files in `supabase/migrations/` in order, then the read-only `supabase/verify.sql` (every row `ok = true`). The Vercel integration does **not** do this for you. Details and troubleshooting: `SUPABASE_PRODUCTION.md`.
+- [ ] **SQL Editor:** run all four files in `supabase/migrations/` in order (already done on production `zyzfufifzitjmwxfqbqx`), then the read-only `supabase/verify.sql` (every row `ok = true`). The Vercel integration does **not** do this for you. Details and troubleshooting: `SUPABASE_PRODUCTION.md`.
 - [ ] **Auth > URL Configuration:**
   - Site URL: `https://www.growxapp.org`
   - Redirect URLs: `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**` (plus your `*.vercel.app` preview URL if you test there). Remove any growxapp.net entries.

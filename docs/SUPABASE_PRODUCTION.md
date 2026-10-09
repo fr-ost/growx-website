@@ -29,16 +29,19 @@ This explains the three production errors, what the code now does about them, an
 - Trial activation reports a reference code when the database or service key is the problem.
 - `src/lib/db/queries.ts` is the single list of columns the app reads; a test checks every one exists in the migrations and is readable by `authenticated`.
 
-## Migrations
-Run in the Supabase SQL Editor of the project Vercel is connected to, **in order**. None of them deletes data.
+## Migrations (applied to production on 2026-10-09)
+Production project: `growx`, ref `zyzfufifzitjmwxfqbqx` (confirmed: the site's Supabase API traffic, including the earlier 404s, comes from this project). Applied through the Supabase MCP `apply_migration` tool, which records them in `supabase_migrations.schema_migrations`. The local file versions match the recorded versions, so `supabase migration list` / `supabase db push` treat them as applied.
 
-| File | Purpose | Notes |
-|---|---|---|
-| `20261009000000_init.sql` | tables, RLS, trial function, signup trigger | **Not re-runnable** (creates triggers/policies). Run once. |
-| `20261009000100_billing_grace_and_early_adopter.sql` | `past_due_since`, early-adopter slots | Run once, after the first. |
-| `20261010000000_production_hardening.sql` | **new**: profile backfill, explicit grants, `ensure_my_profile()` | Idempotent; safe to re-run. |
+| File | Purpose |
+|---|---|
+| `20261009192945_init.sql` | tables, FKs, indexes, RLS + policies, `start_trial()`, signup trigger |
+| `20261009193003_billing_grace_and_early_adopter.sql` | `subscriptions.past_due_since`, `early_adopter_slots`, slot functions |
+| `20261009193016_production_hardening.sql` | profile backfill, explicit grants, `ensure_my_profile()` (idempotent) |
+| `20261009193347_advisor_followups.sql` | revoke API EXECUTE on trigger functions; index `subscriptions.source_payment_id` (idempotent) |
 
-Then run `supabase/verify.sql` (read-only). Every row must show `ok = true`. If a file errors with "already exists", that migration was applied before: skip it and continue with the next.
+Verification run on production after applying: `supabase/verify.sql` 34/34 ok; a rolled-back role test (16/16): users see only their own rows, cannot write trials/subscriptions/payments or call `start_trial`, anon has no access, repeat trials are refused, the signup trigger creates profiles.
+
+For a fresh project (e.g. staging), run the four files in order, then `supabase/verify.sql`. Do not use `db reset` on production.
 
 ## Manual Supabase Dashboard changes
 1. **Authentication > URL Configuration**
@@ -50,7 +53,7 @@ Then run `supabase/verify.sql` (read-only). Every row must show `ok = true`. If 
    - Or keep the default `{{ .ConfirmationURL }}` templates: they work once step 1 is done, but only in the browser that requested the email.
 3. **Authentication > Providers > Email**: Confirm email ON.
 4. **Authentication > SMTP**: configure a real sender (the built-in mailer allows only a few emails per hour and may be rejected by inboxes).
-5. **SQL Editor**: the migrations above, then `verify.sql`.
+5. **Authentication > Attack protection**: enable leaked-password protection (Supabase security advisor warning).
 6. Confirm this is the **same project** as Vercel's `NEXT_PUBLIC_SUPABASE_URL` (Project Settings > API > Project URL).
 
 ## Manual Vercel changes
