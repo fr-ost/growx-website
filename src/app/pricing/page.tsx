@@ -1,84 +1,114 @@
-import { PricingCards } from "@/components/pricing-cards";
 import { TierBadge } from "@/components/feature-lists";
-import { Container, Notice, PageHeader, Section } from "@/components/ui/primitives";
-import { LinkButton } from "@/components/ui/button";
+import { CtaBand } from "@/components/home/cta-band";
+import { Faq } from "@/components/home/faq";
+import { IconCheck, IconInfo } from "@/components/icons";
+import { PricingCards } from "@/components/pricing-cards";
+import { Container, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { featureGroups } from "@/config/features";
 import { TRIAL_DAYS } from "@/config/pricing";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Pricing",
-  description: "Planned GrowX pricing: Free forever, plus Premium monthly, yearly and lifetime. Checkout is not yet available.",
+  description: "GrowX is free forever, with Premium at $1.99/month, $14.99/year or $29.99 lifetime and a 14-day trial. Checkout is coming soon.",
   path: "/pricing",
 });
 
 const faqs = [
-  { q: "Can I buy Premium today?", a: "No. Checkout is not available yet. The prices shown are the planned launch prices and may change before launch." },
-  { q: "Will the free version stay useful?", a: "That is the intention: core features such as the Safe and Balanced autopilot, sources, queue, history, analytics and backup are planned to remain free." },
-  { q: `What about the ${TRIAL_DAYS}-day trial?`, a: `A ${TRIAL_DAYS}-day Premium trial is being prepared for signed-in accounts. It starts only when you choose to start it from your dashboard, and each account can start one.` },
-  { q: "What is the Early Adopter Lifetime offer?", a: "A planned $0.99 lifetime price with permanent Premium access, limited to the first 100 successful, verified purchases. It is not on sale yet. Once the 100 are sold the offer ends and the regular prices apply; no slot counter or countdown is shown." },
-  { q: "Which payment methods are planned?", a: "Cards and other methods through Paddle, and cryptocurrency (USDT and USDC first) through NOWPayments. Neither is connected yet. Failed card renewals are planned to keep Premium for a 3-day grace period; lifetime purchases are unaffected." },
+  { q: "Can I buy Premium today?", a: "Not yet. Checkout is being prepared and no payment can be made on this site today. The prices shown are the planned launch prices." },
+  { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, confirm your email, add your X username and start the trial from your dashboard. It lasts ${TRIAL_DAYS} days, needs no card, and each account and X username can use it once.` },
+  { q: "Will the free version stay useful?", a: "Yes. Core features stay free: the Safe and Balanced autopilot, sources, queue, core filters, history, analytics, backup, the cleanup scan and manual unfollows." },
+  { q: "What is the Early Adopter Lifetime offer?", a: "A $0.99 one-time price for permanent Premium, limited to the first 100 successful, verified purchases. It is not on sale yet. When the 100 are sold, the offer ends and regular prices apply." },
+  { q: "What happens if a renewal payment fails?", a: "Once billing launches, card subscriptions keep Premium for a 3-day grace period after a failed renewal; after that the account returns to Free until a payment succeeds. Lifetime purchases are never affected." },
+  { q: "Which payment methods are planned?", a: "Cards and other methods through Paddle, and cryptocurrency (USDT and USDC first) through NOWPayments." },
 ];
 
 export default function PricingPage() {
   return (
-    <Section>
-      <Container className="space-y-12">
-        <PageHeader eyebrow="Pricing" title="Free forever. Premium when you need more.">
-          These are planned prices. Premium cannot be purchased yet.
-        </PageHeader>
-        <Notice tone="warn" title="Checkout is not yet available">
-          No payment can be made on this site today. Buttons for paid plans are disabled on purpose.
-        </Notice>
-        <PricingCards />
+    <>
+      <PageHero eyebrow="Pricing" title={<>Simple pricing. <span className="text-gradient">Free forever.</span></>}>
+        Start free, try Premium for {TRIAL_DAYS} days, upgrade when it makes sense.
+      </PageHero>
 
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Free vs Premium (proposed)</h2>
-          <p className="mt-2 text-text-2">Based on features that exist in the extension today.</p>
-          <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-surface">
-            <table className="w-full min-w-[34rem] text-left text-sm">
-              <caption className="sr-only">Proposed Free and Premium feature comparison</caption>
-              <thead className="bg-surface-2 text-text-2">
-                <tr>
-                  <th scope="col" className="px-4 py-3 font-semibold">Feature</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Free</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Premium</th>
+      <Section className="pt-14 sm:pt-16">
+        <Container className="space-y-6">
+          <div className="reveal mx-auto flex max-w-2xl items-center gap-3 rounded-2xl border border-warn/25 bg-warn-soft px-5 py-3.5 text-sm text-warn">
+            <IconInfo size={18} className="shrink-0" />
+            <p>
+              <strong>Checkout is coming soon.</strong> Paid plans can&apos;t be purchased yet; prices shown are planned.
+            </p>
+          </div>
+          <div className="pt-6">
+            <PricingCards />
+          </div>
+        </Container>
+      </Section>
+
+      <Section className="bg-surface-2">
+        <Container>
+          <SectionHeading eyebrow="Compare" title="Free vs Premium" center>
+            Premium includes everything in Free.
+          </SectionHeading>
+          <div className="reveal mt-10 overflow-x-auto rounded-2xl border border-border bg-white shadow-[var(--shadow-soft)]">
+            <table className="w-full text-left text-sm sm:min-w-[36rem]">
+              <caption className="sr-only">Free and Premium feature comparison</caption>
+              <thead>
+                <tr className="border-b border-border bg-surface-2">
+                  <th scope="col" className="px-5 py-4 font-bold">Feature</th>
+                  <th scope="col" className="hidden w-28 px-5 py-4 text-center font-bold sm:table-cell">Free</th>
+                  <th scope="col" className="hidden w-28 px-5 py-4 text-center font-bold text-accent sm:table-cell">Premium</th>
                 </tr>
               </thead>
-              <tbody>
-                {featureGroups.flatMap((g) =>
-                  g.features.map((f) => (
-                    <tr key={f.id} className="border-t border-border align-top">
-                      <th scope="row" className="px-4 py-3 font-medium">
-                        {f.title}
-                        <span className="mt-0.5 block text-xs font-normal text-muted">{f.description}</span>
+              {featureGroups.map((g) => (
+                <tbody key={g.id}>
+                  <tr className="bg-tint">
+                    <th colSpan={3} scope="colgroup" className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-accent">
+                      {g.title}
+                    </th>
+                  </tr>
+                  {g.features.map((f) => (
+                    <tr key={f.id} className="border-t border-border align-top transition-colors hover:bg-surface-2">
+                      <th scope="row" className="px-5 py-4 font-semibold">
+                        <span className="flex flex-wrap items-center gap-2">
+                          {f.title} <span className="sm:hidden"><TierBadge tier={f.tier} /></span>
+                        </span>
+                        <span className="mt-1 block text-xs font-normal leading-relaxed text-muted">{f.description}</span>
                       </th>
-                      <td className="px-4 py-3">{f.tier === "free" ? <TierBadge tier="free" /> : <span className="text-muted">-</span>}</td>
-                      <td className="px-4 py-3">
-                        <span className="text-ok" aria-label="Included">Included</span>
+                      <td className="hidden px-5 py-4 text-center sm:table-cell">
+                        {f.tier === "free" ? (
+                          <>
+                            <IconCheck size={20} className="mx-auto text-ok" />
+                            <span className="sr-only">Included</span>
+                          </>
+                        ) : (
+                          <>
+                            <span aria-hidden="true" className="text-muted">-</span>
+                            <span className="sr-only">Not included</span>
+                          </>
+                        )}
+                      </td>
+                      <td className="hidden px-5 py-4 text-center sm:table-cell">
+                        <IconCheck size={20} className="mx-auto text-accent" />
+                        <span className="sr-only">Included</span>
                       </td>
                     </tr>
-                  )),
-                )}
-              </tbody>
+                  ))}
+                </tbody>
+              ))}
             </table>
           </div>
-          <p className="mt-3 text-xs text-muted">Premium includes everything in Free. The split is a proposal and is not enforced anywhere yet.</p>
-        </div>
+        </Container>
+      </Section>
 
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Questions</h2>
-          <dl className="mt-6 grid gap-6 md:grid-cols-2">
-            {faqs.map((f) => (
-              <div key={f.q}>
-                <dt className="font-semibold">{f.q}</dt>
-                <dd className="mt-1.5 text-sm text-text-2">{f.a}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <LinkButton href="/signup">Create a free account</LinkButton>
-      </Container>
-    </Section>
+      <Section>
+        <Container className="max-w-3xl">
+          <SectionHeading eyebrow="FAQ" title="Pricing questions" center />
+          <div className="reveal mt-10">
+            <Faq items={faqs} />
+          </div>
+        </Container>
+      </Section>
+      <CtaBand />
+    </>
   );
 }

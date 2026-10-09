@@ -14,18 +14,20 @@ npm run dev                  # http://localhost:3000
 ```
 Without Supabase variables the public pages still work; auth pages show a "not configured" notice and protected routes redirect to `/login`.
 
-Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
+Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build` · `npm run test:e2e` (builds the app against a local mock Supabase and runs ~100 browser checks with Playwright; needs a Chromium, set `CHROMIUM_PATH` if it is not auto-detected).
 
 ## Supabase setup
 1. Create a project at supabase.com.
 2. **Database:** apply every file in `supabase/migrations/` in order (`..._init.sql`, then `..._billing_grace_and_early_adopter.sql`) (SQL Editor, or `supabase db push` with the Supabase CLI linked to your project).
 3. **Auth > Providers > Email:** enable, and turn **Confirm email** ON.
-4. **Auth > URL Configuration:** Site URL = your site URL; add Redirect URLs `http://localhost:3000/auth/callback` and `https://YOUR-DOMAIN/auth/callback`.
+4. **Auth > URL Configuration:** Site URL `https://www.growxapp.org`; Redirect URLs `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**`. For cross-device email links, use the email templates in `docs/GO_LIVE.md`.
 5. **Google (optional):** create an OAuth client in Google Cloud, set its redirect URI to the callback URL shown in Supabase > Auth > Providers > Google, enable the provider, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
 6. Copy **Project URL**, **publishable (anon) key** and **service_role key** (Settings > API) into your env. The service role key is a server secret: never prefix it with `NEXT_PUBLIC_`, never commit it.
 7. Review `docs/SECURITY.md` (SMTP, CAPTCHA, password rules) before inviting real users.
 
 ## Deploy to Vercel
+See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification checklist; `GET /api/health` reports whether Supabase Auth, the service key and the migrations are working.
+
 1. Import the repo into Vercel (framework: Next.js; defaults are fine).
 2. Add the environment variables below for Production (and Preview if wanted). Mark `SUPABASE_SERVICE_ROLE_KEY` as sensitive.
 3. Set `NEXT_PUBLIC_SITE_URL` to the final https URL, update Supabase Site/Redirect URLs, redeploy.
@@ -34,10 +36,10 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 ## Configuration checklist
 | Variable | Required | Scope | Notes |
 |---|---|---|---|
-| `NEXT_PUBLIC_SITE_URL` | yes | public | `https://www.growxapp.net` in production |
+| `NEXT_PUBLIC_SITE_URL` | yes | public | `https://www.growxapp.org` in production |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | public | |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | public | anon/publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | for trials | **server secret** | only used by trial activation |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`) | yes | public | anon/publishable key; the Vercel Supabase integration names work |
+| `SUPABASE_SERVICE_ROLE_KEY` (or `SUPABASE_SECRET_KEY`) | for trials | **server secret** | trial activation and `/api/health` |
 | `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED` | no | public | `true` only after enabling Google in Supabase |
 | `NEXT_PUBLIC_CHROME_STORE_URL` | no | public | defaults to the official listing |
 | `NEXT_PUBLIC_SUPPORT_EMAIL` | no | public | shown on /contact |
@@ -57,8 +59,7 @@ Scripts: `npm run lint` · `npm run typecheck` · `npm test` · `npm run build`.
 
 ## Known limitations
 - Legal pages are unreviewed drafts (owner name and city are filled in; governing law, retention and refund terms are still placeholders).
-- No account deletion, rate limiting or CSP yet (listed in `docs/SECURITY.md`).
+- Account deletion is manual (deliberate: deleting would also delete trial records and allow repeat trials, and payment records must be retained). No app-level rate limiting yet: use Vercel Firewall (see GO_LIVE.md). A production CSP is set but allows inline scripts (Next.js hydration) (listed in `docs/SECURITY.md`).
 - Trial abuse is mitigated, not eliminated (self-reported usernames cannot prove ownership).
 - RLS/migration tests run on PGlite, not a real Supabase instance.
 - The Free/Premium split is a proposal and is not enforced anywhere.
-- The OG image is the 128px logo; a dedicated 1200x630 image is not made yet.

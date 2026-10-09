@@ -18,31 +18,25 @@ export const metadata: Metadata = {
     title: `${site.name} - ${site.tagline}`,
     description: site.description,
     url: "/",
-    images: [{ url: "/icon.png", width: 128, height: 128, alt: "GrowX logo" }],
   },
-  twitter: { card: "summary", title: `${site.name} - ${site.tagline}`, description: site.description },
-  icons: { icon: "/icon.png" },
+  twitter: { card: "summary_large_image", title: `${site.name} - ${site.tagline}`, description: site.description },
+  icons: { icon: "/icon.png", apple: "/icon.png" },
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fff7f8" },
-    { media: "(prefers-color-scheme: dark)", color: "#0c0608" },
-  ],
-};
+export const viewport: Viewport = { themeColor: "#ffffff", colorScheme: "light" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
-      <body className="flex min-h-dvh flex-col">
+      <body className="flex min-h-dvh flex-col overflow-x-clip">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-contrast"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-accent focus:px-4 focus:py-2 focus:text-white"
         >
           Skip to content
         </a>
         <SiteHeader />
-        <main id="main" className="flex-1">
+        <main id="main" className="flex flex-1 flex-col">
           {children}
         </main>
         <SiteFooter />

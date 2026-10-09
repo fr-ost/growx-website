@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         privacy policy inside the extension; this page covers the website and the optional account system.
       </p>
       <h2>Who is responsible</h2>
-      <p>{site.legalName}, {site.legalAddress}. Contact: see the Contact page.</p>
+      <p>{site.legalName}, {site.legalAddress}. Contact: <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a>.</p>
       <h2>What the website collects</h2>
       <ul>
         <li>Account data: your email address and a password hash or Google sign-in identifier, handled by Supabase Auth.</li>

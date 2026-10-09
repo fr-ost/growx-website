@@ -6,7 +6,7 @@ Browser ──> Next.js 16 (Vercel)
               ├─ Auth pages: /login, /signup  (Server Actions -> Supabase Auth)
               ├─ Protected pages (dynamic): /dashboard, /account
               ├─ src/proxy.ts  (refreshes Supabase session cookies; redirects signed-out users)
-              └─ Route handlers: /api/entitlement, /auth/callback, /auth/signout
+              └─ Route handlers: /api/entitlement, /api/health, /auth/callback (OAuth/PKCE), /auth/confirm (email token links), /auth/signout
 Extension (later) ──Bearer token──> /api/entitlement
 Next.js server ──> Supabase (Postgres + Auth). Service role key only on the server.
 ```

@@ -2,9 +2,9 @@
 
 ## Decided by the owner
 - Legal name: **Shahriar Ahmed Tushar**; address: **Rajshahi, Bangladesh** (used in the privacy/terms drafts).
-- Production domain: **https://www.growxapp.net** (default `site.url`; still set `NEXT_PUBLIC_SITE_URL` in Vercel).
+- Production domain: **https://www.growxapp.org** (default `site.url`; still set `NEXT_PUBLIC_SITE_URL` in Vercel).
 - Chrome Web Store: https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh (extension ID `ofiancichfcakbdgekhcahflpoglfgbh`; origin `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh`; OAuth redirect `https://ofiancichfcakbdgekhcahflpoglfgbh.chromiumapp.org/`).
-- Support email: support@growxapp.net. Grace period, early-adopter and provider decisions: see `PRODUCT_REQUIREMENTS.md`.
+- Support email: support@growxapp.org (moved with the domain change from .net; make sure the mailbox exists). Grace period, early-adopter and provider decisions: see `PRODUCT_REQUIREMENTS.md`.
 - Business model: **freemium with a 14-day trial**. Not 100% free any more; **no grandfathering**: all users get the same experience after the extension update.
 - The trial **requires an X username** (abuse reduction) and a confirmed email.
 
