@@ -28,10 +28,6 @@ const nextConfig: NextConfig = {
     const headers = process.env.NODE_ENV === "production" ? [...securityHeaders, { key: "Content-Security-Policy", value: csp }] : securityHeaders;
     return [{ source: "/:path*", headers }];
   },
-  async redirects() {
-    // Canonical host is www; send the bare domain there.
-    return [{ source: "/:path*", has: [{ type: "host", value: "growxapp.net" }], destination: "https://www.growxapp.net/:path*", permanent: true }];
-  },
 };
 
 export default nextConfig;

@@ -1,30 +1,51 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { IconChrome, IconMail } from "@/components/icons";
 import { Container } from "@/components/ui/primitives";
+import { site } from "@/config/site";
 
 const cols = [
-  { title: "Product", links: [{ href: "/features", label: "Features" }, { href: "/pricing", label: "Pricing" }] },
-  { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/signup", label: "Sign up" }, { href: "/dashboard", label: "Dashboard" }] },
-  { title: "Company", links: [{ href: "/contact", label: "Contact" }, { href: "/privacy", label: "Privacy (draft)" }, { href: "/terms", label: "Terms (draft)" }] },
+  { title: "Product", links: [{ href: "/features", label: "Features" }, { href: "/pricing", label: "Pricing" }, { href: "/signup", label: "Start free" }] },
+  { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/dashboard", label: "Dashboard" }, { href: "/account", label: "Account" }] },
+  { title: "Company", links: [{ href: "/contact", label: "Support" }, { href: "/privacy", label: "Privacy policy" }, { href: "/terms", label: "Terms of service" }] },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-surface">
-      <Container className="grid gap-10 py-12 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+    <footer className="relative mt-auto border-t border-border bg-surface-2">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" aria-hidden="true" />
+      <Container className="grid gap-10 py-14 md:grid-cols-[1.6fr_repeat(3,1fr)]">
         <div>
           <Logo />
-          <p className="mt-3 max-w-xs text-sm text-muted">
-            GrowX is an independent Chrome extension. It is not affiliated with or endorsed by X Corp.
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
+            Smart, safety-first growth tools for X, right inside Chrome. GrowX is independent and not affiliated with or endorsed by X Corp.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {site.chromeStoreUrl ? (
+              <a
+                href={site.chromeStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold hover:border-accent/40 hover:text-accent"
+              >
+                <IconChrome size={16} /> Chrome Web Store
+              </a>
+            ) : null}
+            <a
+              href={`mailto:${site.supportEmail}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold hover:border-accent/40 hover:text-accent"
+            >
+              <IconMail size={16} /> Email us
+            </a>
+          </div>
         </div>
         {cols.map((c) => (
           <nav key={c.title} aria-label={c.title}>
-            <h2 className="text-sm font-semibold">{c.title}</h2>
-            <ul className="mt-3 space-y-2">
+            <h2 className="text-sm font-bold text-text">{c.title}</h2>
+            <ul className="mt-4 space-y-3">
               {c.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-text-2 hover:text-text hover:underline">
+                  <Link href={l.href} className="text-sm text-text-2 transition-colors hover:text-accent">
                     {l.label}
                   </Link>
                 </li>
@@ -33,8 +54,11 @@ export function SiteFooter() {
           </nav>
         ))}
       </Container>
-      <div className="border-t border-border py-5 text-center text-xs text-muted">
-        &copy; {new Date().getFullYear()} GrowX. Pricing shown is planned; checkout is not yet available.
+      <div className="border-t border-border">
+        <Container className="flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted sm:flex-row">
+          <p>&copy; {new Date().getFullYear()} GrowX · {site.legalName}</p>
+          <p>Premium checkout is not available yet. Prices shown are planned.</p>
+        </Container>
       </div>
     </footer>
   );

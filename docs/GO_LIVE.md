@@ -1,35 +1,44 @@
-# Go-live checklist (Vercel + Supabase)
+# Go-live checklist (Vercel + Supabase) - www.growxapp.org
 
-Work through these in order. Nothing here was verified against your live project by the code authors (the build environment cannot reach it); the `/api/health` endpoint lets you verify the key parts yourself.
+The build environment that produced this code cannot reach your live site or dashboards, so these steps are for you to run. `GET https://www.growxapp.org/api/health` tells you whether the important parts are wired up.
 
-## 1. Supabase
-- [ ] Apply **both** migrations in `supabase/migrations/` in order (SQL Editor, or `supabase db push`).
-- [ ] Auth > Providers > Email: enabled, **Confirm email ON**.
-- [ ] Auth > URL Configuration: Site URL `https://www.growxapp.net`; Redirect URLs: `https://www.growxapp.net/auth/callback`, `http://localhost:3000/auth/callback`.
-- [ ] Auth > SMTP: configure a real provider (the default mailer allows only a few emails per hour, so sign-ups will fail to receive mail under load). Set sender `support@growxapp.net` or a no-reply on your domain, and add SPF/DKIM DNS records.
-- [ ] Auth > Attack protection: enable CAPTCHA (Turnstile/hCaptcha) and leaked-password protection; set minimum password length 8+.
-- [ ] (Optional) Google provider, then set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
+## 1. Vercel
+- [ ] **Domains:** add `www.growxapp.org` and `growxapp.org`. Make one primary and let Vercel redirect the other (the app itself does not redirect between hosts, so there is no redirect loop).
+- [ ] **Environment variables (Production):**
+  - `NEXT_PUBLIC_SITE_URL=https://www.growxapp.org` (**update it if it still says growxapp.net**; it is used for metadata, sitemap and robots).
+  - Supabase: the Vercel Supabase integration's variables work as-is (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`). The names in `.env.example` (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`) also work.
+  - Optional: `NEXT_PUBLIC_SUPPORT_EMAIL` (defaults to support@growxapp.org), `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true` (after enabling Google in Supabase), `BILLING_GRACE_DAYS_CARD=3`, `BILLING_GRACE_DAYS_CRYPTO=0`.
+- [ ] **Redeploy** after changing any `NEXT_PUBLIC_*` variable (they are baked in at build time).
 
-## 2. Vercel environment variables (Production)
-`NEXT_PUBLIC_SITE_URL=https://www.growxapp.net`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (sensitive), `BILLING_GRACE_DAYS_CARD=3`, `BILLING_GRACE_DAYS_CRYPTO=0`. `NEXT_PUBLIC_*` values are inlined at build time, so **redeploy** after changing them.
+## 2. Supabase
+- [ ] **SQL Editor:** run both files in `supabase/migrations/` in order (`..._init.sql`, then `..._billing_grace_and_early_adopter.sql`). The Vercel integration does **not** do this for you.
+- [ ] **Auth > URL Configuration:**
+  - Site URL: `https://www.growxapp.org`
+  - Redirect URLs: `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**` (plus your `*.vercel.app` preview URL if you test there). Remove any growxapp.net entries.
+- [ ] **Auth > Providers > Email:** enabled; **Confirm email ON**.
+- [ ] **Auth > Email Templates (recommended):** so confirmation and reset links work even when opened in a different browser or on a phone, change the link in:
+  - *Confirm signup*: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/dashboard`
+  - *Reset password*: `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password`
+  (The default templates also work, but only in the same browser that requested the email; otherwise users are told their email is confirmed and asked to log in.)
+- [ ] **Auth > SMTP:** set up a real provider and send from your domain (e.g. no-reply@growxapp.org) with SPF/DKIM. The built-in mailer sends only a few emails per hour.
+- [ ] **Auth > Attack protection:** CAPTCHA and leaked-password protection; minimum password length 8+.
+- [ ] (Optional) Google provider, callback URL as shown by Supabase.
 
-## 3. Domain
-- [ ] Vercel > Domains: `www.growxapp.net` is the primary; the bare `growxapp.net` redirects to it (the app also redirects it).
-- [ ] HTTPS certificate issued.
+## 3. Email
+- [ ] Make sure `support@growxapp.org` exists and receives mail (it is shown on the site and in the legal drafts).
 
-## 4. Verify (replace the domain)
-1. `https://www.growxapp.net/api/health` must return `{"ok":true,"auth":"ok","database":"ok"}`. `database: failed` usually means a migration is missing or the service-role key is wrong.
-2. Sign up with a real email, click the confirmation link, log in.
-3. Dashboard: save an X username, start the 14-day trial; the plan should show "Premium trial" with an expiry 14 days out. Try starting again: it must be refused.
-4. `/api/entitlement` in the same browser returns `plan: "TRIAL"`. In a private window it returns 401.
-5. A second account using the same X username must be refused a trial.
-6. Forgot password: request a reset, follow the link, set a new password.
-7. In Supabase Table Editor confirm rows appeared in `profiles`, `x_profiles`, `x_profile_history`, `trials`.
-8. Share a link and check the preview (Open Graph image `/opengraph-image`).
+## 4. Verify
+1. `https://www.growxapp.org/api/health` returns `{"ok":true,"auth":"ok","database":"ok"}`.
+   - `auth: "not_configured"`: Supabase URL/key env vars missing; redeploy after adding them.
+   - `database: "failed"`: migrations not run, or the service-role key is wrong.
+2. Sign up with a real email, open the confirmation link, log in.
+3. Dashboard: save your X username, start the trial; the plan card shows "Premium trial" with 14 days left. Pressing start again (or using the same username on a second account) is refused.
+4. `https://www.growxapp.org/api/entitlement` in the same browser returns `"plan":"TRIAL"`; in a private window it returns 401.
+5. Forgot password: request a reset link, follow it, set a new password.
+6. Supabase Table Editor shows rows in `profiles`, `x_profiles`, `x_profile_history`, `trials`.
 
-## 5. Still needed before charging money
-- Vercel Firewall rate-limit rules for `/api/*`, `/login`, `/signup`, `/forgot-password` (suggested: 20 requests/minute/IP on `/api/entitlement`, 10/minute on auth pages).
+## 5. Before charging money
+- Vercel Firewall rate limits for `/api/*`, `/login`, `/signup`, `/forgot-password`.
 - Legal review of `/privacy` and `/terms`.
-- Paddle / NOWPayments integration, verified webhooks, and end-to-end tests (not built; see `PAYMENTS.md`).
+- Paddle / NOWPayments integration with verified webhooks and end-to-end tests (see `PAYMENTS.md`).
 - Extension update (see `EXTENSION_INTEGRATION.md`).
-- Remaining items in `SECURITY.md`.

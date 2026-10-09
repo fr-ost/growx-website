@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabasePublicConfig } from "@/lib/env";
+import { getSupabasePublicConfig, getSupabaseServiceKey } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export async function GET() {
       auth = "failed";
     }
   }
-  if (cfg && process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
+  if (cfg && getSupabaseServiceKey()) {
     try {
       const { error } = await createAdminClient().rpc("early_adopter_available");
       database = error ? "failed" : "ok";

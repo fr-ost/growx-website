@@ -37,7 +37,7 @@ export default function TermsPage() {
       <h2>9. Governing law</h2>
       <p>[Governing law and venue to be decided.]</p>
       <h2>10. Changes and contact</h2>
-      <p>We may update these terms; material changes will be announced. See the Contact page for support.</p>
+      <p>We may update these terms; material changes will be announced. Contact: <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a>.</p>
     </LegalPage>
   );
 }
