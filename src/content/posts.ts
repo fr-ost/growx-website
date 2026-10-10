@@ -186,7 +186,7 @@ export const posts: Post[] = [
         blocks: [
           {
             type: "p",
-            text: "Settings, sources, the queue and history are stored locally in your browser (`chrome.storage`). GrowX talks to x.com using your existing session and does not upload your X data. The extension can send anonymous usage counts (a random install ID, the version and a coarse bucket of follows done) which you can switch off in Settings. You can export a backup file at any time. Read the [privacy policy draft](/privacy) for the website's data handling.",
+            text: "Settings, sources, the queue and history are stored locally in your browser (`chrome.storage`). GrowX talks to x.com using your existing session and does not upload your X data. The extension can send anonymous usage counts (a random install ID, the version and a coarse bucket of follows done) which you can switch off in Settings. You can export a backup file at any time. Read the [privacy policy](/privacy) for the website's data handling.",
           },
         ],
       },
@@ -486,7 +486,7 @@ export const posts: Post[] = [
               "**Safety is never a Premium feature.** The emergency stop, adaptive slow-down, follow verification, active hours and warm-up stay available to everyone.",
               "**Server-side decisions.** Plan checks are made by the server from verified records, never from a flag the browser sends. Paid access is only granted after a payment provider's verified confirmation.",
               "**No fake numbers.** No invented testimonials, counts or countdowns. When the Early Adopter offer exists, it will not show a made-up \"slots left\" ticker.",
-              "**Your data stays yours.** The extension keeps your X data in your browser; account features on this site store only what accounts and billing need, as described in the [privacy policy draft](/privacy).",
+              "**Your data stays yours.** The extension keeps your X data in your browser; account features on this site store only what accounts and billing need, as described in the [privacy policy](/privacy).",
             ],
           },
           {

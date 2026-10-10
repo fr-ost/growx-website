@@ -3,16 +3,16 @@ import { LegalPage } from "@/components/legal";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Privacy Policy (draft)",
-  description: "Draft privacy policy for the GrowX website. Requires review before launch.",
+  title: "Privacy Policy",
+  description: "How the GrowX website handles personal data: accounts, trials, payments and your rights.",
   path: "/privacy",
 });
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Privacy Policy (draft)" updated="October 2026">
+    <LegalPage title="Privacy Policy" updated="October 2026">
       <p>
-        This draft describes how the GrowX website handles personal data. The GrowX Chrome extension has its own
+        This policy describes how the GrowX website handles personal data. The GrowX Chrome extension has its own
         privacy policy inside the extension; this page covers the website and the optional account system.
       </p>
       <h2>Who is responsible</h2>
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <li>Account data: your email address and a password hash or Google sign-in identifier, handled by Supabase Auth.</li>
         <li>An X username, only if you choose to enter it. It is self-reported and is not verified as belonging to you.</li>
         <li>Trial records: when a trial started and when it ends.</li>
-        <li>Planned: subscription and payment records (plan, status, amount, currency, provider reference IDs) once payments exist. Card and wallet details are handled by the payment provider and are not stored by GrowX.</li>
+        <li>Subscription and payment records (plan, status, amount, currency, provider reference IDs). Card and wallet details are handled by the payment provider and are not stored by GrowX.</li>
         <li>Technical data such as IP address and request logs processed by the hosting provider.</li>
       </ul>
       <h2>What the website does not collect</h2>
@@ -34,24 +34,23 @@ export default function PrivacyPage() {
       <ul>
         <li>To provide sign-in, your dashboard and plan information.</li>
         <li>To limit each account to one free trial and prevent abuse.</li>
-        <li>Planned: to process purchases, issue access and handle refunds and support.</li>
+        <li>To process purchases, issue access and handle refunds and support.</li>
       </ul>
       <h2>Service providers</h2>
       <p>
         Supabase (database and authentication) and Vercel (hosting) process data on our behalf. Google processes
-        sign-in data if you use Google sign-in. Paddle and NOWPayments are planned payment providers and are not
-        connected yet. [Data regions and processor agreements to be confirmed.]
+        sign-in data if you use Google sign-in. Paddle (card payments, as merchant of record) and NOWPayments (crypto payments) process payments; they receive the data needed to take payment and send us only payment status and reference IDs. These providers may process data outside your country.
       </p>
       <h2>Retention and your rights</h2>
       <p>
-        [Retention periods to be defined.] Depending on where you live you may have rights to access, correct or
+        We keep account data while your account exists. Trial and payment records are kept as long as needed for fraud prevention, accounting and legal obligations (typically up to 7 years for payment records). Depending on where you live you may have rights to access, correct or
         delete your data. Account deletion is not yet self-service; contact us to request it. Trial and payment
         records may be retained where needed for fraud prevention and accounting.
       </p>
       <h2>Cookies</h2>
-      <p>The website uses strictly necessary cookies to keep you signed in. It does not currently use advertising cookies. [Confirm if analytics are added.]</p>
+      <p>The website uses strictly necessary cookies to keep you signed in. It does not currently use advertising cookies. If that changes we will update this policy.</p>
       <h2>Changes</h2>
-      <p>We will update this policy before launch and when practices change.</p>
+      <p>We will update this policy when our practices change and show the date above.</p>
     </LegalPage>
   );
 }

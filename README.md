@@ -63,7 +63,7 @@ See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification c
 - [`docs/DECISIONS_NEEDED.md`](docs/DECISIONS_NEEDED.md): business details I need from you
 
 ## Known limitations
-- Legal pages are unreviewed drafts (owner name and city are filled in; governing law, retention and refund terms are still placeholders).
+- Legal pages are published with default wording chosen by the assistant (14-day refunds, Bangladesh law, 12-month liability cap) and have not been reviewed by a lawyer; adjust them in `src/app/{terms,privacy,refund-policy}`.
 - Account deletion is manual (deliberate: deleting would also delete trial records and allow repeat trials, and payment records must be retained). No app-level rate limiting yet: use Vercel Firewall (see GO_LIVE.md). A production CSP is set but allows inline scripts (Next.js hydration) (listed in `docs/SECURITY.md`).
 - Trial abuse is mitigated, not eliminated (self-reported usernames cannot prove ownership).
 - RLS/migration tests run on PGlite, not a real Supabase instance.

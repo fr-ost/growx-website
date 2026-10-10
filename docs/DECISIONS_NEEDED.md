@@ -10,7 +10,7 @@
 - The trial **requires an X username** (abuse reduction) and a confirmed email.
 
 ## Still open
-- [ ] Lawyer review of `/privacy` and `/terms`; governing law/venue; refund policy; meaning of "lifetime"; early-adopter terms; data retention periods.
+- [ ] Lawyer review of the now-published `/privacy`, `/terms`, `/refund-policy`. Defaults used: 14-day refunds, "lifetime" = while Premium is offered, Bangladesh law/Rajshahi courts, 12-month liability cap, 7-year payment-record retention. Change if you disagree.
 - [ ] Confirm the Free/Premium split in `docs/FEATURE_SPLIT.md` (you said details are given and the extension is being updated aside; keep both in sync) and any cap on source profiles.
 - [ ] Confirm Paddle's actual retry/dunning schedule so the 3-day grace matches it; confirm NOWPayments recurring behaviour (crypto grace is 0 until then).
 - [ ] Early adopter defaults to confirm: over-cap paid purchases are auto-refunded; refunds do not free a slot.
