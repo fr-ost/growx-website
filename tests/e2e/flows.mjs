@@ -11,7 +11,7 @@ const ok = (name, cond, extra = "") => { results.push(`${cond ? "PASS" : "FAIL"}
 const b = await chromium.launch({ executablePath });
 
 // ---------- public crawl, desktop + mobile
-const pages = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact", "/privacy", "/terms", "/login", "/signup", "/forgot-password", "/does-not-exist"];
+const pages = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
 const links = new Set();
 for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile", { width: 375, height: 780 }]]) {
   const ctx = await b.newContext({ viewport: vp });

@@ -27,8 +27,8 @@ export default function TermsPage() {
       <p>GrowX uses a freemium model: a Free plan plus paid Premium plans. A 14-day Premium trial may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
       <h2>6. Premium and payments (planned)</h2>
       <p>
-        Premium plans (monthly, yearly, lifetime) are planned and cannot be purchased yet. [Billing terms, taxes,
-        refund policy, the definition of &quot;lifetime&quot; and early-adopter terms to be written before checkout launches.]
+        Premium plans (monthly, yearly, lifetime) are not yet on sale. See the <a href="/refund-policy">Refund Policy</a>. [Billing terms, taxes,
+        the definition of &quot;lifetime&quot; and early-adopter terms to be written before checkout launches.]
       </p>
       <h2>7. Acceptable use</h2>
       <p>Do not abuse the service, attempt to bypass plan limits, interfere with the API, or use GrowX for spam or unlawful activity.</p>
