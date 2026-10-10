@@ -105,7 +105,7 @@ describe("schema + RLS", () => {
 });
 
 describe("trial creation", () => {
-  const start = (uid: string) => db.query<{ started_at: string; expires_at: string }>(`select * from public.start_trial('${uid}', 14)`);
+  const start = (uid: string) => db.query<{ started_at: string; expires_at: string }>(`select * from public.start_trial('${uid}', 30)`);
 
   it("requires an X username", async () => {
     await as("service_role", null, async () => {
@@ -113,12 +113,12 @@ describe("trial creation", () => {
     });
   });
 
-  it("starts a 14-day trial using the database clock", async () => {
+  it("starts a 30-day trial using the database clock", async () => {
     await as("service_role", null, async () => {
       const r = await start(A);
       const t = r.rows[0];
       const days = (new Date(t.expires_at).getTime() - new Date(t.started_at).getTime()) / 86400000;
-      expect(days).toBeCloseTo(14, 3);
+      expect(days).toBeCloseTo(30, 3);
     });
   });
 

@@ -12,7 +12,7 @@ export const metadata = pageMetadata({ title: "Sign up", description: "Create a 
 export default async function SignupPage() {
   if (await getCurrentUser()) redirect("/dashboard");
   return (
-    <AuthShell title="Create your free account" subtitle="No payment details needed. Start your 14-day Premium trial from the dashboard whenever you are ready.">
+    <AuthShell title="Create your free account" subtitle="No credit card needed. Start your 30-day Premium trial (every Premium feature, no commitment) from the dashboard whenever you are ready.">
       <GoogleButton />
       <AuthForm mode="signup" action={signupAction} disabled={!isSupabaseConfigured()} />
     </AuthShell>

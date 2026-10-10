@@ -46,7 +46,7 @@ export function StartTrialForm({ disabled }: { disabled: boolean }) {
       {state.message ? <Notice tone={state.ok ? "success" : "error"}>{state.message}</Notice> : null}
       <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={pending || disabled} aria-busy={pending}>
         {pending ? <Spinner /> : null}
-        {pending ? "Starting..." : "Start my 14-day Premium trial"}
+        {pending ? "Starting..." : "Start my 30-day Premium trial"}
       </Button>
     </form>
   );

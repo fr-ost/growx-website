@@ -13,7 +13,7 @@ export default function RefundPolicyPage() {
     <LegalPage title="Refund Policy" updated="October 2026">
       <p>This policy explains how refunds and cancellations work for GrowX Premium.</p>
       <h2>1. Plans covered</h2>
-      <p>Monthly ($1.99), yearly ($14.99), lifetime ($29.99) and the limited Early Adopter lifetime offer ($0.99). The free plan and the 14-day trial cost nothing and need no refund.</p>
+      <p>Monthly ($1.99), yearly ($14.99), lifetime ($29.99) and the limited Early Adopter lifetime offer ($0.99). The free plan and the 30-day trial cost nothing and need no refund.</p>
       <h2>2. Cancelling</h2>
       <p>Monthly and yearly plans are prepaid and never renew automatically, so there is nothing to cancel: Premium simply ends when the period you paid for ends.</p>
       <h2>3. Refund requests</h2>

@@ -96,7 +96,7 @@ export function visibleTiers(status: EarlyAdopterStatus = "unavailable"): readon
   return status === "sold_out" ? pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME") : pricingTiers;
 }
 
-export const TRIAL_DAYS = 14;
+export const TRIAL_DAYS = 30;
 
 export function getTier(id: PricingTierId): PricingTier {
   const tier = pricingTiers.find((t) => t.id === id);

@@ -66,6 +66,6 @@ For a fresh project (e.g. staging), run all five files in order, then `supabase/
 1. `https://www.growxapp.org/api/health` → `"ok": true`, every entry in `tables` and `functions` is `"ok"`, `warnings` is empty.
 2. Sign up with a new address: the email link must start with your Supabase URL and contain `redirect_to=https://www.growxapp.org/...` (default template) or start with `https://www.growxapp.org/auth/confirm` (custom template). Never localhost.
 3. Log in: dashboard shows **Free** and no red banner; Account shows "No payments yet".
-4. Save X username, start trial: plan becomes "Premium trial", 14 days. Starting again is refused.
+4. Save X username, start trial: plan becomes "Premium trial", 30 days. Starting again is refused.
 5. Forgot password → link → new password → dashboard.
 6. If anything fails, the red message shows a reference such as `trials/table_missing (PGRST205)`; Vercel > Logs shows the matching `db_query_failed` line.

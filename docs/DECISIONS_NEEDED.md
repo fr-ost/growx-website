@@ -6,7 +6,7 @@
 - Chrome Web Store: https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh (extension ID `ofiancichfcakbdgekhcahflpoglfgbh`; origin `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh`; OAuth redirect `https://ofiancichfcakbdgekhcahflpoglfgbh.chromiumapp.org/`).
 - Support email: support@growxapp.org (moved with the domain change from .net; make sure the mailbox exists). Grace period, early-adopter and provider decisions: see `PRODUCT_REQUIREMENTS.md`.
 - Public people/credits: only **Shahriar Ahmed** appears on the site (contact, copyright, About, structured data). The legal drafts still use the full legal name "Shahriar Ahmed Tushar".
-- Business model: **freemium with a 14-day trial**. Not 100% free any more; **no grandfathering**: all users get the same experience after the extension update.
+- Business model: **freemium with a 30-day trial**. Not 100% free any more; **no grandfathering**: all users get the same experience after the extension update.
 - The trial **requires an X username** (abuse reduction) and a confirmed email.
 
 ## Still open

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { TRIAL_DAYS } from "@/config/pricing";
 import { isLocalUrl, PRODUCTION_URL, site } from "@/config/site";
 import { classifyDbError, type DbErrorKind } from "@/lib/db/errors";
 import { COLUMNS } from "@/lib/db/queries";
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
       functions.early_adopter_available = ea.error ? classifyDbError(ea.error) : "ok";
       const es = await admin.rpc("early_adopter_state");
       functions.early_adopter_state = es.error ? classifyDbError(es.error) : "ok"; // billing migration present
-      const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: 14 });
+      const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: TRIAL_DAYS });
       functions.start_trial = st.error && /x_username_required/.test(st.error.message ?? "") ? "ok" : st.error ? classifyDbError(st.error) : "unknown";
       const allOk = [...Object.values(tables), ...Object.values(functions)].every((s) => s === "ok");
       database = allOk ? "ok" : "failed";

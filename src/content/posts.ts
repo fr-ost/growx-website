@@ -196,7 +196,7 @@ export const posts: Post[] = [
         blocks: [
           {
             type: "p",
-            text: "GrowX is free to install from the Chrome Web Store, and you can [create a free account](/signup) to try the 14-day Premium trial when it is connected to the extension. Compare the plans on the [pricing page](/pricing) or keep reading: the [features guide](/blog/growx-features-guide-scoring-filters-cleanup) covers scoring, filters, analytics and cleanup in depth.",
+            text: "GrowX is free to install from the Chrome Web Store, and you can [create a free account](/signup) to try the 30-day Premium trial when it is connected to the extension. Compare the plans on the [pricing page](/pricing) or keep reading: the [features guide](/blog/growx-features-guide-scoring-filters-cleanup) covers scoring, filters, analytics and cleanup in depth.",
           },
         ],
       },
@@ -351,9 +351,9 @@ export const posts: Post[] = [
     seoTitle: "GrowX Roadmap: Premium, Accounts & What's Next",
     title: "Growing on X with GrowX: Potential, Best Practices and the Roadmap Ahead",
     description:
-      "What GrowX can do for your X (Twitter) growth, best practices for staying safe, and the planned roadmap: accounts, Premium plans and the 14-day trial.",
+      "What GrowX can do for your X (Twitter) growth, best practices for staying safe, and the planned roadmap: accounts, Premium plans and the 30-day trial.",
     excerpt:
-      "What GrowX is good at, how to use it responsibly, and an honest look at what is planned next: accounts, a 14-day trial, Premium plans and payments.",
+      "What GrowX is good at, how to use it responsibly, and an honest look at what is planned next: accounts, a 30-day trial, Premium plans and payments.",
     category: "Roadmap",
     keywords: [
       "grow X followers",
@@ -440,7 +440,7 @@ export const posts: Post[] = [
             type: "ul",
             items: [
               "The Chrome extension is available on the Chrome Web Store with the autopilot, sources and queue, scoring and filters, analytics, backup and cleanup tools described across this site.",
-              "This website offers free accounts, a prepared 14-day Premium trial and a public pricing page.",
+              "This website offers free accounts, a prepared 30-day Premium trial and a public pricing page.",
               "The extension does not yet sign in to this website, and Premium cannot be purchased yet.",
             ],
           },
@@ -457,7 +457,7 @@ export const posts: Post[] = [
           {
             type: "ul",
             items: [
-              "**Freemium model with a 14-day Premium trial.** Core features stay free: the Safe and Balanced autopilot, sources and queue, core filters, history, analytics, backup, the cleanup scan and reasonable manual selection.",
+              "**Freemium model with a 30-day Premium trial.** Core features stay free: the Safe and Balanced autopilot, sources and queue, core filters, history, analytics, backup, the cleanup scan and reasonable manual selection.",
               "**Premium plans.** $1.99 for 30 days or $14.99 for 365 days (prepaid, no automatic renewal), or $29.99 one-time lifetime. Premium is aimed at advanced automation, higher-volume bulk operations (such as the Turbo and X Premium paces and select-all cleanup), advanced filters and future premium tools.",
               "**Early Adopter Lifetime.** A planned $0.99 one-time offer with permanent Premium for the first 100 successful, verified purchases. It is not on sale, and when the 100 are gone the regular prices apply.",
               "**Account linking.** The extension will sign in with your GrowX account so the server can tell it which plan you have. Entitlements are decided on the server, not by anything the browser claims.",

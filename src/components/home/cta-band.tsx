@@ -4,7 +4,7 @@ import { Container } from "@/components/ui/primitives";
 
 export function CtaBand({
   title = "Ready to grow on X the careful way?",
-  body = "Create your free account in under a minute. Start the 14-day Premium trial whenever you are ready.",
+  body = "Create your free account in under a minute. Start your 30-day Premium trial whenever you are ready: every Premium feature, no credit card, no commitment.",
 }: {
   title?: string;
   body?: string;

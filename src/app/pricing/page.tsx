@@ -10,8 +10,8 @@ import { TRIAL_DAYS } from "@/config/pricing";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "GrowX Pricing: Free Plan, Premium & 14-Day Trial",
-  description: "GrowX is free forever. Planned Premium: $1.99/month, $14.99/year or $29.99 lifetime, with a 14-day trial. Compare Free vs Premium; checkout is coming soon.",
+  title: "GrowX Pricing: Free Plan, Premium & 30-Day Trial",
+  description: "GrowX is free forever. Premium: $1.99 for 30 days, $14.99 for 365 days or $29.99 lifetime, with a free 30-day trial and no credit card. Compare Free vs Premium.",
   path: "/pricing",
   keywords: ["GrowX pricing", "GrowX Premium", "free X auto follow", "Twitter growth tool pricing"],
 });

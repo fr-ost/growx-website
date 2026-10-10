@@ -14,11 +14,11 @@ describe("startTrial", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("calls start_trial with the verified user id and 14 days", async () => {
+  it("calls start_trial with the verified user id and the trial length", async () => {
     const { client, rpc } = fakeAdmin({ data: { started_at: "2026-10-09T00:00:00Z", expires_at: "2026-10-23T00:00:00Z" } });
     const r = await startTrial(client, { id: "u1", emailConfirmed: true });
     expect(r).toEqual({ ok: true, startedAt: "2026-10-09T00:00:00Z", expiresAt: "2026-10-23T00:00:00Z" });
-    expect(rpc).toHaveBeenCalledWith("start_trial", { p_user_id: "u1", p_days: 14 });
+    expect(rpc).toHaveBeenCalledWith("start_trial", { p_user_id: "u1", p_days: 30 });
   });
 
   it("maps repeat calls (unique violation on user) to already_used", async () => {

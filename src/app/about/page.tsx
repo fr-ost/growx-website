@@ -51,7 +51,7 @@ export default function AboutPage() {
           </p>
           <p>
             It started as a Chrome extension (Manifest V3) with an autopilot follow engine, source targeting, a follow-back score,
-            analytics and cleanup tools. This website adds free accounts, a 14-day Premium trial and, later, paid plans, while the
+            analytics and cleanup tools. This website adds free accounts, a 30-day Premium trial and paid plans, while the
             core of the product stays free.
           </p>
           <p>

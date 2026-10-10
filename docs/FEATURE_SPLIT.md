@@ -1,6 +1,6 @@
 # Free / Premium split
 
-**Product decision (owner):** freemium with a 14-day Premium trial. Useful core functionality stays free indefinitely (including basic scanning, basic account insights and reasonable manual account selection). Premium focuses on advanced automation, higher-volume bulk operations, advanced filtering and future premium tools. No grandfathering: after the extension update every user gets the same experience.
+**Product decision (owner):** freemium with a 30-day Premium trial. Useful core functionality stays free indefinitely (including basic scanning, basic account insights and reasonable manual account selection). Premium focuses on advanced automation, higher-volume bulk operations, advanced filtering and future premium tools. No grandfathering: after the extension update every user gets the same experience.
 
 **Enforcement status:** this website does not enforce anything inside the extension yet. The split below is the specification for the extension update (see `EXTENSION_INTEGRATION.md`). The same data feeds the site in `src/config/features.ts`. The extension repository was not modified.
 

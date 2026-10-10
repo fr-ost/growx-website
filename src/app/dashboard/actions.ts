@@ -78,5 +78,5 @@ export async function startTrialAction(): Promise<FormState> {
 
   revalidatePath("/dashboard");
   revalidatePath("/account");
-  return { ok: true, message: "Your 14-day Premium trial has started." };
+  return { ok: true, message: "Your 30-day Premium trial has started." };
 }

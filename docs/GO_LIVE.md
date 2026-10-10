@@ -32,7 +32,7 @@ The build environment that produced this code cannot reach your live site or das
    - `auth: "not_configured"`: Supabase URL/key env vars missing; redeploy after adding them.
    - `database: "failed"`: the `tables` / `functions` entries name what is missing (migrations not run, wrong project, or a bad service-role key).
 2. Sign up with a real email, open the confirmation link, log in.
-3. Dashboard: save your X username, start the trial; the plan card shows "Premium trial" with 14 days left. Pressing start again (or using the same username on a second account) is refused.
+3. Dashboard: save your X username, start the trial; the plan card shows "Premium trial" with 30 days left. Pressing start again (or using the same username on a second account) is refused.
 4. `https://www.growxapp.org/api/entitlement` in the same browser returns `"plan":"TRIAL"`; in a private window it returns 401.
 5. Forgot password: request a reset link, follow it, set a new password.
 6. Supabase Table Editor shows rows in `profiles`, `x_profiles`, `x_profile_history`, `trials`.

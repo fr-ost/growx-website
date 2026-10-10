@@ -1,3 +1,4 @@
+import { TRIAL_DAYS } from "@/config/pricing";
 import { IconInfinity, IconStar } from "@/components/icons";
 import { Badge, Notice } from "@/components/ui/primitives";
 import type { Entitlement, Plan } from "@/lib/entitlement/types";
@@ -51,7 +52,7 @@ function Ring({ value, max, label }: { value: number; max: number; label: string
 
 export function PlanSummary({ e }: { e: Entitlement }) {
   const left = daysLeft(e);
-  const ringMax = e.plan === "TRIAL" ? 14 : e.plan === "PRO_YEARLY" ? 365 : e.plan === "PRO_MONTHLY" ? 31 : 14;
+  const ringMax = e.plan === "TRIAL" ? TRIAL_DAYS : e.plan === "PRO_YEARLY" ? 365 : e.plan === "PRO_MONTHLY" ? 31 : 14;
   return (
     <div className="space-y-5">
       {e.paymentWarning ? (

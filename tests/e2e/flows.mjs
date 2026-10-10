@@ -149,7 +149,7 @@ ok("login success -> dashboard (open redirect blocked)", new URL(p.url()).host =
 await p.locator("h1", { hasText: "Welcome" }).waitFor();
 ok("dashboard welcome", true);
 ok("header shows Dashboard when signed in", await p.locator("header >> text=Dashboard").first().isVisible());
-ok("trial button disabled without username", await p.locator("button", { hasText: "Start my 14-day" }).isDisabled());
+ok("trial button disabled without username", await p.locator("button", { hasText: "Start my 30-day" }).isDisabled());
 ok("new user without subscription sees the real Free plan", /current plan\s*free/i.test(await p.locator("main").innerText()));
 ok("no data-error banner for a healthy account", !(await p.locator("text=could not be loaded").count()));
 
@@ -164,13 +164,13 @@ ok("X username saved from profile URL", true);
 await p.reload();
 ok("username persisted (normalised from URL)", (await p.inputValue("#x_username")) === "Demo_User", await p.inputValue("#x_username"));
 
-const btn = p.locator("button", { hasText: "Start my 14-day" });
+const btn = p.locator("button", { hasText: "Start my 30-day" });
 ok("trial button enabled after username", await btn.isEnabled());
 await btn.click();
 await p.waitForSelector("text=Your trial is active", { timeout: 15000 });
 ok("trial started", true);
 ok("plan shows Premium trial", await p.locator("text=Premium trial").first().isVisible());
-ok("days-left ring shows 14", (await p.locator('[role=img][aria-label*="days of Premium left"]').getAttribute("aria-label")).startsWith("14"));
+ok("days-left ring shows 30", (await p.locator('[role=img][aria-label*="days of Premium left"]').getAttribute("aria-label")).startsWith("30"));
 
 const ent = await p.evaluate(async () => (await fetch("/api/entitlement")).json());
 ok("/api/entitlement returns TRIAL via cookie", ent.plan === "TRIAL" && ent.isPremium === true, JSON.stringify(ent).slice(0, 120));
@@ -193,7 +193,7 @@ await p.fill("#email", "other@example.com"); await p.fill("#password", "correct-
 await p.click("button[type=submit]"); await p.waitForURL("**/dashboard");
 await p.fill("#x_username", "demo_user"); await p.click("button:has-text('Save username')"); await p.waitForSelector("text=Saved.");
 await p.reload();
-await p.locator("button", { hasText: "Start my 14-day" }).click();
+await p.locator("button", { hasText: "Start my 30-day" }).click();
 await p.waitForSelector("text=already been used with this X username");
 ok("second account with same username refused", true);
 

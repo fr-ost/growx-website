@@ -24,7 +24,7 @@ export default function TermsPage() {
       <h2>4. Accounts</h2>
       <p>You must provide accurate information and keep your credentials secure. Entering an X username does not prove ownership and grants no rights over that X account.</p>
       <h2>5. Free plan and trial</h2>
-      <p>GrowX uses a freemium model: a Free plan plus paid Premium plans. A 14-day Premium trial may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
+      <p>GrowX uses a freemium model: a Free plan plus paid Premium plans. A 30-day Premium trial (all Premium features, no credit card, no commitment) may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
       <h2>6. Premium and payments</h2>
       <p>
         Premium plans (monthly, yearly, lifetime, and a limited early-adopter lifetime offer for the first 100 purchases) are paid in advance in cryptocurrency (Ethereum and BNB Smart Chain / BEP20 coins, as offered on the payment page), processed by NOWPayments. Monthly and yearly plans are prepaid for 30 or 365 days and do not renew automatically; you pay again to continue. Network fees and any taxes are your responsibility. Premium is activated only after the payment provider confirms payment to us. Prices may change for future purchases. See the <a href="/refund-policy">Refund Policy</a> for refunds and the meaning of &quot;lifetime&quot;.
