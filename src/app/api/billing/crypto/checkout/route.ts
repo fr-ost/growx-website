@@ -62,9 +62,12 @@ export async function POST(request: NextRequest) {
       environment: getNowPaymentsConfig().environment,
       prepaid: p.cryptoPeriodDays,
     });
-  } catch {
+  } catch (e) {
     await admin.rpc("close_checkout_order", { p_order_id: order.orderId, p_status: "failed" });
-    console.error(JSON.stringify({ event: "nowpayments_create_payment_failed", order_id: order.orderId }));
-    return errorResponse(502, "provider_error", "Could not start crypto checkout. Please try again.");
+    const reason = e instanceof Error ? e.message.slice(0, 220) : "unknown";
+    console.error(JSON.stringify({ event: "nowpayments_create_payment_failed", order_id: order.orderId, pay_currency: payCurrency, reason }));
+    // A short diagnostic (HTTP status or mismatch) helps the owner; no payloads or secrets.
+    const code = /HTTP (\d{3})/.exec(reason)?.[1] ?? (reason === "provider_response_mismatch" ? "mismatch" : "error");
+    return errorResponse(502, "provider_error", `Could not start crypto checkout. Please try again. (ref: ${code})`);
   }
 }

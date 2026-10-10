@@ -54,7 +54,12 @@ async function api<T>(path: string, init: RequestInit & { env?: Env } = {}): Pro
     signal: AbortSignal.timeout(15000),
     cache: "no-store",
   });
-  if (!res.ok) throw new Error(`NOWPayments ${path} failed with HTTP ${res.status}`);
+  if (!res.ok) {
+    // Provider error code/message only (never the request, headers or key); used for diagnosis.
+    const body = (await res.json().catch(() => ({}))) as { code?: unknown; message?: unknown };
+    const detail = [body.code, body.message].filter((x) => typeof x === "string").join(": ").slice(0, 160);
+    throw new Error(`NOWPayments ${path.split("/")[1]} failed with HTTP ${res.status}${detail ? ` (${detail})` : ""}`);
+  }
   return (await res.json()) as T;
 }
 
