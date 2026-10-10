@@ -5,9 +5,12 @@
  */
 export const COLUMNS = {
   trials: "status, started_at, expires_at",
-  subscriptions: "plan, status, current_period_end, provider, past_due_since",
+  subscriptions: "plan, status, current_period_end, provider, past_due_since, access_revoked_at",
   x_profiles: "x_username",
-  payments: "id, product, amount_minor, currency, status, created_at",
+  payments: "id, provider, product, amount_minor, currency, status, refunded_minor, created_at",
+  /** Account page: subscription details. */
+  subscription_details: "id, provider, plan, status, current_period_end, cancel_at_period_end, past_due_since, access_revoked_at, revoked_reason, created_at",
+  checkout_orders: "id, provider, product, status, reservation_expires_at, created_at",
   profiles: "id",
 } as const;
 

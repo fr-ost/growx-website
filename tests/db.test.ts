@@ -234,7 +234,8 @@ describe("early adopter slots", () => {
 });
 
 describe("app queries match the migrated schema", () => {
-  it.each(Object.entries(COLUMNS))("authenticated can run the app's %s query", async (table, cols) => {
+  it.each(Object.entries(COLUMNS))("authenticated can run the app's %s query", async (key, cols) => {
+    const table = key === "subscription_details" ? "subscriptions" : key;
     const ownerCol = table === "profiles" ? "id" : "user_id";
     await as("authenticated", A, async () => {
       await expect(db.query(`select ${cols} from public.${table} where ${ownerCol} = '${A}'`)).resolves.toBeDefined();

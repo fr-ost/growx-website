@@ -268,6 +268,102 @@ const cs = await fetch(BASE + "/auth/signout", { method: "POST", headers: { orig
 ok("cross-site signout blocked", cs.status === 403, String(cs.status));
 
 ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").slice(0, 300));
+
+// ---------- billing: nothing is configured in this environment, so checkout must be unavailable
+{
+  const opt = await (await fetch(BASE + "/api/billing/options")).json();
+  ok("billing options: no provider available when unconfigured", opt.card.available === false && opt.crypto.available === false && opt.earlyAdopter === "unavailable", JSON.stringify(opt).slice(0, 200));
+  ok("billing options expose no keys, price ids or counts", !/pri_|apikey|secret|remaining|count/i.test(JSON.stringify(opt)));
+  for (const path of ["/api/billing/paddle/checkout", "/api/billing/crypto/checkout"]) {
+    const r = await fetch(BASE + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product: "PRO_LIFETIME", price: 1 }) });
+    ok(`${path} refuses signed-out requests`, r.status === 401 || r.status === 403, String(r.status));
+  }
+  const ro = await fetch(BASE + "/api/billing/orders/00000000-0000-4000-8000-000000000001");
+  ok("order status requires a session", ro.status === 401, String(ro.status));
+  for (const [path, header] of [["/api/webhooks/paddle", "paddle-signature"], ["/api/webhooks/nowpayments", "x-nowpayments-sig"]]) {
+    const none = await fetch(BASE + path, { method: "POST", body: JSON.stringify({ event_type: "transaction.completed" }) });
+    const bad = await fetch(BASE + path, { method: "POST", headers: { [header]: "ts=1;h1=deadbeef" }, body: JSON.stringify({ event_type: "transaction.completed" }) });
+    ok(`${path} rejects unsigned and badly signed requests`, [400, 401, 503].includes(none.status) && [400, 401, 503].includes(bad.status), `${none.status}/${bad.status}`);
+  }
+
+  // signed-out visitor: pricing buttons are disabled, no payment UI, no remaining-slot numbers
+  const bp = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+  await bp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
+  const soon = await bp.locator("button:has-text('Coming soon')").count();
+  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("button:has-text('Pay by card'), button:has-text('Pay with crypto')").count()) === 0, String(soon));
+  ok("pricing: 'Coming soon' buttons are disabled", await bp.locator("button:has-text('Coming soon')").evaluateAll((els) => els.every((e) => e.disabled)));
+  const priceText = await bp.locator("main").innerText();
+  ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99", "$0.99"].every((x) => priceText.includes(x)));
+  ok("pricing never shows a remaining-slots number", !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(priceText));
+  await bp.close();
+
+  // UI states with mocked billing endpoints (availability + provider progress); the server never grants from the browser
+  const mctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+  const mp = await mctx.newPage();
+  const merrs = []; mp.on("pageerror", (e) => merrs.push(String(e)));
+  const options = { card: { available: false, environment: "sandbox", products: [] }, crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], payCurrencies: ["usdttrc20", "usdcerc20"], prepaid: true }, earlyAdopter: "unavailable" };
+  let orderState = { status: "pending", paymentStatus: "pending", providerStatus: "waiting", crypto: { address: "TTestAddress123", amount: "1.99", currency: "usdttrc20", actuallyPaid: 0, network: "TRC20" } };
+  let checkoutBody = null;
+  await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: options }));
+  await mctx.route("**/api/billing/crypto/checkout", async (r) => {
+    checkoutBody = r.request().postDataJSON();
+    if (checkoutBody.payCurrency === "boom") return r.fulfill({ status: 502, json: { error: { code: "provider_error" } } });
+    await r.fulfill({ json: { orderId: "00000000-0000-4000-8000-0000000000aa", payment: { address: "TTestAddress123", amount: "1.99", currency: "usdttrc20", network: "TRC20", extraId: null, expiresAt: new Date(Date.now() + 3600e3).toISOString() } } });
+  });
+  await mctx.route("**/api/billing/orders/*", (r) => r.fulfill({ json: orderState }));
+  await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
+  ok("mocked: crypto-only config shows 'Pay with crypto' and test-mode notice", (await mp.locator("button:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
+  ok("mocked: no card button when card is unavailable", (await mp.locator("button:has-text('Pay by card')").count()) === 0);
+  ok("mocked: yearly (not offered) stays 'Coming soon'", (await mp.locator("button:has-text('Coming soon')").count()) >= 1);
+  await mp.locator("button:has-text('Pay with crypto')").first().click();
+  await mp.locator("dialog[open]").waitFor();
+  ok("crypto dialog explains prepaid, no automatic debits", /do not renew automatically/i.test(await mp.locator("dialog").innerText()) || /one-time/i.test(await mp.locator("dialog").innerText()));
+  await mp.click("button:has-text('Show payment details')");
+  await mp.locator("text=Send exactly").waitFor();
+  const dlg = await mp.locator("dialog").innerText();
+  ok("crypto dialog shows server-provided amount, asset, address and network", dlg.includes("1.99 USDTTRC20") && dlg.includes("TTestAddress123") && dlg.includes("TRC20"));
+  ok("client sent only product + payCurrency (no price/amount)", Object.keys(checkoutBody).sort().join() === "payCurrency,product", JSON.stringify(checkoutBody));
+  ok("crypto dialog starts in waiting state, no success claim", /Waiting for your payment/.test(dlg) && !/Payment confirmed/.test(dlg));
+  orderState = { ...orderState, paymentStatus: "partially_paid", providerStatus: "partially_paid", crypto: { ...orderState.crypto, actuallyPaid: "0.5" } };
+  ok("partial payment is shown as NOT active", await mp.locator("text=Partial payment received").waitFor({ timeout: 15000 }).then(() => true, () => false) && /not active until the full amount/i.test(await mp.locator("dialog").innerText()));
+  orderState = { ...orderState, paymentStatus: "confirming", providerStatus: "confirming" };
+  ok("confirming is shown without granting", await mp.locator("text=Payment detected").waitFor({ timeout: 15000 }).then(() => true, () => false) && !(await mp.locator("text=Payment confirmed").count()));
+  orderState = { ...orderState, status: "fulfilled", paymentStatus: "succeeded", providerStatus: "finished" };
+  ok("only a server-fulfilled order shows 'Payment confirmed'", await mp.locator("text=Payment confirmed").waitFor({ timeout: 15000 }).then(() => true, () => false));
+  await mp.keyboard.press("Escape");
+  orderState = { status: "expired", paymentStatus: "expired", providerStatus: "expired", crypto: null };
+  await mp.reload({ waitUntil: "networkidle" });
+  await mp.locator("button:has-text('Pay with crypto')").first().click();
+  await mp.click("button:has-text('Show payment details')");
+  ok("expired order shows 'Payment window expired'", await mp.locator("text=Payment window expired").waitFor({ timeout: 15000 }).then(() => true, () => false));
+  await mp.keyboard.press("Escape");
+  // provider error is surfaced without a stack or secrets
+  await mp.reload({ waitUntil: "networkidle" });
+  await mp.locator("button:has-text('Pay with crypto')").first().click();
+  await mp.locator("#asset").selectOption("usdcerc20");
+  await mctx.unroute("**/api/billing/crypto/checkout");
+  await mctx.route("**/api/billing/crypto/checkout", (r) => r.fulfill({ status: 502, json: { error: { code: "provider_error" } } }));
+  await mp.click("button:has-text('Show payment details')");
+  ok("provider error shows a friendly message and retry", await mp.locator("text=could not be reached").waitFor({ timeout: 10000 }).then(() => true, () => false) && (await mp.locator("button:has-text('Try again')").count()) === 1);
+  ok("no runtime errors in billing UI", merrs.length === 0, merrs.join(" | ").slice(0, 300));
+
+  // early-adopter offer states (server-reported)
+  for (const [state, expect] of [["available", "Limited offer"], ["temporarily_unavailable", "Temporarily unavailable"], ["unavailable", "Not on sale yet"]]) {
+    await mctx.unroute("**/api/billing/options");
+    await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, card: { available: true, environment: "sandbox", products: ["PRO_LIFETIME_EARLY", "PRO_LIFETIME"] }, earlyAdopter: state } }));
+    await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
+    ok(`early-adopter state '${state}' -> '${expect}'`, (await mp.locator(`text=${expect}`).count()) >= 1);
+    const t = await mp.locator("main").innerText();
+    ok(`early-adopter state '${state}' shows no remaining-slot number`, !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(t));
+  }
+  await mctx.unroute("**/api/billing/options");
+  await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, earlyAdopter: "sold_out" } }));
+  await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
+  await mp.waitForTimeout(500);
+  { const h = await mp.locator("h3:has-text('Early Adopter')").count(); ok("early-adopter sold out hides the offer banner", h === 0, `banner headings=${h}`); }
+  await mctx.close();
+}
+
 await b.close();
 console.log(results.join("\n"));
 const failed = results.filter((r) => r.startsWith("FAIL")).length;

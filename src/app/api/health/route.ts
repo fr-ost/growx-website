@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isLocalUrl, PRODUCTION_URL, site } from "@/config/site";
 import { classifyDbError, type DbErrorKind } from "@/lib/db/errors";
 import { COLUMNS } from "@/lib/db/queries";
+import { nowPaymentsStatus, paddleStatus } from "@/lib/billing/config";
 import { getSupabasePublicConfig, getSupabaseServiceKey } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -16,6 +17,8 @@ const TABLE_PROBES: Record<string, string> = {
   x_profile_history: "id",
   webhook_events: "id",
   early_adopter_slots: "slot",
+  checkout_orders: "id",
+  payment_adjustments: "id",
 };
 
 /**
@@ -56,6 +59,8 @@ export async function GET(request: NextRequest) {
       // random id that has no X username, so it raises before inserting anything.
       const ea = await admin.rpc("early_adopter_available");
       functions.early_adopter_available = ea.error ? classifyDbError(ea.error) : "ok";
+      const es = await admin.rpc("early_adopter_state");
+      functions.early_adopter_state = es.error ? classifyDbError(es.error) : "ok"; // billing migration present
       const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: 14 });
       functions.start_trial = st.error && /x_username_required/.test(st.error.message ?? "") ? "ok" : st.error ? classifyDbError(st.error) : "unknown";
       const allOk = [...Object.values(tables), ...Object.values(functions)].every((s) => s === "ok");
@@ -83,6 +88,8 @@ export async function GET(request: NextRequest) {
     if (new URL(site.url).host !== request.nextUrl.host) warnings.push(`Site URL host (${new URL(site.url).host}) differs from this request's host (${request.nextUrl.host}).`);
   }
 
+  const cardStatus = paddleStatus();
+  const cryptoStatus = nowPaymentsStatus();
   const ok = auth === "ok" && database === "ok";
   return NextResponse.json(
     {
@@ -92,6 +99,12 @@ export async function GET(request: NextRequest) {
       tables,
       functions,
       config: { siteUrl: site.url, vercelEnv, serviceKeyConfigured: !!getSupabaseServiceKey() },
+      // Setting NAMES that are missing or invalid, never values. Payments are optional for "ok".
+      billing: {
+        card: { available: cardStatus.available, environment: cardStatus.environment, problems: cardStatus.problems },
+        crypto: { available: cryptoStatus.available, environment: cryptoStatus.environment, problems: cryptoStatus.problems },
+        earlyAdopterEnabled: process.env.EARLY_ADOPTER_ENABLED === "true",
+      },
       warnings,
       manualChecks: [
         "Supabase Auth > URL Configuration > Site URL must be https://www.growxapp.org (it cannot be read from here).",

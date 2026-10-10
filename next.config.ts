@@ -12,11 +12,13 @@ const securityHeaders = [
 // Next.js hydration unless nonces are used, which would make every page dynamic.
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "connect-src 'self'",
+  // Paddle.js (card checkout overlay). Hosts follow Paddle's CSP guidance; verify in the sandbox.
+  "script-src 'self' 'unsafe-inline' https://cdn.paddle.com",
+  "style-src 'self' 'unsafe-inline' https://cdn.paddle.com",
+  "img-src 'self' data: blob: https://*.paddle.com",
+  "font-src 'self' data: https://*.paddle.com",
+  "connect-src 'self' https://*.paddle.com",
+  "frame-src 'self' https://buy.paddle.com https://sandbox-buy.paddle.com",
   "object-src 'none'",
   "base-uri 'self'",
   "frame-ancestors 'none'",

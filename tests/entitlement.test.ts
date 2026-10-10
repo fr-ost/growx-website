@@ -140,3 +140,19 @@ describe("resolveEntitlement", () => {
     });
   });
 });
+
+describe("refund / chargeback revocation", () => {
+  const live = { plan: "PRO_LIFETIME", status: "active", current_period_end: null, provider: "paddle" };
+  it("revoked access never grants Premium, for any plan or status", () => {
+    const revoked = { access_revoked_at: iso(-1000) };
+    expect(resolveEntitlement({ trials: [], subscriptions: [{ ...live, ...revoked }] }, NOW).isPremium).toBe(false);
+    expect(resolveEntitlement({ trials: [], subscriptions: [{ plan: "PRO_YEARLY", status: "active", current_period_end: iso(DAY), ...revoked }] }, NOW).isPremium).toBe(false);
+  });
+  it("a revoked subscription does not hide a valid trial or another valid subscription", () => {
+    const e = resolveEntitlement(
+      { trials: [], subscriptions: [{ ...live, access_revoked_at: iso(-1) }, { plan: "PRO_MONTHLY", status: "active", current_period_end: iso(5 * DAY) }] },
+      NOW,
+    );
+    expect(e.plan).toBe("PRO_MONTHLY");
+  });
+});

@@ -32,6 +32,7 @@ function subscriptionGrant(
   now: number,
   grace: GracePolicy,
 ): { plan: Plan; expiresAt: number | null; graceEndsAt?: number } | null {
+  if (s.access_revoked_at) return null; // refund / chargeback
   if (s.status === "past_due") {
     // Grace applies to recurring plans only (lifetime is never past_due) and
     // only when we know when the failure started. Fails closed otherwise.

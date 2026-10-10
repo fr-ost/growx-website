@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { credentialsSchema, safeNextPath } from "@/lib/validation/auth";
 import { parseXUsername } from "@/lib/validation/xUsername";
-import { CHECKOUT_AVAILABLE, EARLY_ADOPTER_PURCHASABLE, getTier, pricingTiers } from "@/config/pricing";
+import { getTier, pricingTiers } from "@/config/pricing";
 
 describe("parseXUsername", () => {
   it.each([
@@ -45,10 +45,6 @@ describe("pricing config", () => {
     ]);
     expect(getTier("EARLY_ADOPTER_LIFETIME").purchaseLimit).toBe(100);
   });
-  it("keeps checkout and the early-adopter offer unavailable", () => {
-    expect(CHECKOUT_AVAILABLE).toBe(false);
-    expect(EARLY_ADOPTER_PURCHASABLE).toBe(false);
-  });
 });
 
 import { getGracePolicy } from "@/lib/billing/grace";
@@ -65,7 +61,7 @@ describe("grace policy config", () => {
 
 describe("early adopter visibility", () => {
   it("is shown while planned/available and hidden when sold out, regular prices remain", () => {
-    expect(visibleTiers("planned").some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(true);
+    expect(visibleTiers("unavailable").some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(true);
     const sold = visibleTiers("sold_out");
     expect(sold.some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(false);
     expect(sold.map((t) => t.priceLabel)).toEqual(["$0", "$1.99", "$14.99", "$29.99"]);
