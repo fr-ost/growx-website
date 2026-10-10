@@ -4,11 +4,12 @@ import { NextRequest } from "next/server";
 const getCurrentUser = vi.fn();
 const rpc = vi.fn();
 const createNowPayment = vi.fn();
+const minUsd = vi.fn<(c: string) => Promise<number | null>>(async () => null);
 
 vi.mock("@/lib/supabase/user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ rpc }) }));
 vi.mock("@/lib/origin", () => ({ requestOrigin: async () => "https://www.growxapp.org" }));
-vi.mock("@/lib/billing/nowpayments", async (orig) => ({ ...(await orig<typeof import("@/lib/billing/nowpayments")>()), createNowPayment: (i: unknown) => createNowPayment(i) }));
+vi.mock("@/lib/billing/nowpayments", async (orig) => ({ ...(await orig<typeof import("@/lib/billing/nowpayments")>()), createNowPayment: (i: unknown) => createNowPayment(i), getMinPaymentUsd: async (c: string) => minUsd(c) }));
 
 const { POST: cryptoCheckout } = await import("@/app/api/billing/crypto/checkout/route");
 const { GET: options } = await import("@/app/api/billing/options/route");
@@ -30,6 +31,7 @@ beforeEach(() => {
   getCurrentUser.mockReset().mockResolvedValue(USER);
   rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : { data: null, error: null }));
   createNowPayment.mockReset();
+  minUsd.mockReset().mockResolvedValue(null);
 });
 
 describe("POST /api/billing/crypto/checkout", () => {
@@ -77,6 +79,17 @@ describe("POST /api/billing/crypto/checkout", () => {
   it("is unavailable without NOWPayments configuration", async () => {
     delete process.env.NOWPAYMENTS_IPN_SECRET;
     expect((await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }))).status).toBe(503);
+  });
+});
+
+describe("coin minimums", () => {
+  it("refuses with a clear message, and creates no order, when the coin minimum exceeds the plan price", async () => {
+    minUsd.mockResolvedValue(5.5);
+    const res = await cryptoCheckout(req("https://www.growxapp.org/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error.message).toMatch(/minimum payment of about \$5\.50/);
+    expect(rpc).not.toHaveBeenCalledWith("create_checkout_order", expect.anything());
+    expect(createNowPayment).not.toHaveBeenCalled();
   });
 });
 

@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { cryptoCheckoutBodySchema, decimalToMinor, getProduct } from "@/lib/billing/catalog";
 import { getNowPaymentsConfig, nowPaymentsStatus } from "@/lib/billing/config";
-import { createNowPayment } from "@/lib/billing/nowpayments";
+import { createNowPayment, getMinPaymentUsd } from "@/lib/billing/nowpayments";
 import { createOrder } from "@/lib/billing/service";
 import { errorResponse, jsonResponse, requireApiUser } from "@/lib/api/guards";
 import { requestOrigin } from "@/lib/origin";
@@ -36,6 +36,12 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient();
   const p = getProduct(product);
+
+  // Each coin has a provider-side minimum; say so clearly instead of failing at creation.
+  const min = await getMinPaymentUsd(payCurrency);
+  if (min !== null && min > p.amountMinor / 100) {
+    return errorResponse(409, "amount_below_minimum", `${payCurrency.toUpperCase()} requires a minimum payment of about $${(Math.ceil(min * 100) / 100).toFixed(2)}, which is more than this plan costs. Please choose another coin or plan.`);
+  }
   const order = await createOrder(admin, { userId: auth.user.id, provider: "nowpayments", product, asset: payCurrency, ttlSeconds: 60 * 60 });
   if (!order.ok) {
     const [code, message] = ORDER_ERRORS[order.code] ?? [500, "Could not start checkout."];

@@ -88,6 +88,17 @@ export async function createNowPayment(i: CreatePaymentInput): Promise<NowPaymen
   });
 }
 
+/** Minimum payment for a coin, expressed in USD (best effort: null when unknown). */
+export async function getMinPaymentUsd(payCurrency: string, env?: Env): Promise<number | null> {
+  try {
+    const r = await api<{ fiat_equivalent?: number | string }>(`/min-amount?currency_from=${encodeURIComponent(payCurrency)}&fiat_equivalent=usd`, { env });
+    const n = Number(r.fiat_equivalent);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 export const getNowPayment = (paymentId: string, env?: Env) => api<NowPayment>(`/payment/${encodeURIComponent(paymentId)}`, { env });
 
 // -------------------------------------------------------------- status map
