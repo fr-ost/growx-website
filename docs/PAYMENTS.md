@@ -45,4 +45,4 @@ A browser redirect must **never** grant Premium.
 
 ## Provider notes
 - Paddle: merchant-of-record handles tax; requires approval of the business/product. Sandbox first.
-- NOWPayments: USDT/USDC first; confirm networks, fees and underpayment handling; refunds are manual.
+- NOWPayments: hosted invoices; coins (ETH, BNB Smart Chain / BEP20) are enabled in the NOWPayments dashboard; confirm networks, fees and underpayment handling; refunds are manual.

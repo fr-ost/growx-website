@@ -31,29 +31,20 @@ export interface NowPaymentsConfig {
   apiKey: string | undefined;
   ipnSecret: string | undefined;
   baseUrl: string;
-  /** Server allowlist of pay_currency codes (asset + network), lowercase. */
-  payCurrencies: string[];
 }
-
-export const DEFAULT_PAY_CURRENCIES = ["usdttrc20", "usdterc20", "usdcerc20"];
 
 export function getNowPaymentsConfig(env: Env = process.env): NowPaymentsConfig {
   const { environment, liveBlocked } = resolveEnvironment(env.NOWPAYMENTS_ENV, env);
-  const list = (val(env.NOWPAYMENTS_PAY_CURRENCIES) ?? "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter((s) => /^[a-z0-9]{2,24}$/.test(s));
   return {
     environment,
     liveBlocked,
     apiKey: val(env.NOWPAYMENTS_API_KEY),
     ipnSecret: val(env.NOWPAYMENTS_IPN_SECRET),
     baseUrl: environment === "sandbox" ? "https://api-sandbox.nowpayments.io/v1" : "https://api.nowpayments.io/v1",
-    payCurrencies: list.length ? [...new Set(list)] : DEFAULT_PAY_CURRENCIES,
   };
 }
 
-export function nowPaymentsStatus(env: Env = process.env): ProviderStatus & { payCurrencies: string[] } {
+export function nowPaymentsStatus(env: Env = process.env): ProviderStatus {
   const c = getNowPaymentsConfig(env);
   const problems: string[] = [];
   if (!c.apiKey) problems.push("NOWPAYMENTS_API_KEY");
@@ -61,5 +52,5 @@ export function nowPaymentsStatus(env: Env = process.env): ProviderStatus & { pa
   if (c.liveBlocked) problems.push("BILLING_LIVE_APPROVED (live mode not approved)");
   const available = problems.length === 0;
   const products = PRODUCT_IDS.filter((p) => p !== "PRO_LIFETIME_EARLY" || env.EARLY_ADOPTER_ENABLED === "true");
-  return { available, environment: c.environment, products: available ? [...products] : [], problems, payCurrencies: available ? c.payCurrencies : [] };
+  return { available, environment: c.environment, products: available ? [...products] : [], problems };
 }

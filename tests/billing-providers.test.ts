@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { checkoutBodySchema, cryptoCheckoutBodySchema, decimalToMinor, getProduct, minorToDecimal, PRODUCT_IDS } from "@/lib/billing/catalog";
 import { getNowPaymentsConfig, nowPaymentsStatus } from "@/lib/billing/config";
-import { computeIpnSignature, mapNowPayment, nowEventId, sortKeysDeep, verifyIpnSignature } from "@/lib/billing/nowpayments";
+import { computeIpnSignature, isNowPaymentsUrl, mapNowPayment, nowEventId, sortKeysDeep, verifyIpnSignature } from "@/lib/billing/nowpayments";
 import { handleNowPaymentsIpn } from "@/lib/billing/service";
 
 const ENV = {
@@ -32,9 +32,9 @@ describe("product catalog and amounts", () => {
     expect(checkoutBodySchema.safeParse({ product: "PRO_MONTHLY" }).success).toBe(true);
     for (const bad of [{ product: "PRO_MONTHLY", amount: 1 }, { product: "PRO_MONTHLY", priceId: "pri_x" }, { product: "PRO_MONTHLY", plan: "PRO_LIFETIME" }, { product: "PRO_MONTHLY", userId: "x" }, { product: "FREE" }, { product: "pro_monthly" }, {}, null, "PRO_MONTHLY"])
       expect(checkoutBodySchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
-    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY", payCurrency: "usdttrc20" }).success).toBe(true);
-    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY", payCurrency: "usdttrc20", price_amount: 0.01 }).success).toBe(false);
-    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY", payCurrency: "USDT TRC20; drop" }).success).toBe(false);
+    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY" }).success).toBe(true);
+    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY", price_amount: 0.01 }).success).toBe(false);
+    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_YEARLY", payCurrency: "eth" }).success).toBe(false);
   });
 });
 
@@ -59,16 +59,35 @@ describe("provider configuration gates", () => {
     expect(nowPaymentsStatus({ ...live, BILLING_LIVE_APPROVED: "true" })).toMatchObject({ available: true, environment: "production" });
     expect(getNowPaymentsConfig(ENV).baseUrl).toContain("sandbox");
   });
-  it("asset allowlist comes from server config and is sanitised", () => {
-    expect(getNowPaymentsConfig({ ...ENV, NOWPAYMENTS_PAY_CURRENCIES: "USDTTRC20, usdcerc20 ,bad!!, usdttrc20" }).payCurrencies).toEqual(["usdttrc20", "usdcerc20"]);
-    expect(getNowPaymentsConfig(ENV).payCurrencies.length).toBeGreaterThan(0);
+  it("only NOWPayments' own https pages are accepted as invoice links", () => {
+    expect(isNowPaymentsUrl("https://nowpayments.io/payment/?iid=1")).toBe(true);
+    expect(isNowPaymentsUrl("https://sandbox.nowpayments.io/payment/?iid=1")).toBe(true);
+    for (const bad of ["http://nowpayments.io/x", "https://nowpayments.io.evil.com/x", "https://evilnowpayments.io/x", "javascript:alert(1)", "", null, 5])
+      expect(isNowPaymentsUrl(bad), String(bad)).toBe(false);
   });
 });
 
-// ---------------------------------------------------------------- Paddle
-const fakeAdmin = (result = "applied") => {
+const fakeAdmin = (result = "applied", bindError: { code: string } | null = null) => {
   const rpc = vi.fn().mockResolvedValue({ data: { result }, error: null });
-  return { admin: { rpc, from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { product: "PRO_MONTHLY" } }) }) }) }) } as unknown as SupabaseClient, rpc };
+  const bind = vi.fn();
+  // Minimal query-builder fake: select(...).eq().maybeSingle() and update(...).eq().eq().is().in()
+  const chain = (done: () => unknown) => {
+    const filters: unknown[][] = [];
+    const c: Record<string, unknown> = { filters };
+    for (const m of ["eq", "is"]) c[m] = (...a: unknown[]) => (filters.push([m, ...a]), c);
+    c.in = async (...a: unknown[]) => (filters.push(["in", ...a]), done());
+    c.maybeSingle = async () => done();
+    return c;
+  };
+  const from = () => ({
+    select: () => chain(() => ({ data: { product: "PRO_MONTHLY" } })),
+    update: (values: unknown) => {
+      const c = chain(() => ({ error: bindError }));
+      bind(values, c.filters);
+      return c;
+    },
+  });
+  return { admin: { rpc, from } as unknown as SupabaseClient, rpc, bind };
 };
 
 // ----------------------------------------------------------- NOWPayments
@@ -161,6 +180,22 @@ describe("NOWPayments IPN handler", () => {
     const r = await handleNowPaymentsIpn(raw, nsig(payload), { admin, env: ENV, fetchPayment: () => Promise.reject(new Error("down")) });
     expect(r.status).toBe(503);
     expect(rpc).not.toHaveBeenCalled();
+  });
+  it("binds an invoice order to the first verified payment (payment id + the coin the customer chose), only after verification", async () => {
+    const { admin, rpc, bind } = fakeAdmin();
+    await handleNowPaymentsIpn(raw, "0".repeat(128), { admin, env: ENV, fetchPayment: apiPayment });
+    expect(bind).not.toHaveBeenCalled();
+    await handleNowPaymentsIpn(raw, nsig(payload), { admin, env: ENV, fetchPayment: () => Promise.resolve(ipn({ pay_currency: "ETH" }) as never) });
+    expect(bind).toHaveBeenCalledTimes(1);
+    const [values, filters] = bind.mock.calls[0];
+    expect(values).toEqual({ provider_ref: "5077125051", asset: "eth" });
+    expect(filters).toEqual(expect.arrayContaining([["eq", "id", payload.order_id], ["eq", "provider", "nowpayments"], ["is", "provider_ref", null], ["in", "status", ["created", "pending"]]]));
+    expect(rpc.mock.calls[0][1].p_effect).toMatchObject({ asset: "ETH" });
+  });
+  it("a failing bind surfaces as an error (provider retries); an already-bound reference is not an error", async () => {
+    await expect(handleNowPaymentsIpn(raw, nsig(payload), { admin: fakeAdmin("applied", { code: "08006" }).admin, env: ENV, fetchPayment: apiPayment })).rejects.toThrow(/bind_invoice_order/);
+    const ok = fakeAdmin("applied", { code: "23505" });
+    expect((await handleNowPaymentsIpn(raw, nsig(payload), { admin: ok.admin, env: ENV, fetchPayment: apiPayment })).status).toBe(200);
   });
   it("applies a verified, reconciled notification idempotently with a deterministic event id", async () => {
     const { admin, rpc } = fakeAdmin();

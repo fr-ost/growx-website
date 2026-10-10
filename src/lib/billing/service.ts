@@ -81,11 +81,26 @@ export async function handleNowPaymentsIpn(
   }
 
   const orderId = payment.order_id ?? body.order_id;
+  // Invoice orders learn their payment id and coin from the first VERIFIED payment; after that the
+  // database's strict order checks (reference, amount, asset, product) apply to every later event.
+  if (orderId && payment.pay_currency) await bindInvoiceOrder(deps.admin, orderId, paymentId, payment.pay_currency);
   const product = orderId ? await productForOrder(deps.admin, orderId) : undefined;
   const effect = mapNowPayment({ ...payment, order_id: orderId }, product);
   const result = await applyBillingEffect(deps.admin, "nowpayments", nowEventId(payment), `payment.${String(payment.payment_status)}`, payment.updated_at ?? null, effect);
   log("nowpayments_ipn_processed", { payment_id: paymentId, status: payment.payment_status, result });
   return { status: 200, body: { ok: true, result } };
+}
+
+async function bindInvoiceOrder(admin: SupabaseClient, orderId: string, paymentId: string, payCurrency: string): Promise<void> {
+  if (!/^[0-9a-f-]{36}$/i.test(orderId) || !/^[a-z0-9]{2,24}$/i.test(payCurrency)) return;
+  const { error } = await admin
+    .from("checkout_orders")
+    .update({ provider_ref: paymentId, asset: payCurrency.toLowerCase() })
+    .eq("id", orderId)
+    .eq("provider", "nowpayments")
+    .is("provider_ref", null)
+    .in("status", ["created", "pending"]);
+  if (error && error.code !== "23505") throw new Error(`bind_invoice_order failed: ${error.code ?? "unknown"}`);
 }
 
 async function productForOrder(admin: SupabaseClient, orderId: string): Promise<ProductId | undefined> {

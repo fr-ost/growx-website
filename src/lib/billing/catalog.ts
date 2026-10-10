@@ -56,7 +56,8 @@ export const isProductId = (v: unknown): v is ProductId => typeof v === "string"
 
 /** Request bodies accept ONLY a product id. Any extra field (amount, priceId, ...) is rejected. */
 export const checkoutBodySchema = z.object({ product: z.enum(PRODUCT_IDS) }).strict();
-export const cryptoCheckoutBodySchema = z.object({ product: z.enum(PRODUCT_IDS), payCurrency: z.string().min(2).max(24).regex(/^[a-z0-9]+$/) }).strict();
+/** Crypto checkout: only the product. The customer chooses the coin on the NOWPayments invoice page. */
+export const cryptoCheckoutBodySchema = z.object({ product: z.enum(PRODUCT_IDS) }).strict();
 
 /** Exact decimal string -> minor units. Rejects floats with >2 decimals and anything non-numeric. */
 export function decimalToMinor(value: unknown): number | null {

@@ -461,7 +461,7 @@ export const posts: Post[] = [
               "**Premium plans.** Planned prices: $1.99 per month, $14.99 per year or $29.99 one-time lifetime. Premium is aimed at advanced automation, higher-volume bulk operations (such as the Turbo and X Premium paces and select-all cleanup), advanced filters and future premium tools.",
               "**Early Adopter Lifetime.** A planned $0.99 one-time offer with permanent Premium for the first 100 successful, verified purchases. It is not on sale, and when the 100 are gone the regular prices apply.",
               "**Account linking.** The extension will sign in with your GrowX account so the server can tell it which plan you have. Entitlements are decided on the server, not by anything the browser claims.",
-              "**Payments.** Cryptocurrency (USDT and USDC first) through NOWPayments, with verified notifications before any access is granted.",
+              "**Payments.** Cryptocurrency (Ethereum and BNB Smart Chain coins) through NOWPayments invoices, with verified notifications before any access is granted.",
               "**Clearer naming.** The extension's \"Premium\" speed preset means X Premium accounts, not GrowX Premium, and the wording will be made less confusing.",
             ],
           },

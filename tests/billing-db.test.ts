@@ -319,6 +319,38 @@ describe("NOWPayments (prepaid crypto periods)", () => {
     expect(await planAt(u, new Date(Date.now() + 32 * DAY))).toBe("FREE"); // expires: prepaid, no auto-renewal
   });
 
+  it("hosted invoice: no coin preselected; the first verified payment binds payment id + coin, then strict checks apply", async () => {
+    const u = await addUser(db);
+    const o = await order(u, "nowpayments", "PRO_MONTHLY", { asset: null, days: 30, ref: null });
+    const oid = o.order_id!;
+    await db.query("select public.attach_order_ref($1, null, null)", [oid]); // what the checkout route does
+    expect((await row<{ status: string; provider_ref: string | null }>("select status, provider_ref from public.checkout_orders where id = $1", [oid]))[0]).toEqual({ status: "pending", provider_ref: null });
+
+    // Without the bind, a payment in any coin would not match the order (asset null) and is never granted.
+    const u2 = await addUser(db);
+    const o2 = (await order(u2, "nowpayments", "PRO_MONTHLY", { asset: null, days: 30, ref: null })).order_id!;
+    expect(await apply("nowpayments", cryptoPay(o2, "np_unbound", "PRO_MONTHLY", "succeeded", true, { asset: "eth" }))).toBe("rejected:order_validation_failed");
+    expect(await planAt(u2)).toBe("FREE");
+
+    // The IPN handler's bind, executed with the service role's privileges only.
+    const bind = (id: string, ref: string, coin: string) =>
+      asRole(db, "service_role", null, () => db.query("update public.checkout_orders set provider_ref = $2, asset = $3 where id = $1 and provider = 'nowpayments' and provider_ref is null and status in ('created','pending')", [id, ref, coin]));
+    await bind(oid, "np_inv_1", "eth");
+    await bind(oid, "np_inv_2", "bnbbsc"); // a second payment on the same invoice cannot re-bind
+    expect((await row<{ provider_ref: string; asset: string }>("select provider_ref, asset from public.checkout_orders where id = $1", [oid]))[0]).toEqual({ provider_ref: "np_inv_1", asset: "eth" });
+
+    await apply("nowpayments", cryptoPay(oid, "np_inv_1", "PRO_MONTHLY", "confirming", false, { asset: "eth" }));
+    expect(await planAt(u)).toBe("FREE");
+    expect(await apply("nowpayments", cryptoPay(oid, "np_inv_1", "PRO_MONTHLY", "succeeded", true, { asset: "eth" }))).toBe("applied");
+    expect(await planAt(u)).toBe("PRO_MONTHLY");
+    expect((await row<{ asset: string }>("select asset from public.payments where provider_payment_id = 'np_inv_1'"))[0].asset).toBe("eth");
+
+    // A different payment (or coin) on the same order never grants again.
+    expect(await apply("nowpayments", cryptoPay(oid, "np_inv_2", "PRO_MONTHLY", "succeeded", true, { asset: "bnbbsc" }))).toBe("rejected:order_reference_mismatch");
+    expect(await apply("nowpayments", cryptoPay(oid, "np_inv_1", "PRO_MONTHLY", "succeeded", true, { asset: "bnbbsc" }))).toMatch(/^(rejected:order_validation_failed|duplicate_fulfillment)$/);
+    expect(await subsOf(u)).toHaveLength(1);
+  });
+
   it("a renewal is a NEW verified payment and stacks on the remaining time", async () => {
     const u = await addUser(db);
     const o1 = await monthly(u, "np_r1");

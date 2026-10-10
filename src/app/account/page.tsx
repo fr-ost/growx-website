@@ -137,6 +137,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                     ? "We received a payment that could not be activated automatically. Contact support and we will resolve it or refund you."
                     : "Waiting for the payment provider to confirm. Nothing is activated until it does."}
                 </Notice>
+                {o.status !== "refund_required" ? <LinkButton href={`/checkout/${o.id}`} variant="ghost" size="sm" className="mt-1">View payment status</LinkButton> : null}
               </li>
             ))}
           </ul>

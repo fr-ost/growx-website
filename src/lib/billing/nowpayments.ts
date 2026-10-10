@@ -63,39 +63,52 @@ async function api<T>(path: string, init: RequestInit & { env?: Env } = {}): Pro
   return (await res.json()) as T;
 }
 
-export interface CreatePaymentInput {
+export interface NowInvoice {
+  id?: string | number;
+  invoice_url?: string;
+  order_id?: string;
+  price_amount?: string | number;
+  price_currency?: string;
+}
+
+export interface CreateInvoiceInput {
   orderId: string;
   productId: ProductId;
-  payCurrency: string;
   callbackUrl: string;
+  successUrl: string;
+  cancelUrl: string;
   env?: Env;
 }
 
-/** Creates the payment with SERVER-controlled amount/currency/order id. */
-export async function createNowPayment(i: CreatePaymentInput): Promise<NowPayment> {
+/**
+ * Creates a hosted invoice with SERVER-controlled amount and order id. No pay_currency is
+ * sent: the customer picks any coin enabled in the NOWPayments account on the invoice page.
+ */
+export async function createNowInvoice(i: CreateInvoiceInput): Promise<NowInvoice> {
   const p = getProduct(i.productId);
-  return api<NowPayment>("/payment", {
+  return api<NowInvoice>("/invoice", {
     method: "POST",
     env: i.env,
     body: JSON.stringify({
       price_amount: Number(minorToDecimal(p.amountMinor)),
       price_currency: "usd",
-      pay_currency: i.payCurrency,
-      ipn_callback_url: i.callbackUrl,
       order_id: i.orderId,
       order_description: `GrowX ${p.name}${p.cryptoPeriodDays ? ` (${p.cryptoPeriodDays} days, prepaid)` : ""}`,
+      ipn_callback_url: i.callbackUrl,
+      success_url: i.successUrl,
+      cancel_url: i.cancelUrl,
     }),
   });
 }
 
-/** Minimum payment for a coin, expressed in USD (best effort: null when unknown). */
-export async function getMinPaymentUsd(payCurrency: string, env?: Env): Promise<number | null> {
+/** Only links to NOWPayments' own hosted pages are ever sent to the browser. */
+export function isNowPaymentsUrl(u: unknown): u is string {
+  if (typeof u !== "string") return false;
   try {
-    const r = await api<{ fiat_equivalent?: number | string }>(`/min-amount?currency_from=${encodeURIComponent(payCurrency)}&fiat_equivalent=usd`, { env });
-    const n = Number(r.fiat_equivalent);
-    return Number.isFinite(n) && n > 0 ? n : null;
+    const url = new URL(u);
+    return url.protocol === "https:" && (url.hostname === "nowpayments.io" || url.hostname.endsWith(".nowpayments.io"));
   } catch {
-    return null;
+    return false;
   }
 }
 

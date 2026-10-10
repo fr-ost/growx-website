@@ -3,20 +3,19 @@ import { NextRequest } from "next/server";
 
 const getCurrentUser = vi.fn();
 const rpc = vi.fn();
-const createNowPayment = vi.fn();
-const minUsd = vi.fn<(c: string) => Promise<number | null>>(async () => null);
+const createNowInvoice = vi.fn();
 
 vi.mock("@/lib/supabase/user", () => ({ getCurrentUser: () => getCurrentUser() }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ rpc }) }));
 vi.mock("@/lib/origin", () => ({ requestOrigin: async () => "https://www.growxapp.org" }));
-vi.mock("@/lib/billing/nowpayments", async (orig) => ({ ...(await orig<typeof import("@/lib/billing/nowpayments")>()), createNowPayment: (i: unknown) => createNowPayment(i), getMinPaymentUsd: async (c: string) => minUsd(c) }));
+vi.mock("@/lib/billing/nowpayments", async (orig) => ({ ...(await orig<typeof import("@/lib/billing/nowpayments")>()), createNowInvoice: (i: unknown) => createNowInvoice(i) }));
 
 const { POST: cryptoCheckout } = await import("@/app/api/billing/crypto/checkout/route");
 const { GET: options } = await import("@/app/api/billing/options/route");
 
 const ENV = {
   NEXT_PUBLIC_SUPABASE_URL: "https://x.supabase.co", NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "pk", SUPABASE_SERVICE_ROLE_KEY: "service-role-secret",
-  NOWPAYMENTS_ENV: "sandbox", NOWPAYMENTS_API_KEY: "np-key", NOWPAYMENTS_IPN_SECRET: "np-ipn", NOWPAYMENTS_PAY_CURRENCIES: "usdttrc20,usdcerc20",
+  NOWPAYMENTS_ENV: "sandbox", NOWPAYMENTS_API_KEY: "np-key", NOWPAYMENTS_IPN_SECRET: "np-ipn",
 };
 const KEYS = [...Object.keys(ENV), "EARLY_ADOPTER_ENABLED", "BILLING_LIVE_APPROVED"];
 
@@ -30,66 +29,76 @@ beforeEach(() => {
   Object.assign(process.env, ENV);
   getCurrentUser.mockReset().mockResolvedValue(USER);
   rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : { data: null, error: null }));
-  createNowPayment.mockReset();
-  minUsd.mockReset().mockResolvedValue(null);
+  createNowInvoice.mockReset();
 });
 
-describe("POST /api/billing/crypto/checkout", () => {
-  const good = { payment_id: "999", pay_address: "TAddr", order_id: ORDER_ID, price_amount: 1.99, pay_amount: 2.01, pay_currency: "usdttrc20", expiration_estimate_date: new Date(Date.now() + 3600_000).toISOString() };
+describe("POST /api/billing/crypto/checkout (hosted invoice)", () => {
+  const good = { id: "4522625843", invoice_url: "https://nowpayments.io/payment/?iid=4522625843", order_id: ORDER_ID, price_amount: "1.99", price_currency: "usd" };
+  const start = (body: unknown = { product: "PRO_MONTHLY" }, headers?: Record<string, string>) => cryptoCheckout(req("/api/billing/crypto/checkout", body, headers));
 
-  it("requires an authenticated same-origin caller and strict input", async () => {
+  it("requires an authenticated same-origin caller and strict input (only a product id)", async () => {
     getCurrentUser.mockResolvedValue(null);
-    expect((await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }))).status).toBe(401);
+    expect((await start()).status).toBe(401);
     getCurrentUser.mockResolvedValue(USER);
-    expect((await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20", price_amount: 0.01 }))).status).toBe(400);
-    expect((await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }, { origin: "https://evil.example", host: "www.growxapp.org" }))).status).toBe(403);
-    expect(createNowPayment).not.toHaveBeenCalled();
+    for (const bad of [{ product: "PRO_MONTHLY", price_amount: 0.01 }, { product: "PRO_MONTHLY", payCurrency: "eth" }, { product: "FREE" }, {}])
+      expect((await start(bad)).status, JSON.stringify(bad)).toBe(400);
+    expect((await start({ product: "PRO_MONTHLY" }, { origin: "https://evil.example", host: "www.growxapp.org" })).status).toBe(403);
+    getCurrentUser.mockResolvedValue({ ...USER, email_confirmed_at: null });
+    expect((await start()).status).toBe(403);
+    expect(createNowInvoice).not.toHaveBeenCalled();
   });
 
-  it("only offers assets from the server allowlist", async () => {
-    const res = await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "btc" }));
-    expect(res.status).toBe(400);
-    expect((await res.json()).error.code).toBe("unsupported_asset");
-    expect(createNowPayment).not.toHaveBeenCalled();
-  });
-
-  it("creates the payment with the server's amount and order id, records the provider reference, and returns payment details", async () => {
-    createNowPayment.mockResolvedValue(good);
-    const res = await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }));
+  it("creates the order for the session user with the server's price and no preselected coin, then returns the invoice URL", async () => {
+    createNowInvoice.mockResolvedValue(good);
+    const res = await start();
     expect(res.status).toBe(200);
-    expect(rpc.mock.calls.find((c) => c[0] === "create_checkout_order")![1]).toMatchObject({ p_user_id: USER.id, p_provider: "nowpayments", p_amount_minor: 199, p_asset: "usdttrc20", p_period_days: 30 });
-    expect(createNowPayment).toHaveBeenCalledWith({ orderId: ORDER_ID, productId: "PRO_MONTHLY", payCurrency: "usdttrc20", callbackUrl: "https://www.growxapp.org/api/webhooks/nowpayments" });
-    expect(rpc.mock.calls.find((c) => c[0] === "attach_order_ref")![1]).toMatchObject({ p_ref: "999" });
-    const body = await res.json();
-    expect(body.payment).toMatchObject({ address: "TAddr", amount: "2.01", currency: "usdttrc20" });
-    expect(body.prepaid).toBe(30);
+    expect(rpc.mock.calls.find((c) => c[0] === "create_checkout_order")![1]).toMatchObject({ p_user_id: USER.id, p_provider: "nowpayments", p_amount_minor: 199, p_asset: null, p_period_days: 30 });
+    expect(createNowInvoice).toHaveBeenCalledWith({
+      orderId: ORDER_ID, productId: "PRO_MONTHLY",
+      callbackUrl: "https://www.growxapp.org/api/webhooks/nowpayments",
+      successUrl: `https://www.growxapp.org/checkout/${ORDER_ID}`,
+      cancelUrl: `https://www.growxapp.org/checkout/${ORDER_ID}?canceled=1`,
+    });
+    expect(rpc.mock.calls.find((c) => c[0] === "attach_order_ref")![1]).toMatchObject({ p_order_id: ORDER_ID, p_ref: null });
+    expect(await res.json()).toEqual({ orderId: ORDER_ID, invoiceUrl: good.invoice_url });
   });
 
-  it("refuses a provider response that doesn't match the order (amount, asset, order id, address) and closes the order", async () => {
-    for (const bad of [{ price_amount: 0.01 }, { pay_currency: "usdterc20" }, { order_id: "99999999-9999-4999-8999-999999999999" }, { pay_address: "" }]) {
-      createNowPayment.mockResolvedValue({ ...good, ...bad });
+  it("refuses a provider response that doesn't match (amount, order id, non-NOWPayments URL) and closes the order", async () => {
+    for (const bad of [{ price_amount: "0.01" }, { order_id: "99999999-9999-4999-8999-999999999999" }, { invoice_url: "https://evil.example/pay" }, { invoice_url: "http://nowpayments.io/x" }, { invoice_url: undefined }, { id: undefined }]) {
+      createNowInvoice.mockResolvedValue({ ...good, ...bad });
       rpc.mockClear();
-      const res = await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }));
+      const res = await start();
       expect(res.status, JSON.stringify(bad)).toBe(502);
       expect(rpc).toHaveBeenCalledWith("close_checkout_order", expect.objectContaining({ p_status: "failed" }));
       expect(rpc.mock.calls.some((c) => c[0] === "attach_order_ref")).toBe(false);
     }
   });
 
-  it("is unavailable without NOWPayments configuration", async () => {
-    delete process.env.NOWPAYMENTS_IPN_SECRET;
-    expect((await cryptoCheckout(req("/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }))).status).toBe(503);
+  it("a provider error closes the order and returns a short reference, never provider details", async () => {
+    createNowInvoice.mockRejectedValue(new Error("NOWPayments invoice failed with HTTP 400 (INVALID_REQUEST_PARAMS: secret detail)"));
+    const res = await start();
+    expect(res.status).toBe(502);
+    const text = JSON.stringify(await res.json());
+    expect(text).toContain("ref: 400");
+    expect(text).not.toContain("secret detail");
+    expect(rpc).toHaveBeenCalledWith("close_checkout_order", expect.objectContaining({ p_status: "failed" }));
   });
-});
 
-describe("coin minimums", () => {
-  it("refuses with a clear message, and creates no order, when the coin minimum exceeds the plan price", async () => {
-    minUsd.mockResolvedValue(5.5);
-    const res = await cryptoCheckout(req("https://www.growxapp.org/api/billing/crypto/checkout", { product: "PRO_MONTHLY", payCurrency: "usdttrc20" }));
-    expect(res.status).toBe(409);
-    expect((await res.json()).error.message).toMatch(/minimum payment of about \$5\.50/);
-    expect(rpc).not.toHaveBeenCalledWith("create_checkout_order", expect.anything());
-    expect(createNowPayment).not.toHaveBeenCalled();
+  it("maps order refusals to 409 without calling the provider", async () => {
+    rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "error", code: "already_owned" }, error: null } : { data: null, error: null }));
+    expect((await start({ product: "PRO_LIFETIME" })).status).toBe(409);
+    expect(createNowInvoice).not.toHaveBeenCalled();
+  });
+
+  it("is unavailable without NOWPayments configuration or live approval", async () => {
+    delete process.env.NOWPAYMENTS_IPN_SECRET;
+    expect((await start()).status).toBe(503);
+    process.env.NOWPAYMENTS_IPN_SECRET = "np-ipn";
+    process.env.NOWPAYMENTS_ENV = "production";
+    expect((await start()).status).toBe(503);
+    process.env.BILLING_LIVE_APPROVED = "true";
+    createNowInvoice.mockResolvedValue(good);
+    expect((await start()).status).toBe(200);
   });
 });
 
@@ -97,7 +106,8 @@ describe("GET /api/billing/options", () => {
   it("exposes availability only (no keys, price ids or counts)", async () => {
     const body = await (await options()).json();
     expect(body.card).toBeUndefined();
-    expect(body.crypto).toMatchObject({ available: true, prepaid: true, payCurrencies: ["usdttrc20", "usdcerc20"] });
+    expect(body.crypto).toMatchObject({ available: true, prepaid: true });
+    expect(body.crypto.payCurrencies).toBeUndefined();
     expect(body.earlyAdopter).toBe("unavailable");
     const text = JSON.stringify(body);
     for (const secret of ["service-role-secret", "np-ipn", "np-key"]) expect(text).not.toContain(secret);

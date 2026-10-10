@@ -290,61 +290,74 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const bp = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
   await bp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
   const soon = await bp.locator("button:has-text('Coming soon')").count();
-  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("button:has-text('Pay with crypto')").count()) === 0, String(soon));
+  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("a:has-text('Pay with crypto')").count()) === 0, String(soon));
   ok("pricing: 'Coming soon' buttons are disabled", await bp.locator("button:has-text('Coming soon')").evaluateAll((els) => els.every((e) => e.disabled)));
   const priceText = await bp.locator("main").innerText();
   ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99", "$0.99"].every((x) => priceText.includes(x)));
   ok("pricing never shows a remaining-slots number", !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(priceText));
   await bp.close();
 
-  // UI states with mocked billing endpoints (availability + provider progress); the server never grants from the browser
+  // Checkout flow with mocked billing endpoints: pricing -> /checkout invoice page -> NOWPayments invoice -> /checkout/{id} status
   const mctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
   const mp = await mctx.newPage();
   const merrs = []; mp.on("pageerror", (e) => merrs.push(String(e)));
-  const options = { crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], payCurrencies: ["usdttrc20", "usdcerc20"], prepaid: true }, earlyAdopter: "unavailable" };
-  let orderState = { status: "pending", paymentStatus: "pending", providerStatus: "waiting", crypto: { address: "TTestAddress123", amount: "1.99", currency: "usdttrc20", actuallyPaid: 0, network: "TRC20" } };
+  const ORDER = "00000000-0000-4000-8000-0000000000aa";
+  const options = { crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], prepaid: true }, earlyAdopter: "unavailable" };
+  let orderState = { product: "PRO_MONTHLY", status: "pending", paymentStatus: null, providerStatus: null };
   let checkoutBody = null;
+  let checkoutReply = { status: 200, json: { orderId: ORDER, invoiceUrl: "https://nowpayments.io/payment/?iid=4522625843" } };
   await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: options }));
-  await mctx.route("**/api/billing/crypto/checkout", async (r) => {
-    checkoutBody = r.request().postDataJSON();
-    if (checkoutBody.payCurrency === "boom") return r.fulfill({ status: 502, json: { error: { code: "provider_error" } } });
-    await r.fulfill({ json: { orderId: "00000000-0000-4000-8000-0000000000aa", payment: { address: "TTestAddress123", amount: "1.99", currency: "usdttrc20", network: "TRC20", extraId: null, expiresAt: new Date(Date.now() + 3600e3).toISOString() } } });
-  });
+  await mctx.route("**/api/billing/crypto/checkout", async (r) => { checkoutBody = r.request().postDataJSON(); await r.fulfill(checkoutReply); });
   await mctx.route("**/api/billing/orders/*", (r) => r.fulfill({ json: orderState }));
+  await mctx.route("https://nowpayments.io/**", (r) => r.fulfill({ contentType: "text/html", body: "<title>NOWPayments invoice</title><h1>NOWPayments invoice</h1>" }));
+
   await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-  ok("mocked: crypto config shows 'Pay with crypto' and test-mode notice", (await mp.locator("button:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
-  ok("no card payment option exists; Paddle routes are gone", (await mp.locator("button:has-text('Pay by card')").count()) === 0 && (await fetch(BASE + "/api/webhooks/paddle", { method: "POST" })).status === 404 && !(await mp.locator("body").innerText()).includes("Paddle"));
+  ok("mocked: crypto config shows 'Pay with crypto' and test-mode notice", (await mp.locator("a:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
+  ok("no card payment option exists; Paddle routes are gone", (await mp.locator("text=Pay by card").count()) === 0 && (await fetch(BASE + "/api/webhooks/paddle", { method: "POST" })).status === 404 && !(await mp.locator("body").innerText()).includes("Paddle"));
   ok("mocked: yearly (not offered) stays 'Coming soon'", (await mp.locator("button:has-text('Coming soon')").count()) >= 1);
-  await mp.locator("button:has-text('Pay with crypto')").first().click();
-  await mp.locator("dialog[open]").waitFor();
-  ok("crypto dialog explains prepaid, no automatic debits", /do not renew automatically/i.test(await mp.locator("dialog").innerText()) || /one-time/i.test(await mp.locator("dialog").innerText()));
-  await mp.click("button:has-text('Show payment details')");
-  await mp.locator("text=Send exactly").waitFor();
-  const dlg = await mp.locator("dialog").innerText();
-  ok("crypto dialog shows server-provided amount, asset, address and network", dlg.includes("1.99 USDTTRC20") && dlg.includes("TTestAddress123") && dlg.includes("TRC20"));
-  ok("client sent only product + payCurrency (no price/amount)", Object.keys(checkoutBody).sort().join() === "payCurrency,product", JSON.stringify(checkoutBody));
-  ok("crypto dialog starts in waiting state, no success claim", /Waiting for your payment/.test(dlg) && !/Payment confirmed/.test(dlg));
-  orderState = { ...orderState, paymentStatus: "partially_paid", providerStatus: "partially_paid", crypto: { ...orderState.crypto, actuallyPaid: "0.5" } };
-  ok("partial payment is shown as NOT active", await mp.locator("text=Partial payment received").waitFor({ timeout: 15000 }).then(() => true, () => false) && /not active until the full amount/i.test(await mp.locator("dialog").innerText()));
-  orderState = { ...orderState, paymentStatus: "confirming", providerStatus: "confirming" };
-  ok("confirming is shown without granting", await mp.locator("text=Payment detected").waitFor({ timeout: 15000 }).then(() => true, () => false) && !(await mp.locator("text=Payment confirmed").count()));
-  orderState = { ...orderState, status: "fulfilled", paymentStatus: "succeeded", providerStatus: "finished" };
-  ok("only a server-fulfilled order shows 'Payment confirmed'", await mp.locator("text=Payment confirmed").waitFor({ timeout: 15000 }).then(() => true, () => false));
-  await mp.keyboard.press("Escape");
-  orderState = { status: "expired", paymentStatus: "expired", providerStatus: "expired", crypto: null };
-  await mp.reload({ waitUntil: "networkidle" });
-  await mp.locator("button:has-text('Pay with crypto')").first().click();
-  await mp.click("button:has-text('Show payment details')");
-  ok("expired order shows 'Payment window expired'", await mp.locator("text=Payment window expired").waitFor({ timeout: 15000 }).then(() => true, () => false));
-  await mp.keyboard.press("Escape");
-  // provider error is surfaced without a stack or secrets
-  await mp.reload({ waitUntil: "networkidle" });
-  await mp.locator("button:has-text('Pay with crypto')").first().click();
-  await mp.locator("#asset").selectOption("usdcerc20");
-  await mctx.unroute("**/api/billing/crypto/checkout");
-  await mctx.route("**/api/billing/crypto/checkout", (r) => r.fulfill({ status: 502, json: { error: { code: "provider_error" } } }));
-  await mp.click("button:has-text('Show payment details')");
-  ok("provider error shows a friendly message and retry", await mp.locator("text=could not be reached").waitFor({ timeout: 10000 }).then(() => true, () => false) && (await mp.locator("button:has-text('Try again')").count()) === 1);
+  ok("pricing names the accepted coins, not USDT TRC20", /ETH/.test(await mp.locator("main").innerText()) && !/TRC20/i.test(await mp.locator("main").innerText()));
+
+  // signed out -> login -> back to the invoice page
+  await mp.locator("a:has-text('Pay with crypto')").first().click();
+  await mp.waitForURL("**/login?next=*");
+  ok("checkout requires login and remembers the plan", decodeURIComponent(mp.url()).includes("next=/checkout?plan=PRO_MONTHLY"), mp.url());
+  await mp.fill("#email", "demo@example.com"); await mp.fill("#password", "correct-horse-1");
+  await mp.click("button[type=submit]");
+  await mp.waitForURL("**/checkout?plan=PRO_MONTHLY", { timeout: 15000 });
+  const inv = await mp.locator("main").innerText();
+  ok("invoice page shows plan, server price and prepaid term", /monthly/i.test(inv) && inv.includes("$1.99") && /30 days of Premium, prepaid/.test(inv), inv.slice(0, 300));
+  ok("invoice page explains the customer picks the coin on the next page", /choose the cryptocurrency/i.test(inv) && /do not renew automatically/i.test(inv));
+  await mp.click("button:has-text('Continue to payment')");
+  await mp.waitForURL("https://nowpayments.io/**", { timeout: 15000 });
+  ok("continue -> browser goes to the NOWPayments hosted invoice", mp.url().startsWith("https://nowpayments.io/payment/?iid="), mp.url());
+  ok("client sent only the product (no coin, price or amount)", JSON.stringify(checkoutBody) === JSON.stringify({ product: "PRO_MONTHLY" }), JSON.stringify(checkoutBody));
+
+  // provider error on the invoice page
+  checkoutReply = { status: 502, json: { error: { code: "provider_error", message: "Could not start crypto checkout. Please try again. (ref: 400)" } } };
+  await mp.goto(BASE + "/checkout?plan=PRO_LIFETIME", { waitUntil: "networkidle" });
+  ok("lifetime invoice shows $29.99 one-time", /\$29\.99/.test(await mp.locator("main").innerText()) && /one-time payment/i.test(await mp.locator("main").innerText()));
+  await mp.click("button:has-text('Continue to payment')");
+  ok("provider error is shown with its reference and the button is usable again", await mp.locator("text=(ref: 400)").waitFor({ timeout: 10000 }).then(() => true, () => false) && (await mp.locator("button:has-text('Continue to payment')").isEnabled()));
+  await mp.goto(BASE + "/checkout?plan=NOT_A_PLAN");
+  ok("unknown plan -> pricing", mp.url().endsWith("/pricing"), mp.url());
+
+  // status page (NOWPayments success_url): only the server's 'fulfilled' shows success
+  const statusAt = async (state, path = `/checkout/${ORDER}`) => { orderState = { product: "PRO_MONTHLY", paymentStatus: null, ...state }; await mp.goto(BASE + path, { waitUntil: "networkidle" }); return mp.locator("main"); };
+  const seen = async (text) => mp.locator(`text=${text}`).first().waitFor({ timeout: 15000 }).then(() => true, () => false);
+  await statusAt({ status: "pending", providerStatus: null });
+  ok("status: waiting for payment, no success claim", (await seen("Waiting for your payment")) && !(await mp.locator("text=Payment confirmed").count()));
+  await statusAt({ status: "pending", providerStatus: "partially_paid" });
+  ok("status: partial payment is NOT active", (await seen("Partial payment received")) && /not active until the full amount/i.test(await mp.locator("main").innerText()));
+  await statusAt({ status: "pending", providerStatus: "confirming" });
+  ok("status: confirming shown without granting", (await seen("Payment detected")) && !(await mp.locator("text=Payment confirmed").count()));
+  orderState = { ...orderState, status: "fulfilled", providerStatus: "finished" };
+  ok("status: page updates by itself to 'Payment confirmed' once the server says fulfilled", await seen("Payment confirmed"));
+  await statusAt({ status: "expired", providerStatus: "expired" });
+  ok("status: expired order explained, with a new-payment link", (await seen("Payment window expired")) && (await mp.locator("a:has-text('Start a new payment')").count()) === 1);
+  await statusAt({ status: "pending", providerStatus: null }, `/checkout/${ORDER}?canceled=1`);
+  ok("status: canceled invoice explained", await seen("Payment not finished"));
+  await statusAt({ status: "refund_required", providerStatus: "finished" });
+  ok("status: refund-required explained", await seen("Payment received but not activated"));
   ok("no runtime errors in billing UI", merrs.length === 0, merrs.join(" | ").slice(0, 300));
 
   // early-adopter offer states (server-reported)

@@ -27,7 +27,7 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      crypto: { available: crypto.available, environment: crypto.environment, products: crypto.products, payCurrencies: crypto.payCurrencies, prepaid: true },
+      crypto: { available: crypto.available, environment: crypto.environment, products: crypto.products, prepaid: true },
       earlyAdopter,
     },
     { headers: { "Cache-Control": "no-store" } },
