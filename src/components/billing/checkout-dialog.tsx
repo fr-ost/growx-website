@@ -8,7 +8,6 @@ import { Notice } from "@/components/ui/primitives";
 import { getProduct, type ProductId } from "@/lib/billing/catalog";
 import { minorToDecimal } from "@/lib/billing/catalog";
 
-type Method = "card" | "crypto";
 interface OrderView {
   status: "created" | "pending" | "fulfilled" | "expired" | "failed" | "canceled" | "refund_required";
   paymentStatus: string | null;
@@ -20,8 +19,6 @@ interface CryptoPayment { address: string; amount: string; currency: string; net
 type Phase =
   | { kind: "choose" }
   | { kind: "starting" }
-  | { kind: "card-open" }
-  | { kind: "waiting"; orderId: string }
   | { kind: "crypto"; orderId: string; payment: CryptoPayment }
   | { kind: "done" }
   | { kind: "error"; message: string };
@@ -48,25 +45,20 @@ async function post(path: string, body: unknown) {
  */
 export function CheckoutDialog({
   product,
-  method,
   payCurrencies,
-  paddle,
   onClose,
 }: {
   product: ProductId;
-  method: Method;
   payCurrencies: string[];
-  paddle: { environment: "sandbox" | "production" } | null;
   onClose: () => void;
 }) {
   const router = useRouter();
   const ref = useRef<HTMLDialogElement>(null);
   const p = getProduct(product);
-  const [phase, setPhase] = useState<Phase>(method === "card" ? { kind: "starting" } : { kind: "choose" });
+  const [phase, setPhase] = useState<Phase>({ kind: "choose" });
   const [asset, setAsset] = useState(payCurrencies[0] ?? "");
   const [order, setOrder] = useState<OrderView | null>(null);
   const [copied, setCopied] = useState(false);
-  const started = useRef(false);
 
   useEffect(() => {
     const d = ref.current;
@@ -82,7 +74,7 @@ export function CheckoutDialog({
   };
 
   // Poll the server for the order state (the only source of truth).
-  const orderId = phase.kind === "waiting" || phase.kind === "crypto" ? phase.orderId : null;
+  const orderId = phase.kind === "crypto" ? phase.orderId : null;
   useEffect(() => {
     if (!orderId) return;
     let stop = false;
@@ -103,45 +95,14 @@ export function CheckoutDialog({
       } catch {
         /* keep polling */
       }
-      if (!stop && tries < 200) timer = setTimeout(tick, method === "crypto" ? 8000 : 4000);
+      if (!stop && tries < 200) timer = setTimeout(tick, 8000);
     };
     let timer = setTimeout(tick, 1500);
     return () => {
       stop = true;
       clearTimeout(timer);
     };
-  }, [orderId, method, router]);
-
-  const startCard = async () => {
-    setPhase({ kind: "starting" });
-    const { status, json } = await post("/api/billing/paddle/checkout", { product });
-    if (status !== 200) return fail(status, json);
-    try {
-      const { initializePaddle } = await import("@paddle/paddle-js");
-      const pd = await initializePaddle({
-        environment: json.environment,
-        token: json.clientToken,
-        eventCallback: (e) => {
-          if (e.name === ("checkout.completed" as never)) setPhase({ kind: "waiting", orderId: json.orderId });
-          if (e.name === ("checkout.closed" as never)) setPhase((cur) => (cur.kind === "card-open" ? { kind: "choose" } : cur));
-        },
-      });
-      if (!pd) throw new Error("paddle_init");
-      setPhase({ kind: "card-open" });
-      pd.Checkout.open({ transactionId: json.transactionId });
-    } catch {
-      setPhase({ kind: "error", message: "Could not load the secure card checkout. Please try again." });
-    }
-  };
-
-  useEffect(() => {
-    if (method === "card" && !started.current) {
-      started.current = true;
-      void startCard();
-    }
-    // Starts exactly once when the dialog opens for the card flow.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [method]);
+  }, [orderId, router]);
 
   const startCrypto = async () => {
     setPhase({ kind: "starting" });
@@ -170,14 +131,13 @@ export function CheckoutDialog({
           <div>
             <h2 id="checkout-title" className="text-xl font-extrabold">{p.name}</h2>
             <p className="mt-1 text-sm text-text-2">
-              {price} · {method === "card" ? "Card & other methods via Paddle" : "Crypto via NOWPayments"}
-              {paddle?.environment === "sandbox" && method === "card" ? " · TEST MODE" : ""}
+              {price} · Crypto via NOWPayments
             </p>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="rounded-lg p-1.5 text-muted hover:bg-surface-2 hover:text-text">✕</button>
         </div>
 
-        {phase.kind === "choose" && method === "crypto" ? (
+        {phase.kind === "choose" ? (
           <div className="space-y-4">
             <Notice tone="info" title={p.cryptoPeriodDays ? `Prepaid for ${p.cryptoPeriodDays} days` : "One-time payment"}>
               {p.cryptoPeriodDays ? "Crypto plans do not renew automatically. When the period ends you pay again to continue; nothing is debited from your wallet." : "Pay once for permanent Premium."}
@@ -195,18 +155,6 @@ export function CheckoutDialog({
 
         {phase.kind === "starting" ? (
           <p className="flex items-center gap-3 py-6 text-text-2" role="status"><Spinner /> <span className="[&]:text-text-2">Preparing secure checkout…</span></p>
-        ) : null}
-
-        {phase.kind === "card-open" ? (
-          <Notice tone="info" title="Complete your payment in the secure window">
-            Premium is activated only after the payment provider confirms your payment to GrowX. You can close this message.
-          </Notice>
-        ) : null}
-
-        {phase.kind === "waiting" ? (
-          <Notice tone="info" title="Payment submitted, waiting for confirmation">
-            We&apos;re waiting for Paddle to confirm your payment with GrowX. This usually takes a few seconds. This is not yet an activated plan. If it takes longer than a few minutes, your Account page will update automatically once confirmed.
-          </Notice>
         ) : null}
 
         {phase.kind === "crypto" ? (
@@ -254,7 +202,7 @@ export function CheckoutDialog({
           <div className="space-y-4">
             <Notice tone="error">{phase.message}</Notice>
             <div className="flex gap-3">
-              <Button onClick={() => (method === "card" ? startCard() : setPhase({ kind: "choose" }))}>Try again</Button>
+              <Button onClick={() => setPhase({ kind: "choose" })}>Try again</Button>
               <Button variant="secondary" onClick={close}>Close</Button>
             </div>
           </div>

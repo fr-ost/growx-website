@@ -32,7 +32,7 @@ export function EarlyAdopterBanner({ tier }: { tier: PricingTier }) {
             <Badge tone={state === "available" ? "solid" : "neutral"}>{label}</Badge>
           </div>
           <p className="mt-1.5 text-text-2">
-            Permanent Premium for <strong>{tier.priceLabel}</strong> one-time, for the first {tier.purchaseLimit} successful purchases across card and crypto. Once they are gone, regular prices apply.
+            Permanent Premium for <strong>{tier.priceLabel}</strong> one-time, for the first {tier.purchaseLimit} successful purchases. Once they are gone, regular prices apply.
             {state === "temporarily_unavailable" ? " All remaining offers are currently reserved by customers who are checking out; check back shortly." : ""}
           </p>
         </div>

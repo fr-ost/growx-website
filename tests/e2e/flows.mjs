@@ -272,15 +272,15 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
 // ---------- billing: nothing is configured in this environment, so checkout must be unavailable
 {
   const opt = await (await fetch(BASE + "/api/billing/options")).json();
-  ok("billing options: no provider available when unconfigured", opt.card.available === false && opt.crypto.available === false && opt.earlyAdopter === "unavailable", JSON.stringify(opt).slice(0, 200));
+  ok("billing options: no provider available when unconfigured", opt.crypto.available === false && opt.earlyAdopter === "unavailable", JSON.stringify(opt).slice(0, 200));
   ok("billing options expose no keys, price ids or counts", !/pri_|apikey|secret|remaining|count/i.test(JSON.stringify(opt)));
-  for (const path of ["/api/billing/paddle/checkout", "/api/billing/crypto/checkout"]) {
+  for (const path of ["/api/billing/crypto/checkout"]) {
     const r = await fetch(BASE + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product: "PRO_LIFETIME", price: 1 }) });
     ok(`${path} refuses signed-out requests`, r.status === 401 || r.status === 403, String(r.status));
   }
   const ro = await fetch(BASE + "/api/billing/orders/00000000-0000-4000-8000-000000000001");
   ok("order status requires a session", ro.status === 401, String(ro.status));
-  for (const [path, header] of [["/api/webhooks/paddle", "paddle-signature"], ["/api/webhooks/nowpayments", "x-nowpayments-sig"]]) {
+  for (const [path, header] of [["/api/webhooks/nowpayments", "x-nowpayments-sig"]]) {
     const none = await fetch(BASE + path, { method: "POST", body: JSON.stringify({ event_type: "transaction.completed" }) });
     const bad = await fetch(BASE + path, { method: "POST", headers: { [header]: "ts=1;h1=deadbeef" }, body: JSON.stringify({ event_type: "transaction.completed" }) });
     ok(`${path} rejects unsigned and badly signed requests`, [400, 401, 503].includes(none.status) && [400, 401, 503].includes(bad.status), `${none.status}/${bad.status}`);
@@ -290,7 +290,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const bp = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
   await bp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
   const soon = await bp.locator("button:has-text('Coming soon')").count();
-  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("button:has-text('Pay by card'), button:has-text('Pay with crypto')").count()) === 0, String(soon));
+  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("button:has-text('Pay with crypto')").count()) === 0, String(soon));
   ok("pricing: 'Coming soon' buttons are disabled", await bp.locator("button:has-text('Coming soon')").evaluateAll((els) => els.every((e) => e.disabled)));
   const priceText = await bp.locator("main").innerText();
   ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99", "$0.99"].every((x) => priceText.includes(x)));
@@ -301,7 +301,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const mctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
   const mp = await mctx.newPage();
   const merrs = []; mp.on("pageerror", (e) => merrs.push(String(e)));
-  const options = { card: { available: false, environment: "sandbox", products: [] }, crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], payCurrencies: ["usdttrc20", "usdcerc20"], prepaid: true }, earlyAdopter: "unavailable" };
+  const options = { crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], payCurrencies: ["usdttrc20", "usdcerc20"], prepaid: true }, earlyAdopter: "unavailable" };
   let orderState = { status: "pending", paymentStatus: "pending", providerStatus: "waiting", crypto: { address: "TTestAddress123", amount: "1.99", currency: "usdttrc20", actuallyPaid: 0, network: "TRC20" } };
   let checkoutBody = null;
   await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: options }));
@@ -312,8 +312,8 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   });
   await mctx.route("**/api/billing/orders/*", (r) => r.fulfill({ json: orderState }));
   await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-  ok("mocked: crypto-only config shows 'Pay with crypto' and test-mode notice", (await mp.locator("button:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
-  ok("mocked: no card button when card is unavailable", (await mp.locator("button:has-text('Pay by card')").count()) === 0);
+  ok("mocked: crypto config shows 'Pay with crypto' and test-mode notice", (await mp.locator("button:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
+  ok("no card payment option exists; Paddle routes are gone", (await mp.locator("button:has-text('Pay by card')").count()) === 0 && (await fetch(BASE + "/api/webhooks/paddle", { method: "POST" })).status === 404 && !(await mp.locator("body").innerText()).includes("Paddle"));
   ok("mocked: yearly (not offered) stays 'Coming soon'", (await mp.locator("button:has-text('Coming soon')").count()) >= 1);
   await mp.locator("button:has-text('Pay with crypto')").first().click();
   await mp.locator("dialog[open]").waitFor();
@@ -350,7 +350,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   // early-adopter offer states (server-reported)
   for (const [state, expect] of [["available", "Limited offer"], ["temporarily_unavailable", "Temporarily unavailable"], ["unavailable", "Not on sale yet"]]) {
     await mctx.unroute("**/api/billing/options");
-    await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, card: { available: true, environment: "sandbox", products: ["PRO_LIFETIME_EARLY", "PRO_LIFETIME"] }, earlyAdopter: state } }));
+    await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, crypto: { ...options.crypto, products: ["PRO_LIFETIME_EARLY", "PRO_LIFETIME"] }, earlyAdopter: state } }));
     await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
     ok(`early-adopter state '${state}' -> '${expect}'`, (await mp.locator(`text=${expect}`).count()) >= 1);
     const t = await mp.locator("main").innerText();

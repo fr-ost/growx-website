@@ -3,7 +3,6 @@ import { IconLock, IconMail, IconStar, IconUser } from "@/components/icons";
 import { PlanSummary, formatDate } from "@/components/plan-summary";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, Notice } from "@/components/ui/primitives";
-import { SubscriptionControls } from "@/components/billing/subscription-controls";
 import { getProduct, isProductId } from "@/lib/billing/catalog";
 import { site } from "@/config/site";
 import { DataIssue } from "@/components/data-issue";
@@ -18,7 +17,7 @@ export const metadata = pageMetadata({ title: "Account", description: "Your Grow
 export const dynamic = "force-dynamic";
 
 const PRODUCT_NAME = (p: string) => (isProductId(p) ? getProduct(p).name : p);
-const PROVIDER_LABEL: Record<string, string> = { paddle: "Card (Paddle)", nowpayments: "Crypto (NOWPayments)" };
+const PROVIDER_LABEL: Record<string, string> = { nowpayments: "Crypto (NOWPayments)" };
 const PAYMENT_LABEL: Record<string, { text: string; tone: "ok" | "warn" | "neutral" | "accent" }> = {
   succeeded: { text: "Paid", tone: "ok" },
   pending: { text: "Pending", tone: "neutral" },
@@ -103,7 +102,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               const ended = s.current_period_end && Date.parse(s.current_period_end) <= now;
               const live = !revoked && s.status === "active" && !ended;
               const label = revoked ? (s.revoked_reason === "chargeback" ? "Access removed (chargeback)" : "Access removed (refund)") : s.status === "past_due" ? "Payment failed" : s.status === "canceled" ? "Canceled" : ended ? "Expired" : s.cancel_at_period_end ? "Active, cancels at period end" : "Active";
-              const paddleRecurring = s.provider === "paddle" && !lifetime;
               return (
                 <li key={s.id} className="space-y-3 py-4 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -114,9 +112,6 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
                     {lifetime ? "Lifetime access: no expiry date." : s.current_period_end ? `${live ? "Paid through" : "Paid through (ended)"}: ${formatDate(s.current_period_end)}` : null}
                     {s.provider === "nowpayments" && !lifetime ? " Prepaid: this plan does not renew automatically." : ""}
                   </p>
-                  {paddleRecurring && !revoked && (s.status === "active" || s.status === "past_due") ? (
-                    <SubscriptionControls canCancel={s.status === "active" && !s.cancel_at_period_end} pastDue={s.status === "past_due"} />
-                  ) : null}
                   {s.provider === "nowpayments" && !lifetime && !revoked ? (
                     <LinkButton href="/pricing" variant="secondary" size="sm">{live ? "Add more time" : "Renew"}</LinkButton>
                   ) : null}

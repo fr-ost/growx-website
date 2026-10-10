@@ -27,7 +27,7 @@ export default function TermsPage() {
       <p>GrowX uses a freemium model: a Free plan plus paid Premium plans. A 14-day Premium trial may be started once per account. We may change, limit or end trials and may refuse trials where abuse is suspected.</p>
       <h2>6. Premium and payments</h2>
       <p>
-        Premium plans (monthly, yearly, lifetime, and a limited early-adopter lifetime offer for the first 100 purchases) are paid in advance. Card payments are processed by Paddle, which acts as merchant of record and handles taxes; crypto payments are processed by NOWPayments and are prepaid for a fixed period without automatic renewal. Card subscriptions renew until cancelled. Premium is activated only after the payment provider confirms payment to us. Prices may change for future purchases. See the <a href="/refund-policy">Refund Policy</a> for refunds and the meaning of &quot;lifetime&quot;.
+        Premium plans (monthly, yearly, lifetime, and a limited early-adopter lifetime offer for the first 100 purchases) are paid in advance in cryptocurrency (USDT or USDC), processed by NOWPayments. Monthly and yearly plans are prepaid for 30 or 365 days and do not renew automatically; you pay again to continue. Network fees and any taxes are your responsibility. Premium is activated only after the payment provider confirms payment to us. Prices may change for future purchases. See the <a href="/refund-policy">Refund Policy</a> for refunds and the meaning of &quot;lifetime&quot;.
       </p>
       <h2>7. Acceptable use</h2>
       <p>Do not abuse the service, attempt to bypass plan limits, interfere with the API, or use GrowX for spam or unlawful activity.</p>

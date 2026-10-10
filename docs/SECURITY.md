@@ -9,7 +9,7 @@
 - Generic auth error messages; no tokens/emails logged by our code.
 - Security headers (`X-Frame-Options`, `nosniff`, HSTS, Referrer-Policy, Permissions-Policy).
 
-- Billing: webhook endpoints verify Paddle (SDK, raw body, 5 s timestamp window) and NOWPayments (HMAC-SHA512 over key-sorted JSON, constant-time compare, plus an API re-fetch) signatures before any state change; checkout endpoints require a session, same-origin, a strict body of only a product id; prices, plans, entitlement and early-adopter eligibility are server-owned; all billing SQL functions are service-role only; no payment secrets or card/wallet data are stored.
+- Billing: the webhook endpoint verifies NOWPayments (HMAC-SHA512 over key-sorted JSON, constant-time compare, plus an API re-fetch) signatures before any state change; checkout endpoints require a session, same-origin, a strict body of only a product id; prices, plans, entitlement and early-adopter eligibility are server-owned; all billing SQL functions are service-role only; no payment secrets or card/wallet data are stored.
 
 ## Must be done before production launch
 1. **Test against a real Supabase project**: apply migrations, then verify RLS with two real users using the anon key (PGlite is only an approximation).

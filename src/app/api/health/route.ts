@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isLocalUrl, PRODUCTION_URL, site } from "@/config/site";
 import { classifyDbError, type DbErrorKind } from "@/lib/db/errors";
 import { COLUMNS } from "@/lib/db/queries";
-import { nowPaymentsStatus, paddleStatus } from "@/lib/billing/config";
+import { nowPaymentsStatus } from "@/lib/billing/config";
 import { getSupabasePublicConfig, getSupabaseServiceKey } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -88,7 +88,6 @@ export async function GET(request: NextRequest) {
     if (new URL(site.url).host !== request.nextUrl.host) warnings.push(`Site URL host (${new URL(site.url).host}) differs from this request's host (${request.nextUrl.host}).`);
   }
 
-  const cardStatus = paddleStatus();
   const cryptoStatus = nowPaymentsStatus();
   const ok = auth === "ok" && database === "ok";
   return NextResponse.json(
@@ -101,7 +100,6 @@ export async function GET(request: NextRequest) {
       config: { siteUrl: site.url, vercelEnv, serviceKeyConfigured: !!getSupabaseServiceKey() },
       // Setting NAMES that are missing or invalid, never values. Payments are optional for "ok".
       billing: {
-        card: { available: cardStatus.available, environment: cardStatus.environment, problems: cardStatus.problems },
         crypto: { available: cryptoStatus.available, environment: cryptoStatus.environment, problems: cryptoStatus.problems },
         earlyAdopterEnabled: process.env.EARLY_ADOPTER_ENABLED === "true",
       },

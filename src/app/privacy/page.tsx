@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <li>Account data: your email address and a password hash or Google sign-in identifier, handled by Supabase Auth.</li>
         <li>An X username, only if you choose to enter it. It is self-reported and is not verified as belonging to you.</li>
         <li>Trial records: when a trial started and when it ends.</li>
-        <li>Subscription and payment records (plan, status, amount, currency, provider reference IDs). Card and wallet details are handled by the payment provider and are not stored by GrowX.</li>
+        <li>Subscription and payment records (plan, status, amount, currency, provider reference IDs). Wallet details and private keys are never requested or stored by GrowX; blockchain transactions are public by nature.</li>
         <li>Technical data such as IP address and request logs processed by the hosting provider.</li>
       </ul>
       <h2>What the website does not collect</h2>
@@ -39,7 +39,7 @@ export default function PrivacyPage() {
       <h2>Service providers</h2>
       <p>
         Supabase (database and authentication) and Vercel (hosting) process data on our behalf. Google processes
-        sign-in data if you use Google sign-in. Paddle (card payments, as merchant of record) and NOWPayments (crypto payments) process payments; they receive the data needed to take payment and send us only payment status and reference IDs. These providers may process data outside your country.
+        sign-in data if you use Google sign-in. NOWPayments processes crypto payments; it receives the data needed to take payment and send us only payment status and reference IDs. These providers may process data outside your country.
       </p>
       <h2>Retention and your rights</h2>
       <p>

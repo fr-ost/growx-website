@@ -2,7 +2,7 @@
 
 Marketing site, accounts and Premium-readiness backend for the **GrowX** Chrome extension (auto-follow and cleanup tools for X/Twitter).
 
-**Status: foundation phase** (product decisions in [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md)). Public pages, email/Google auth, protected dashboard/account, database schema with RLS, a 14-day trial action and an entitlement API are implemented. **Payments are integrated for sandbox/test use only** (Paddle cards + NOWPayments crypto, verified webhooks; see [`docs/BILLING.md`](docs/BILLING.md)); live payments are NOT enabled and the sandbox flows have not yet been run against the real providers. The extension is **not** connected to this site yet, and nothing has been deployed or configured on Supabase/Vercel by this repo's authors.
+**Status: foundation phase** (product decisions in [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md)). Public pages, email/Google auth, protected dashboard/account, database schema with RLS, a 14-day trial action and an entitlement API are implemented. **Payments are integrated for sandbox/test use only** (NOWPayments crypto, verified IPN; see [`docs/BILLING.md`](docs/BILLING.md)); live payments are NOT enabled and the sandbox flows have not yet been run against the real providers. The extension is **not** connected to this site yet, and nothing has been deployed or configured on Supabase/Vercel by this repo's authors.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (Postgres + Auth, `@supabase/ssr`) · Vercel.
 
@@ -46,7 +46,7 @@ See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification c
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION` | no | public | search-console verification tokens (see `docs/SEO.md`) |
 | `BILLING_GRACE_DAYS_CARD` / `BILLING_GRACE_DAYS_CRYPTO` | no | server | grace after failed recurring payment; defaults 3 / 0 |
 | `ALLOWED_EXTENSION_ORIGINS` | later | server | comma-separated `chrome-extension://ofiancichfcakbdgekhcahflpoglfgbh` |
-| `PADDLE_*`, `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN`, `NOWPAYMENTS_*`, `EARLY_ADOPTER_ENABLED`, `BILLING_LIVE_APPROVED` | for payments | server secret / public token | all optional; see `docs/BILLING.md` and `.env.example`. Checkout is unavailable until configured |
+| `NOWPAYMENTS_*`, `EARLY_ADOPTER_ENABLED`, `BILLING_LIVE_APPROVED` | for payments | server secret / public token | all optional; see `docs/BILLING.md` and `.env.example`. Checkout is unavailable until configured |
 
 ## Documentation
 - [`docs/SEO.md`](docs/SEO.md): keyword strategy, what is implemented, search-console steps
@@ -56,7 +56,7 @@ See [`docs/GO_LIVE.md`](docs/GO_LIVE.md) for the full go-live and verification c
 - [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md): owner-approved product decisions
 - [`docs/FEATURE_SPLIT.md`](docs/FEATURE_SPLIT.md): extension feature inventory and proposed Free/Premium split
 - [`docs/EXTENSION_INTEGRATION.md`](docs/EXTENSION_INTEGRATION.md): how the extension will authenticate and what must change in it
-- [`docs/BILLING.md`](docs/BILLING.md): Paddle/NOWPayments sandbox integration, setup, runbook, live-enable checklist
+- [`docs/BILLING.md`](docs/BILLING.md): NOWPayments (crypto) integration, setup, runbook
 - [`docs/BILLING_TESTING.md`](docs/BILLING_TESTING.md): what was tested and what was not
 - [`docs/PAYMENTS.md`](docs/PAYMENTS.md): original payment design/principles
 - [`docs/SECURITY.md`](docs/SECURITY.md): what is in place and what must be reviewed before launch

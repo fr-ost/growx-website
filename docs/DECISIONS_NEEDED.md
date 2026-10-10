@@ -12,12 +12,11 @@
 ## Still open
 - [ ] Lawyer review of the now-published `/privacy`, `/terms`, `/refund-policy`. Defaults used: 14-day refunds, "lifetime" = while Premium is offered, Bangladesh law/Rajshahi courts, 12-month liability cap, 7-year payment-record retention. Change if you disagree.
 - [ ] Confirm the Free/Premium split in `docs/FEATURE_SPLIT.md` (you said details are given and the extension is being updated aside; keep both in sync) and any cap on source profiles.
-- [ ] Confirm Paddle's actual retry/dunning schedule so the 3-day grace matches it; confirm NOWPayments recurring behaviour (crypto grace is 0 until then).
 - [ ] Early adopter defaults to confirm: over-cap paid purchases are auto-refunded; refunds do not free a slot.
 - [ ] Free daily manual-unfollow allowance and whether Free limits source profiles (`FEATURE_SPLIT.md`).
 - [ ] Create the Google OAuth client and enable it, if wanted.
-- [ ] Paddle business verification, NOWPayments account, supported crypto networks (see `BILLING.md` for the sandbox steps and the live checklist).
-- [ ] Create the Paddle sandbox products/prices and NOWPayments sandbox keys and put the values in Vercel (I never create or invent provider ids).
+- [ ] NOWPayments account, supported crypto networks (see `BILLING.md` for the sandbox steps and the live checklist).
+- [ ] Create the NOWPayments API key + IPN secret and add them in Vercel (see `BILLING.md`).
 - [ ] Confirm: crypto plans are prepaid periods (30/365 days) with no automatic renewal; refund/chargeback revokes access immediately; late early-adopter payments with no inventory are refunded manually.
 - [ ] Approve switching to live mode only after the sandbox checklist passes (`BILLING_LIVE_APPROVED`).
 - [ ] Whether to add website analytics (affects the privacy policy).

@@ -5,54 +5,14 @@ export type ProviderEnvironment = "sandbox" | "production";
 
 const val = (v: string | undefined) => v?.trim() || undefined;
 
-/** Live mode needs BOTH the provider env set to production AND an explicit approval flag. */
+/**
+ * Live is the default environment (NOWPAYMENTS_ENV=sandbox opts into NOWPayments' sandbox).
+ * Taking real payments additionally needs the explicit approval flag BILLING_LIVE_APPROVED=true.
+ */
 function resolveEnvironment(raw: string | undefined, env: Env): { environment: ProviderEnvironment; liveBlocked: boolean } {
-  const environment: ProviderEnvironment = raw === "production" ? "production" : "sandbox";
+  const environment: ProviderEnvironment = raw === "sandbox" ? "sandbox" : "production";
   const liveBlocked = environment === "production" && env.BILLING_LIVE_APPROVED !== "true";
   return { environment, liveBlocked };
-}
-
-// ---------------------------------------------------------------- Paddle
-const PRICE_ENV: Record<ProductId, string> = {
-  PRO_MONTHLY: "PADDLE_PRICE_ID_MONTHLY",
-  PRO_YEARLY: "PADDLE_PRICE_ID_YEARLY",
-  PRO_LIFETIME: "PADDLE_PRICE_ID_LIFETIME",
-  PRO_LIFETIME_EARLY: "PADDLE_PRICE_ID_EARLY_ADOPTER",
-};
-
-export interface PaddleConfig {
-  environment: ProviderEnvironment;
-  apiKey: string | undefined;
-  webhookSecret: string | undefined;
-  clientToken: string | undefined;
-  /** product -> Paddle price id (pri_...) taken ONLY from server env. */
-  prices: Partial<Record<ProductId, string>>;
-}
-
-export function getPaddleConfig(env: Env = process.env): PaddleConfig & { liveBlocked: boolean } {
-  const { environment, liveBlocked } = resolveEnvironment(env.PADDLE_ENV, env);
-  const prices: PaddleConfig["prices"] = {};
-  for (const id of PRODUCT_IDS) {
-    const v = val(env[PRICE_ENV[id]]);
-    if (v && /^pri_[a-z0-9]+$/i.test(v)) prices[id] = v;
-  }
-  return {
-    environment,
-    liveBlocked,
-    apiKey: val(env.PADDLE_API_KEY),
-    webhookSecret: val(env.PADDLE_WEBHOOK_SECRET),
-    clientToken: val(env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) ?? val(env.PADDLE_CLIENT_TOKEN),
-    prices,
-  };
-}
-
-/** Sandbox keys/tokens must not be mixed with live ones (a common, costly mistake). */
-export function paddleKeyMismatch(c: PaddleConfig): string | null {
-  const live = (s: string | undefined) => !!s && /(^live_|_live_)/.test(s);
-  const sbx = (s: string | undefined) => !!s && /(^test_|_sdbx_|_sandbox_)/.test(s);
-  if (c.environment === "sandbox" && (live(c.apiKey) || live(c.clientToken))) return "live credentials configured while PADDLE_ENV is sandbox";
-  if (c.environment === "production" && (sbx(c.apiKey) || sbx(c.clientToken))) return "sandbox credentials configured while PADDLE_ENV is production";
-  return null;
 }
 
 export interface ProviderStatus {
@@ -62,29 +22,6 @@ export interface ProviderStatus {
   products: ProductId[];
   /** Names of missing/invalid settings (never values). */
   problems: string[];
-}
-
-export function paddleStatus(env: Env = process.env): ProviderStatus {
-  const c = getPaddleConfig(env);
-  const problems: string[] = [];
-  if (!c.apiKey) problems.push("PADDLE_API_KEY");
-  if (!c.webhookSecret) problems.push("PADDLE_WEBHOOK_SECRET");
-  if (!c.clientToken) problems.push("NEXT_PUBLIC_PADDLE_CLIENT_TOKEN");
-  if (c.liveBlocked) problems.push("BILLING_LIVE_APPROVED (live mode not approved)");
-  const mismatch = paddleKeyMismatch(c);
-  if (mismatch) problems.push(mismatch);
-  const products = PRODUCT_IDS.filter((p) => !!c.prices[p] && (p !== "PRO_LIFETIME_EARLY" || env.EARLY_ADOPTER_ENABLED === "true"));
-  if (!products.length) problems.push("PADDLE_PRICE_ID_*");
-  const available = problems.length === 0;
-  return { available, environment: c.environment, products: available ? products : [], problems };
-}
-
-/** Price id -> product, built from server env only. Unknown price ids map to null. */
-export function paddleProductForPrice(priceId: string | undefined | null, env: Env = process.env): ProductId | null {
-  if (!priceId) return null;
-  const c = getPaddleConfig(env);
-  for (const id of PRODUCT_IDS) if (c.prices[id] === priceId) return id;
-  return null;
 }
 
 // ----------------------------------------------------------- NOWPayments

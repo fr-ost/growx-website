@@ -13,8 +13,6 @@
     "test:e2e": "node tests/e2e/run.mjs"
   },
   "dependencies": {
-    "@paddle/paddle-js": "^1.6.5",
-    "@paddle/paddle-node-sdk": "^3.10.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "next": "^16.4.0",

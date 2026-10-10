@@ -40,5 +40,5 @@ The build environment that produced this code cannot reach your live site or das
 ## 5. Before charging money
 - Vercel Firewall rate limits for `/api/*`, `/login`, `/signup`, `/forgot-password`.
 - Legal review of `/privacy` and `/terms`.
-- Paddle / NOWPayments: the sandbox integration exists but has not been run against the real providers. Follow `BILLING.md` (sandbox setup, end-to-end checklist, then the "Before enabling LIVE payments" list). Live mode needs `*_ENV=production` AND `BILLING_LIVE_APPROVED=true`.
+- Payments: NOWPayments (crypto) only; follow `BILLING.md` for the dashboard setup and the first live test.
 - Extension update (see `EXTENSION_INTEGRATION.md`).

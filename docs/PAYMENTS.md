@@ -1,6 +1,6 @@
 # Payment architecture
 
-> **Phase 3 implemented the sandbox integration described in [`BILLING.md`](BILLING.md)** (Paddle cards, NOWPayments crypto, verified webhooks, unified orders/payments/subscriptions). This file is the original design and still states the principles; where it differs, `BILLING.md` wins (e.g. crypto is prepaid with no renewals, and checkout availability comes from provider configuration, not a constant). Live payments are NOT enabled.
+> **Paddle was later removed; only NOWPayments is used.** **Phase 3 implemented the sandbox integration described in [`BILLING.md`](BILLING.md)** (NOWPayments crypto only; Paddle was removed, verified webhooks, unified orders/payments/subscriptions). This file is the original design and still states the principles; where it differs, `BILLING.md` wins (e.g. crypto is prepaid with no renewals, and checkout availability comes from provider configuration, not a constant). Live payments are NOT enabled.
 
 A browser redirect must **never** grant Premium.
 

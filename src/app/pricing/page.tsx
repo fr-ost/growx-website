@@ -17,12 +17,11 @@ export const metadata = pageMetadata({
 });
 
 const faqs = [
-  { q: "Can I buy Premium today?", a: "Not yet. Checkout is being prepared and no payment can be made on this site today. The prices shown are the planned launch prices." },
+  { q: "How do I pay?", a: "With cryptocurrency (USDT and USDC) through NOWPayments. Monthly and yearly plans are prepaid for 30 or 365 days and do not renew automatically; lifetime is a single payment. Premium turns on automatically once your payment is confirmed on the network." },
   { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, confirm your email, add your X username and start the trial from your dashboard. It lasts ${TRIAL_DAYS} days, needs no card, and each account and X username can use it once.` },
   { q: "Will the free version stay useful?", a: "Yes. Core features stay free: the Safe and Balanced autopilot, sources, queue, core filters, history, analytics, backup, the cleanup scan and manual unfollows." },
-  { q: "What is the Early Adopter Lifetime offer?", a: "A $0.99 one-time price for permanent Premium, limited to the first 100 successful, verified purchases. It is not on sale yet. When the 100 are sold, the offer ends and regular prices apply." },
-  { q: "What happens if a renewal payment fails?", a: "Once billing launches, card subscriptions keep Premium for a 3-day grace period after a failed renewal; after that the account returns to Free until a payment succeeds. Lifetime purchases are never affected." },
-  { q: "Which payment methods are planned?", a: "Cards and other methods through Paddle, and cryptocurrency (USDT and USDC first) through NOWPayments." },
+  { q: "What is the Early Adopter Lifetime offer?", a: "A $0.99 one-time price for permanent Premium, limited to the first 100 successful, verified purchases. When the 100 are sold, the offer ends and regular prices apply." },
+  { q: "What happens when my prepaid period ends?", a: "Premium ends on the date shown in your account and you return to the Free plan. Nothing is charged automatically; pay again whenever you want to continue. Lifetime purchases never expire." },
 ];
 
 export default function PricingPage() {
@@ -35,10 +34,10 @@ export default function PricingPage() {
 
       <Section className="pt-14 sm:pt-16">
         <Container className="space-y-6">
-          <div className="reveal mx-auto flex max-w-2xl items-center gap-3 rounded-2xl border border-warn/25 bg-warn-soft px-5 py-3.5 text-sm text-warn">
-            <IconInfo size={18} className="shrink-0" />
+          <div className="reveal mx-auto flex max-w-2xl items-center gap-3 rounded-2xl border border-accent/20 bg-accent-soft px-5 py-3.5 text-sm text-text-2">
+            <IconInfo size={18} className="shrink-0 text-accent" />
             <p>
-              <strong>Checkout is coming soon.</strong> Paid plans can&apos;t be purchased yet; prices shown are planned.
+              <strong>Pay with crypto (USDT / USDC).</strong> Monthly and yearly plans are prepaid and don&apos;t renew automatically. Premium activates once your payment is confirmed.
             </p>
           </div>
           <div className="pt-6">

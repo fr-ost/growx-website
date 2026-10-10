@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import type { ProductId } from "@/lib/billing/catalog";
 
 export interface BillingOptions {
-  card: { available: boolean; environment: "sandbox" | "production"; products: ProductId[] };
   crypto: { available: boolean; environment: "sandbox" | "production"; products: ProductId[]; payCurrencies: string[]; prepaid: boolean };
   earlyAdopter: "unavailable" | "available" | "temporarily_unavailable" | "sold_out";
 }

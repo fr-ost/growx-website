@@ -4,7 +4,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "Refund Policy",
-  description: "How refunds, cancellations and chargebacks work for GrowX Premium plans paid by card or crypto. Last updated October 2026.",
+  description: "How refunds, cancellations and chargebacks work for GrowX Premium plans paid in cryptocurrency. Last updated October 2026.",
   path: "/refund-policy",
 });
 
@@ -14,11 +14,11 @@ export default function RefundPolicyPage() {
       <p>This policy explains how refunds and cancellations work for GrowX Premium.</p>
       <h2>1. Plans covered</h2>
       <p>Monthly ($1.99), yearly ($14.99), lifetime ($29.99) and the limited Early Adopter lifetime offer ($0.99). The free plan and the 14-day trial cost nothing and need no refund.</p>
-      <h2>2. Cancelling a card subscription</h2>
-      <p>Monthly and yearly card plans are handled by our payment provider, Paddle. You can cancel at any time from your Account page. Cancelling stops future renewals; Premium stays active until the end of the period you already paid for.</p>
+      <h2>2. Cancelling</h2>
+      <p>Monthly and yearly plans are prepaid and never renew automatically, so there is nothing to cancel: Premium simply ends when the period you paid for ends.</p>
       <h2>3. Refund requests</h2>
       <p>
-        You can ask for a refund within 14 days of a purchase (a first monthly or yearly payment, or a lifetime purchase). Renewal payments are refundable within 14 days of the renewal charge if you did not use Premium since it renewed. After the window, refunds are at our discretion unless the law where you live says otherwise. To request a refund, email <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a> from your account email with your order details. Card payments are refunded to the original payment method by Paddle.
+        You can ask for a refund within 14 days of a purchase (a monthly, yearly or lifetime purchase), if you have not used Premium extensively in that time. After the window, refunds are at our discretion unless the law where you live says otherwise. To request a refund, email <a href={`mailto:${site.supportEmail}`}>{site.supportEmail}</a> from your account email with your order details.
       </p>
       <h2>4. Crypto payments</h2>
       <p>

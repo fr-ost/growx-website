@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { nowPaymentsStatus, paddleStatus } from "@/lib/billing/config";
+import { nowPaymentsStatus } from "@/lib/billing/config";
 import { getSupabaseServiceKey } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -10,9 +10,8 @@ export const dynamic = "force-dynamic";
  * no keys, price ids, counts or remaining-slot numbers.
  */
 export async function GET() {
-  const card = paddleStatus();
   const crypto = nowPaymentsStatus();
-  const providerOn = card.available || crypto.available;
+  const providerOn = crypto.available;
 
   let earlyAdopter: "unavailable" | "available" | "temporarily_unavailable" | "sold_out" = "unavailable";
   const earlyEnabled = process.env.EARLY_ADOPTER_ENABLED === "true";
@@ -28,7 +27,6 @@ export async function GET() {
 
   return NextResponse.json(
     {
-      card: { available: card.available, environment: card.environment, products: card.products },
       crypto: { available: crypto.available, environment: crypto.environment, products: crypto.products, payCurrencies: crypto.payCurrencies, prepaid: true },
       earlyAdopter,
     },

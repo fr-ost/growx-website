@@ -1,10 +1,9 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getProduct, isProductId, type ProductId } from "./catalog";
-import { getNowPaymentsConfig, getPaddleConfig, type Env } from "./config";
+import { getNowPaymentsConfig, type Env } from "./config";
 import type { BillingEffect } from "./effects";
 import { mapNowPayment, nowEventId, verifyIpnSignature, type NowPayment } from "./nowpayments";
-import { mapPaddleEvent, verifyPaddleSignature, type PaddleEvent } from "./paddle";
 
 export interface HandlerResult {
   status: number;
@@ -33,37 +32,6 @@ export async function applyBillingEffect(
   });
   if (error) throw new Error(`billing_apply failed: ${error.code ?? "unknown"}`);
   return String((data as { result?: string } | null)?.result ?? "unknown");
-}
-
-// ----------------------------------------------------------------- Paddle
-export async function handlePaddleWebhook(
-  rawBody: string,
-  signature: string | null,
-  deps: { admin: SupabaseClient; env?: Env; verify?: typeof verifyPaddleSignature },
-): Promise<HandlerResult> {
-  const env = deps.env ?? process.env;
-  const secret = getPaddleConfig(env).webhookSecret;
-  if (!secret) return { status: 503, body: { error: "not_configured" } };
-
-  // 1. Signature over the exact raw bytes, BEFORE parsing anything.
-  const ok = await (deps.verify ?? verifyPaddleSignature)(rawBody, signature, secret);
-  if (!ok) {
-    log("paddle_webhook_rejected", { reason: "invalid_signature" });
-    return { status: 401, body: { error: "invalid_signature" } };
-  }
-
-  let evt: PaddleEvent;
-  try {
-    evt = JSON.parse(rawBody) as PaddleEvent;
-  } catch {
-    return { status: 400, body: { error: "invalid_json" } };
-  }
-  if (typeof evt.event_id !== "string" || typeof evt.event_type !== "string") return { status: 400, body: { error: "invalid_event" } };
-
-  const effect = mapPaddleEvent(evt, env);
-  const result = await applyBillingEffect(deps.admin, "paddle", evt.event_id, evt.event_type, evt.occurred_at ?? null, effect);
-  log("paddle_webhook_processed", { event_id: evt.event_id, type: evt.event_type, result });
-  return { status: 200, body: { ok: true, result } };
 }
 
 // ------------------------------------------------------------ NOWPayments
