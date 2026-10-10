@@ -1,6 +1,6 @@
 # Billing: NOWPayments (crypto)
 
-Paddle was removed (it rejected the product). Payments are **cryptocurrency only, through NOWPayments hosted invoices**, in live mode by default. Nothing has been run against the real NOWPayments service yet (see [`BILLING_TESTING.md`](BILLING_TESTING.md)), so the first purchase should be a small real test that you make yourself.
+Paddle was removed (it rejected the product). Payments are **cryptocurrency only, through NOWPayments hosted invoices**, in live mode by default. Live NOWPayments IPNs have been received and verified in production (status `waiting` only); no payment has yet completed (`finished`), so the grant path has not been observed live. Make one small real purchase yourself before announcing it (see [`BILLING_TESTING.md`](BILLING_TESTING.md)).
 
 ## Prices (fixed in `src/config/pricing.ts`, never taken from the browser)
 | Product id | Plan granted | Price | Notes |
@@ -20,7 +20,8 @@ server: create_checkout_order() (SQL, atomic, no coin) → NOWPayments POST /inv
         → browser goes to the NOWPayments invoice page; the customer picks ANY coin enabled in your account
 NOWPayments ──IPN──▶ /api/webhooks/nowpayments
 server: verify x-nowpayments-sig (HMAC-SHA512 of key-sorted JSON) → re-fetch the payment from the NOWPayments API
-        → first verified payment binds the order to that payment id + coin
+        → verified payments bind the order to their payment id + coin: the first one binds; a later payment
+          that actually received funds re-binds only if the bound payment received nothing (coin switch)
         → billing_apply() (one SQL transaction, strict amount/coin/reference checks) → payments / subscriptions
 /checkout/{order}: only polls GET /api/billing/orders/{id}; it NEVER grants Premium.
 ```
@@ -60,6 +61,7 @@ Checkout stays "Coming soon" until the key, IPN secret and `BILLING_LIVE_APPROVE
 * `checkout_orders.status = 'refund_required'`: money moved but access was (correctly) not granted (late early-adopter payment with no slot, wrong amount/asset, partial payment). Refund manually from NOWPayments; the refund event closes the payment.
 * `partially_paid`: the customer must send the remainder to the same address or contact support.
 * `webhook_events.result` of `unlinked` / `rejected:*` shows why an event did nothing.
+* Vercel log event `nowpayments_payment_needs_review`: funds arrived on a payment that could not be applied (for example a customer paid twice on one invoice). Refund or resolve manually.
 
 ## Database
 Schema from `20261010050903_billing_core.sql` (applied to production). It still allows a `paddle` provider value, which is simply unused; no data or schema change was needed to remove Paddle.

@@ -43,8 +43,8 @@ export const pricingTiers: readonly PricingTier[] = [
     currency: "USD",
     interval: "month",
     priceLabel: "$1.99",
-    cadence: "per month",
-    blurb: "Flexible. Cancel any time once billing launches.",
+    cadence: "for 30 days",
+    blurb: "30 days of Premium, prepaid. No automatic renewal.",
   },
   {
     id: "PRO_YEARLY",
@@ -54,8 +54,8 @@ export const pricingTiers: readonly PricingTier[] = [
     currency: "USD",
     interval: "year",
     priceLabel: "$14.99",
-    cadence: "per year",
-    blurb: "About $1.25 a month, billed yearly.",
+    cadence: "for 365 days",
+    blurb: "365 days of Premium for about $1.25 a month, prepaid. No automatic renewal.",
     highlight: true,
   },
   {

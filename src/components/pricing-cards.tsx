@@ -9,7 +9,7 @@ import type { ProductId } from "@/lib/billing/catalog";
 const perks: Record<string, string[]> = {
   FREE: ["Safe & Balanced autopilot", "Sources, scored queue, core filters", "History, analytics, backup", "Cleanup scan & manual unfollow"],
   PRO_MONTHLY: ["Everything in Free", "Turbo & X Premium paces", "Advanced filters & bulk import", "High-volume cleanup"],
-  PRO_YEARLY: ["Everything in Premium", "About $1.25 per month", "One payment a year"],
+  PRO_YEARLY: ["Everything in Premium", "About $1.25 per month", "One payment for 365 days"],
   PRO_LIFETIME: ["Everything in Premium", "Pay once", "No renewal payments"],
 };
 

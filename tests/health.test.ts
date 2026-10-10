@@ -25,6 +25,15 @@ const healthyRpc = (name: string) =>
   Promise.resolve(name === "start_trial" ? { data: null, error: { code: "P0001", message: "x_username_required" } } : { data: true, error: null });
 
 describe("GET /api/health", () => {
+  it("probes only real tables (named queries such as subscription_details map to their table)", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    const REAL = new Set(["profiles", "x_profiles", "x_profile_history", "trials", "subscriptions", "payments", "webhook_events", "early_adopter_slots", "checkout_orders", "payment_adjustments"]);
+    tableResult.mockImplementation(async (t: string) => (REAL.has(t) ? { data: [], error: null } : { data: null, error: { code: "PGRST205", message: `Could not find the table 'public.${t}'` } }));
+    rpc.mockImplementation(healthyRpc);
+    const body = await (await GET(req())).json();
+    expect(body.database).toBe("ok");
+    expect(tableResult.mock.calls.map((c) => c[0]).every((t: string) => REAL.has(t))).toBe(true);
+  });
   it("200 when auth, every table and every function are present; leaks no secrets", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
     tableResult.mockResolvedValue({ data: [], error: null });

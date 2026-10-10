@@ -11,6 +11,9 @@ export const dynamic = "force-dynamic";
 type Check = "ok" | "failed" | "not_configured";
 type ObjectStatus = "ok" | DbErrorKind;
 
+/** COLUMNS keys that are named queries rather than table names. */
+const QUERY_TABLE: Record<string, string> = { subscription_details: "subscriptions" };
+
 /** Tables/columns the app reads, plus tables only the server writes. */
 const TABLE_PROBES: Record<string, string> = {
   ...COLUMNS,
@@ -51,7 +54,7 @@ export async function GET(request: NextRequest) {
       const admin = createAdminClient();
       await Promise.all(
         Object.entries(TABLE_PROBES).map(async ([table, cols]) => {
-          const { error } = await admin.from(table).select(cols).limit(0);
+          const { error } = await admin.from(QUERY_TABLE[table] ?? table).select(cols).limit(0);
           tables[table] = error ? classifyDbError(error) : "ok";
         }),
       );

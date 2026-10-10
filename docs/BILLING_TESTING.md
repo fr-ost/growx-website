@@ -1,5 +1,13 @@
 # Billing: what was tested, and what was NOT
 
+## Phase 4 audit (2026-10-10), live production evidence (read-only)
+* 12 NOWPayments IPNs reached production, passed HMAC-SHA512 verification and API reconciliation, and were applied (`payment.waiting` -> `applied`); each was recorded once per provider state (duplicates collapse).
+* Hosted-invoice orders were bound to the payment the customer created (e.g. coin `usdtbsc`), proving the IPN carries our `order_id`.
+* **No payment has reached `finished` in production.** The payment-to-entitlement grant has therefore NOT been observed live; it is covered by database and handler tests only.
+* RLS / privileges verified in production: RLS on every table; `authenticated` has SELECT-own only on billing tables, no writes; every billing function is service-role only.
+* `subscriptions` contains two active rows with provider `paddle` created by Paddle **sandbox** webhook events (no real money). They grant Premium to one account until removed by the owner.
+
+
 Results below are from real runs in the build environment on 2026-10-10 (no figures are estimated).
 
 ## Executed and passing

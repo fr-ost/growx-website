@@ -351,6 +351,34 @@ describe("NOWPayments (prepaid crypto periods)", () => {
     expect(await subsOf(u)).toHaveLength(1);
   });
 
+  it("hosted invoice coin switch: funds on a new payment re-bind an order whose bound payment got nothing (even after it expired)", async () => {
+    const u = await addUser(db);
+    const oid = (await order(u, "nowpayments", "PRO_YEARLY", { asset: null, days: 365, ref: null })).order_id!;
+    const sql = (prev: string | null) =>
+      `update public.checkout_orders set provider_ref = $2, asset = $3, status = 'pending'
+        where id = $1 and provider = 'nowpayments' and status in ('created','pending','expired','failed')
+          and ${prev === null ? "provider_ref is null" : "provider_ref = $4"}`;
+    const rebind = (ref: string, coin: string, prev: string | null) =>
+      asRole(db, "service_role", null, () => db.query(sql(prev), prev === null ? [oid, ref, coin] : [oid, ref, coin, prev]));
+    const yearly = (id: string, coin: string, status: string, fulfill: boolean, extra: Record<string, unknown> = {}) =>
+      cryptoPay(oid, id, "PRO_YEARLY", status, fulfill, { asset: coin, amount_minor: 1499, ...extra });
+
+    // customer picks ETH (waiting), the ETH payment expires and closes the order...
+    await rebind("np_eth", "eth", null);
+    await apply("nowpayments", yearly("np_eth", "eth", "pending", false));
+    await apply("nowpayments", yearly("np_eth", "eth", "expired", false, { order_status: "expired" }));
+    expect((await row<{ status: string }>("select status from public.checkout_orders where id = $1", [oid]))[0].status).toBe("expired");
+    // ...then pays with BNB on the same invoice: the funded payment re-binds (compare-and-set on the old ref)
+    const stale = await rebind("np_other", "bnbbsc", "np_wrong_prev");
+    expect(stale.affectedRows).toBe(0);
+    await rebind("np_bnb", "bnbbsc", "np_eth");
+    expect(await apply("nowpayments", yearly("np_bnb", "bnbbsc", "succeeded", true))).toBe("applied");
+    expect(await planAt(u)).toBe("PRO_YEARLY");
+    expect((await row<{ status: string; provider_ref: string }>("select status, provider_ref from public.checkout_orders where id = $1", [oid]))[0]).toEqual({ status: "fulfilled", provider_ref: "np_bnb" });
+    // once fulfilled the order can never be re-bound
+    expect((await rebind("np_x", "eth", "np_bnb")).affectedRows).toBe(0);
+  });
+
   it("a renewal is a NEW verified payment and stacks on the remaining time", async () => {
     const u = await addUser(db);
     const o1 = await monthly(u, "np_r1");

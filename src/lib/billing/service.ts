@@ -81,26 +81,60 @@ export async function handleNowPaymentsIpn(
   }
 
   const orderId = payment.order_id ?? body.order_id;
-  // Invoice orders learn their payment id and coin from the first VERIFIED payment; after that the
-  // database's strict order checks (reference, amount, asset, product) apply to every later event.
-  if (orderId && payment.pay_currency) await bindInvoiceOrder(deps.admin, orderId, paymentId, payment.pay_currency);
+  // Invoice orders learn their payment id and coin from VERIFIED payments; the database's strict
+  // order checks (reference, amount, asset, product) then apply to every event.
+  const moneyMoved = MONEY_STATUSES.has(String(payment.payment_status ?? "").toLowerCase());
+  if (orderId && payment.pay_currency) await bindInvoiceOrder(deps.admin, orderId, paymentId, payment.pay_currency, moneyMoved);
   const product = orderId ? await productForOrder(deps.admin, orderId) : undefined;
   const effect = mapNowPayment({ ...payment, order_id: orderId }, product);
   const result = await applyBillingEffect(deps.admin, "nowpayments", nowEventId(payment), `payment.${String(payment.payment_status)}`, payment.updated_at ?? null, effect);
   log("nowpayments_ipn_processed", { payment_id: paymentId, status: payment.payment_status, result });
+  if (moneyMoved && result.startsWith("rejected:")) {
+    // Funds arrived but cannot be applied automatically (e.g. a customer paid twice on one invoice). Needs a manual refund/review.
+    console.error(JSON.stringify({ event: "nowpayments_payment_needs_review", payment_id: paymentId, order_id: orderId ?? null, status: payment.payment_status, result }));
+  }
   return { status: 200, body: { ok: true, result } };
 }
 
-async function bindInvoiceOrder(admin: SupabaseClient, orderId: string, paymentId: string, payCurrency: string): Promise<void> {
+/** Provider statuses meaning funds were (at least partly) sent. */
+const MONEY_STATUSES = new Set(["confirming", "confirmed", "sending", "partially_paid", "finished", "refunded"]);
+/** Our payment statuses meaning no funds were received. */
+const NO_MONEY = new Set(["pending", "expired", "failed"]);
+/** Orders that may still be (re)bound to a provider payment. Never fulfilled / refund_required / canceled ones. */
+const BINDABLE = ["created", "pending", "expired", "failed"];
+
+/**
+ * Binds an invoice order to a provider payment + the coin the customer chose.
+ * - An unbound order binds to the first verified payment.
+ * - A bound order is re-bound ONLY when funds arrived on a new payment while the bound one has
+ *   received nothing (the customer switched coins on the invoice page). A payment without funds
+ *   never takes over, so a stray "waiting" notification cannot detach the paying payment.
+ * The update is compare-and-set on the previous reference, so concurrent notifications cannot both win.
+ */
+async function bindInvoiceOrder(admin: SupabaseClient, orderId: string, paymentId: string, payCurrency: string, moneyMoved: boolean): Promise<void> {
   if (!/^[0-9a-f-]{36}$/i.test(orderId) || !/^[a-z0-9]{2,24}$/i.test(payCurrency)) return;
-  const { error } = await admin
+  const { data: order, error } = await admin.from("checkout_orders").select("provider_ref, status").eq("id", orderId).eq("provider", "nowpayments").maybeSingle();
+  if (error) throw new Error(`bind_invoice_order read failed: ${error.code ?? "unknown"}`);
+  const o = order as { provider_ref: string | null; status: string } | null;
+  if (!o || o.provider_ref === paymentId || !BINDABLE.includes(o.status)) return;
+
+  if (o.provider_ref) {
+    if (!moneyMoved) return;
+    const { data: prev, error: pe } = await admin.from("payments").select("status").eq("provider", "nowpayments").eq("provider_payment_id", o.provider_ref).maybeSingle();
+    if (pe) throw new Error(`bind_invoice_order read failed: ${pe.code ?? "unknown"}`);
+    const prevStatus = (prev as { status?: string } | null)?.status;
+    if (prevStatus && !NO_MONEY.has(prevStatus)) return; // the bound payment already received funds: keep it
+  }
+
+  let q = admin
     .from("checkout_orders")
-    .update({ provider_ref: paymentId, asset: payCurrency.toLowerCase() })
+    .update({ provider_ref: paymentId, asset: payCurrency.toLowerCase(), status: "pending" })
     .eq("id", orderId)
     .eq("provider", "nowpayments")
-    .is("provider_ref", null)
-    .in("status", ["created", "pending"]);
-  if (error && error.code !== "23505") throw new Error(`bind_invoice_order failed: ${error.code ?? "unknown"}`);
+    .in("status", BINDABLE);
+  q = o.provider_ref ? q.eq("provider_ref", o.provider_ref) : q.is("provider_ref", null);
+  const { error: ue } = await q;
+  if (ue && ue.code !== "23505") throw new Error(`bind_invoice_order failed: ${ue.code ?? "unknown"}`);
 }
 
 async function productForOrder(admin: SupabaseClient, orderId: string): Promise<ProductId | undefined> {

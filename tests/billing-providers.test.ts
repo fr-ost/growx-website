@@ -67,20 +67,29 @@ describe("provider configuration gates", () => {
   });
 });
 
-const fakeAdmin = (result = "applied", bindError: { code: string } | null = null) => {
+const fakeAdmin = (
+  result = "applied",
+  bindError: { code: string } | null = null,
+  state: { order?: { provider_ref: string | null; status: string } | null; prevPayment?: { status: string } | null } = {},
+) => {
+  const order = state.order === undefined ? { provider_ref: null, status: "pending" } : state.order;
   const rpc = vi.fn().mockResolvedValue({ data: { result }, error: null });
   const bind = vi.fn();
-  // Minimal query-builder fake: select(...).eq().maybeSingle() and update(...).eq().eq().is().in()
+  // Minimal thenable query-builder fake: select(...).eq().maybeSingle() and await update(...).eq().in().is()
   const chain = (done: () => unknown) => {
     const filters: unknown[][] = [];
     const c: Record<string, unknown> = { filters };
-    for (const m of ["eq", "is"]) c[m] = (...a: unknown[]) => (filters.push([m, ...a]), c);
-    c.in = async (...a: unknown[]) => (filters.push(["in", ...a]), done());
+    for (const m of ["eq", "is", "in"]) c[m] = (...a: unknown[]) => (filters.push([m, ...a]), c);
     c.maybeSingle = async () => done();
+    c.then = (res: (v: unknown) => unknown, rej: (e: unknown) => unknown) => Promise.resolve(done()).then(res, rej);
     return c;
   };
-  const from = () => ({
-    select: () => chain(() => ({ data: { product: "PRO_MONTHLY" } })),
+  const from = (table: string) => ({
+    select: (cols: string) =>
+      chain(() =>
+        table === "payments" ? { data: state.prevPayment ?? null, error: null }
+        : cols.includes("provider_ref") ? { data: order, error: null }
+        : { data: { product: "PRO_MONTHLY" } }),
     update: (values: unknown) => {
       const c = chain(() => ({ error: bindError }));
       bind(values, c.filters);
@@ -188,9 +197,39 @@ describe("NOWPayments IPN handler", () => {
     await handleNowPaymentsIpn(raw, nsig(payload), { admin, env: ENV, fetchPayment: () => Promise.resolve(ipn({ pay_currency: "ETH" }) as never) });
     expect(bind).toHaveBeenCalledTimes(1);
     const [values, filters] = bind.mock.calls[0];
-    expect(values).toEqual({ provider_ref: "5077125051", asset: "eth" });
-    expect(filters).toEqual(expect.arrayContaining([["eq", "id", payload.order_id], ["eq", "provider", "nowpayments"], ["is", "provider_ref", null], ["in", "status", ["created", "pending"]]]));
+    expect(values).toEqual({ provider_ref: "5077125051", asset: "eth", status: "pending" });
+    expect(filters).toEqual(expect.arrayContaining([["eq", "id", payload.order_id], ["eq", "provider", "nowpayments"], ["is", "provider_ref", null], ["in", "status", ["created", "pending", "expired", "failed"]]]));
     expect(rpc.mock.calls[0][1].p_effect).toMatchObject({ asset: "ETH" });
+  });
+  it("coin switch: a payment WITH funds takes over an order bound to a payment without funds (compare-and-set)", async () => {
+    const { admin, bind } = fakeAdmin("applied", null, { order: { provider_ref: "111", status: "pending" }, prevPayment: { status: "pending" } });
+    await handleNowPaymentsIpn(raw, nsig(payload), { admin, env: ENV, fetchPayment: apiPayment }); // finished
+    expect(bind).toHaveBeenCalledTimes(1);
+    expect(bind.mock.calls[0][0]).toMatchObject({ provider_ref: "5077125051", status: "pending" });
+    expect(bind.mock.calls[0][1]).toEqual(expect.arrayContaining([["eq", "provider_ref", "111"]]));
+  });
+  it("a payment without funds never detaches the bound payment, and a bound payment with funds is never replaced", async () => {
+    const waiting = ipn({ payment_status: "waiting", actually_paid: 0 });
+    const a = fakeAdmin("applied", null, { order: { provider_ref: "111", status: "pending" }, prevPayment: { status: "pending" } });
+    await handleNowPaymentsIpn(JSON.stringify(waiting), nsig(waiting), { admin: a.admin, env: ENV, fetchPayment: () => Promise.resolve(waiting as never) });
+    expect(a.bind).not.toHaveBeenCalled();
+    const b = fakeAdmin("rejected:order_reference_mismatch", null, { order: { provider_ref: "111", status: "pending" }, prevPayment: { status: "confirming" } });
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    await handleNowPaymentsIpn(raw, nsig(payload), { admin: b.admin, env: ENV, fetchPayment: apiPayment });
+    expect(b.bind).not.toHaveBeenCalled();
+    // funds that cannot be applied are flagged for manual review
+    expect(err.mock.calls.map((c) => String(c[0])).join()).toContain("nowpayments_payment_needs_review");
+    err.mockRestore();
+  });
+  it("fulfilled / refund_required orders are never re-bound; expired ones can be (late payment)", async () => {
+    for (const status of ["fulfilled", "refund_required", "canceled"]) {
+      const f = fakeAdmin("applied", null, { order: { provider_ref: null, status } });
+      await handleNowPaymentsIpn(raw, nsig(payload), { admin: f.admin, env: ENV, fetchPayment: apiPayment });
+      expect(f.bind, status).not.toHaveBeenCalled();
+    }
+    const e = fakeAdmin("applied", null, { order: { provider_ref: null, status: "expired" } });
+    await handleNowPaymentsIpn(raw, nsig(payload), { admin: e.admin, env: ENV, fetchPayment: apiPayment });
+    expect(e.bind).toHaveBeenCalledTimes(1);
   });
   it("a failing bind surfaces as an error (provider retries); an already-bound reference is not an error", async () => {
     await expect(handleNowPaymentsIpn(raw, nsig(payload), { admin: fakeAdmin("applied", { code: "08006" }).admin, env: ENV, fetchPayment: apiPayment })).rejects.toThrow(/bind_invoice_order/);
