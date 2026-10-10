@@ -1,6 +1,6 @@
 # Billing: NOWPayments (crypto)
 
-Paddle was removed (it rejected the product). Payments are **cryptocurrency only, through NOWPayments hosted invoices**, in live mode by default. Live NOWPayments IPNs have been received and verified in production (status `waiting` only); no payment has yet completed (`finished`), so the grant path has not been observed live. Make one small real purchase yourself before announcing it (see [`BILLING_TESTING.md`](BILLING_TESTING.md)).
+Paddle was removed (it rejected the product). Payments are **cryptocurrency only, through NOWPayments hosted invoices**, in live mode by default. Payments are live (owner confirmed). Live NOWPayments IPNs have been received and verified in production (see [`BILLING_TESTING.md`](BILLING_TESTING.md)).
 
 ## Prices (fixed in `src/config/pricing.ts`, never taken from the browser)
 | Product id | Plan granted | Price | Notes |

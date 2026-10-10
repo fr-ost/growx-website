@@ -116,7 +116,7 @@ export default function HowItWorksPage() {
               </tbody>
             </table>
           </div>
-          <p className="mt-4 text-center text-xs text-muted">Higher presets are planned as Premium. No tool can promise zero risk on X; you remain responsible for following X&apos;s rules.</p>
+          <p className="mt-4 text-center text-xs text-muted">Higher presets are part of Premium. No tool can promise zero risk on X; you remain responsible for following X&apos;s rules.</p>
         </Container>
       </Section>
 

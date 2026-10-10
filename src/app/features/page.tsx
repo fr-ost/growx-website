@@ -17,8 +17,8 @@ export const metadata = pageMetadata({
 
 const faqs = [
   { q: "Which GrowX features are free?", a: "Core features are free: the Safe and Balanced autopilot, safety controls, sources and queue, core targeting filters, history and analytics, backup and restore, the cleanup scan and manual selection with a reasonable daily unfollow allowance." },
-  { q: "What will Premium add?", a: "Premium is planned for higher-volume and advanced use: Turbo and X Premium paces, custom limits above Balanced, advanced filters (keywords, location, verified, account age, last active), bulk list import and select-all bulk unfollow." },
-  { q: "Are any features available right now that aren't listed?", a: "The extension today contains everything listed on this page. The Free/Premium split is a plan; checkout is not available yet and the extension does not sign in to this site yet." },
+  { q: "What does Premium add?", a: "Premium is for higher-volume and advanced use: Turbo and X Premium paces, custom limits above Balanced, advanced filters (keywords, location, verified, account age, last active), bulk list import and select-all bulk unfollow." },
+  { q: "Are any features available right now that aren't listed?", a: "The extension today contains everything listed on this page. Premium is available now: start the free 30-day trial or buy a plan on the pricing page, then sign in to the extension with your GrowX account." },
   { q: "Does GrowX work on Firefox, Edge or mobile?", a: "GrowX is a Chrome extension (Manifest V3, Chrome 116 or newer). Other Chromium browsers may install Chrome extensions, but only Chrome is supported." },
 ];
 
@@ -34,7 +34,7 @@ export default function FeaturesPage() {
       />
       <PageHero eyebrow="Features" title={<>Everything GrowX does to <span className="text-gradient">grow you safely</span>.</>}>
         Auto follow engine, follow-back scoring, targeting filters, growth analytics and cleanup tools: every feature of the GrowX
-        Chrome extension, and what is Free versus planned Premium.
+        Chrome extension, and what is Free versus Premium.
       </PageHero>
 
       <Section className="pb-4">

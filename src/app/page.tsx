@@ -87,7 +87,7 @@ const faqs = [
   { q: "Do I need to give GrowX my X password?", a: "No. GrowX works through the X session that is already signed in in your Chrome browser. It never sees or stores your X password, and it does not use X OAuth." },
   { q: "Is it safe for my account?", a: "No tool can promise zero risk; X decides. GrowX is built to behave like a careful person: randomised delays, breaks, hourly and daily caps, active hours, warm-up and an automatic slow-down whenever X shows a warning." },
   { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, add your X username and start the trial from your dashboard when you are ready. It runs for ${TRIAL_DAYS} days, needs no payment details, and each account can use it once.` },
-  { q: "Can I buy Premium today?", a: "Not yet. Checkout is being prepared. The planned prices are on the pricing page, and nothing is charged until payments launch." },
+  { q: "Can I buy Premium today?", a: "Yes. Premium is available now for $1.99 for 30 days, $14.99 for 365 days or $29.99 lifetime, paid in cryptocurrency through NOWPayments. You can also try every Premium feature free for 30 days, with no credit card and no commitment." },
 ];
 
 export default function HomePage() {

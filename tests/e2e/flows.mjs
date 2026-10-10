@@ -289,11 +289,11 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   // signed-out visitor: pricing buttons are disabled, no payment UI, no remaining-slot numbers
   const bp = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
   await bp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-  const soon = await bp.locator("button:has-text('Coming soon')").count();
-  ok("pricing: paid plans show disabled 'Coming soon' while unconfigured", soon >= 3 && (await bp.locator("a:has-text('Pay with crypto')").count()) === 0, String(soon));
-  ok("pricing: 'Coming soon' buttons are disabled", await bp.locator("button:has-text('Coming soon')").evaluateAll((els) => els.every((e) => e.disabled)));
+  const soon = await bp.locator("button:has-text('Currently unavailable')").count();
+  ok("pricing: paid plans show disabled 'Currently unavailable' while unconfigured", soon >= 3 && (await bp.locator("a:has-text('Pay with crypto')").count()) === 0, String(soon));
+  ok("pricing: 'Currently unavailable' buttons are disabled", await bp.locator("button:has-text('Currently unavailable')").evaluateAll((els) => els.every((e) => e.disabled)));
   const priceText = await bp.locator("main").innerText();
-  ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99", "$0.99"].every((x) => priceText.includes(x)));
+  ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99"].every((x) => priceText.includes(x)));
   ok("pricing never shows a remaining-slots number", !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(priceText));
   await bp.close();
 
@@ -314,7 +314,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
   ok("mocked: crypto config shows 'Pay with crypto' and test-mode notice", (await mp.locator("a:has-text('Pay with crypto')").count()) >= 1 && (await mp.locator("text=Test mode: no real charges").count()) >= 1);
   ok("no card payment option exists; Paddle routes are gone", (await mp.locator("text=Pay by card").count()) === 0 && (await fetch(BASE + "/api/webhooks/paddle", { method: "POST" })).status === 404 && !(await mp.locator("body").innerText()).includes("Paddle"));
-  ok("mocked: yearly (not offered) stays 'Coming soon'", (await mp.locator("button:has-text('Coming soon')").count()) >= 1);
+  ok("mocked: yearly (not offered) stays 'Currently unavailable'", (await mp.locator("button:has-text('Currently unavailable')").count()) >= 1);
   ok("pricing names the accepted coins, not USDT TRC20", /ETH/.test(await mp.locator("main").innerText()) && !/TRC20/i.test(await mp.locator("main").innerText()));
 
   // signed out -> login -> back to the invoice page
@@ -361,11 +361,11 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("no runtime errors in billing UI", merrs.length === 0, merrs.join(" | ").slice(0, 300));
 
   // early-adopter offer states (server-reported)
-  for (const [state, expect] of [["available", "Limited offer"], ["temporarily_unavailable", "Temporarily unavailable"], ["unavailable", "Not on sale yet"]]) {
+  for (const [state, expect] of [["available", "Limited offer"], ["temporarily_unavailable", "Temporarily unavailable"], ["unavailable", null]]) {
     await mctx.unroute("**/api/billing/options");
     await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, crypto: { ...options.crypto, products: ["PRO_LIFETIME_EARLY", "PRO_LIFETIME"] }, earlyAdopter: state } }));
     await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-    ok(`early-adopter state '${state}' -> '${expect}'`, (await mp.locator(`text=${expect}`).count()) >= 1);
+    ok(`early-adopter state '${state}' -> ${expect ? `'${expect}'` : "offer hidden"}`, expect ? (await mp.locator(`text=${expect}`).count()) >= 1 : (await mp.locator("h3:has-text('Early Adopter')").count()) === 0);
     const t = await mp.locator("main").innerText();
     ok(`early-adopter state '${state}' shows no remaining-slot number`, !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(t));
   }

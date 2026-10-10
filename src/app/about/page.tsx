@@ -18,7 +18,7 @@ const principles = [
   { icon: IconShield, title: "Safety first", text: "Randomised delays, breaks, rolling caps, active hours and automatic slow-down are defaults, not options. When X shows a warning, GrowX backs off instead of pushing through." },
   { icon: IconLock, title: "Local-first data", text: "Your settings, queue and history live in your browser. GrowX uses your own x.com session, never asks for your X password and does not upload your X data." },
   { icon: IconTarget, title: "Quality over volume", text: "Source targeting, hard filters and a 1-99 follow-back score aim your effort at relevant, active people rather than at the biggest possible number." },
-  { icon: IconStar, title: "Honest claims", text: "No fake testimonials, user counts or guaranteed results. Planned features are labelled as planned, and the pricing page says plainly that checkout is not live yet." },
+  { icon: IconStar, title: "Honest claims", text: "No fake testimonials, user counts or guaranteed results. Prices, trial length and payment methods are stated plainly on the pricing page." },
 ];
 
 export default function AboutPage() {

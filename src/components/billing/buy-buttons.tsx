@@ -14,8 +14,8 @@ export function BuyButtons({ product, primary = false, early = false }: { produc
 
   if (!opts || !crypto || blockedByOffer) {
     return (
-      <Button variant="secondary" className="w-full" disabled aria-disabled="true" title="Not available right now">
-        {early && opts?.earlyAdopter === "temporarily_unavailable" ? "Temporarily unavailable" : "Coming soon"}
+      <Button variant="secondary" className="w-full" disabled aria-disabled="true" title="Checkout is temporarily unavailable">
+        {early && opts?.earlyAdopter === "temporarily_unavailable" ? "Temporarily unavailable" : "Currently unavailable"}
       </Button>
     );
   }

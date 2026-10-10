@@ -1,7 +1,6 @@
 /**
  * Features that exist in GrowX extension v2.3.0 (inspected from source), and the
- * PROPOSED Free / Premium split. Nothing here is enforced anywhere yet: the
- * extension currently has no accounts and no paywall. See docs/FEATURE_SPLIT.md.
+ * Free / Premium split. See docs/FEATURE_SPLIT.md.
  */
 export type Tier = "free" | "premium";
 
@@ -9,7 +8,7 @@ export interface Feature {
   id: string;
   title: string;
   description: string;
-  /** Proposed placement once Premium launches. */
+  /** Which plan includes the feature. */
   tier: Tier;
 }
 

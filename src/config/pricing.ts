@@ -78,7 +78,7 @@ export const pricingTiers: readonly PricingTier[] = [
     interval: "once",
     priceLabel: "$0.99",
     cadence: "one-time",
-    blurb: "Planned launch offer: permanent Premium for the first 100 successful, verified purchases.",
+    blurb: "Launch offer: permanent Premium for the first 100 successful, verified purchases.",
     purchaseLimit: 100,
   },
 ] as const;

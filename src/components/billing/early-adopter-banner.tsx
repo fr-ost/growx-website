@@ -15,10 +15,10 @@ export function EarlyAdopterBanner({ tier }: { tier: PricingTier }) {
   const opts = useBillingOptions();
   if (opts === undefined) return null; // never flash an offer that may turn out to be sold out
   const state = opts?.earlyAdopter ?? "unavailable";
-  if (state === "sold_out") return null;
+  if (state === "sold_out" || state === "unavailable") return null; // not offered right now: show nothing rather than a teaser
 
   const label =
-    state === "available" ? "Limited offer" : state === "temporarily_unavailable" ? "Temporarily unavailable" : "Not on sale yet";
+    state === "available" ? "Limited offer" : "Temporarily unavailable";
 
   return (
     <div className="reveal relative overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-r from-accent-soft via-white to-accent-soft p-6 sm:p-8">

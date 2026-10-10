@@ -196,7 +196,7 @@ export const posts: Post[] = [
         blocks: [
           {
             type: "p",
-            text: "GrowX is free to install from the Chrome Web Store, and you can [create a free account](/signup) to try the 30-day Premium trial when it is connected to the extension. Compare the plans on the [pricing page](/pricing) or keep reading: the [features guide](/blog/growx-features-guide-scoring-filters-cleanup) covers scoring, filters, analytics and cleanup in depth.",
+            text: "GrowX is free to install from the Chrome Web Store, and you can [create a free account](/signup) to try every Premium feature free for 30 days, no credit card needed. Compare the plans on the [pricing page](/pricing) or keep reading: the [features guide](/blog/growx-features-guide-scoring-filters-cleanup) covers scoring, filters, analytics and cleanup in depth.",
           },
         ],
       },
@@ -280,7 +280,7 @@ export const posts: Post[] = [
           },
           {
             type: "p",
-            text: "Core filters are part of the free plan. Advanced filtering (keyword include/exclude lists, location, verified-only, account age and last-active rules) is planned as a Premium feature; see the [Free vs Premium comparison](/pricing) and the [roadmap post](/blog/growx-potential-best-practices-roadmap).",
+            text: "Core filters are part of the free plan. Advanced filtering (keyword include/exclude lists, location, verified-only, account age and last-active rules) is a Premium feature; see the [Free vs Premium comparison](/pricing) and the [roadmap post](/blog/growx-potential-best-practices-roadmap).",
           },
         ],
       },
@@ -320,7 +320,7 @@ export const posts: Post[] = [
           },
           {
             type: "p",
-            text: "Cleanup scanning and manual selection are planned to stay free; large select-all batches are planned as Premium. Details are in the [features overview](/features).",
+            text: "Cleanup scanning and manual selection stay free; large select-all batches are part of Premium. Details are in the [features overview](/features).",
           },
         ],
       },
@@ -351,9 +351,9 @@ export const posts: Post[] = [
     seoTitle: "GrowX Roadmap: Premium, Accounts & What's Next",
     title: "Growing on X with GrowX: Potential, Best Practices and the Roadmap Ahead",
     description:
-      "What GrowX can do for your X (Twitter) growth, best practices for staying safe, and the planned roadmap: accounts, Premium plans and the 30-day trial.",
+      "What GrowX can do for your X (Twitter) growth, best practices for staying safe, and what is live and next: accounts, Premium plans and the 30-day trial.",
     excerpt:
-      "What GrowX is good at, how to use it responsibly, and an honest look at what is planned next: accounts, a 30-day trial, Premium plans and payments.",
+      "What GrowX is good at, how to use it responsibly, and an honest look at what is live and what is next: accounts, the 30-day trial, Premium plans and payments.",
     category: "Roadmap",
     keywords: [
       "grow X followers",
@@ -404,7 +404,7 @@ export const posts: Post[] = [
             items: [
               "**Creators and writers** who post regularly and want relevant readers: pick a few sources that share your audience and keep the filters on so only active, real-looking profiles are queued.",
               "**Founders and indie makers** building in public: target the followers of tools, communities and peers in your space, then use the follow-back data to see which communities actually respond.",
-              "**Small businesses and communities** that want local or topical reach: location and keyword filters (planned as Premium) narrow the audience further.",
+              "**Small businesses and communities** that want local or topical reach: location and keyword filters (part of Premium) narrow the audience further.",
               "**Anyone with an overgrown following list**: Cleanup is useful on its own to find inactive accounts and people who never followed back, even if you never use the autopilot.",
             ],
           },
@@ -440,29 +440,29 @@ export const posts: Post[] = [
             type: "ul",
             items: [
               "The Chrome extension is available on the Chrome Web Store with the autopilot, sources and queue, scoring and filters, analytics, backup and cleanup tools described across this site.",
-              "This website offers free accounts, a prepared 30-day Premium trial and a public pricing page.",
-              "The extension does not yet sign in to this website, and Premium cannot be purchased yet.",
+              "This website offers free accounts, a free 30-day Premium trial (no credit card) and paid Premium plans.",
+              "The extension signs in with your GrowX account, and Premium is available to buy on the [pricing page](/pricing).",
             ],
           },
         ],
       },
       {
         id: "roadmap",
-        heading: "Roadmap: what is planned",
+        heading: "What is live and what is next",
         blocks: [
           {
             type: "p",
-            text: "The items below are **plans, not promises with dates**. They describe the direction the project is working toward.",
+            text: "Most of the items below are live now. Anything marked as next is a direction, **not a promise with a date**.",
           },
           {
             type: "ul",
             items: [
               "**Freemium model with a 30-day Premium trial.** Core features stay free: the Safe and Balanced autopilot, sources and queue, core filters, history, analytics, backup, the cleanup scan and reasonable manual selection.",
               "**Premium plans.** $1.99 for 30 days or $14.99 for 365 days (prepaid, no automatic renewal), or $29.99 one-time lifetime. Premium is aimed at advanced automation, higher-volume bulk operations (such as the Turbo and X Premium paces and select-all cleanup), advanced filters and future premium tools.",
-              "**Early Adopter Lifetime.** A planned $0.99 one-time offer with permanent Premium for the first 100 successful, verified purchases. It is not on sale, and when the 100 are gone the regular prices apply.",
-              "**Account linking.** The extension will sign in with your GrowX account so the server can tell it which plan you have. Entitlements are decided on the server, not by anything the browser claims.",
+              "**Early Adopter Lifetime.** A $0.99 one-time offer with permanent Premium for the first 100 successful, verified purchases. When the 100 are gone the regular prices apply.",
+              "**Account linking.** The extension signs in with your GrowX account so the server can tell it which plan you have. Entitlements are decided on the server, not by anything the browser claims.",
               "**Payments.** Cryptocurrency (Ethereum and BNB Smart Chain coins) through NOWPayments invoices, with verified notifications before any access is granted.",
-              "**Clearer naming.** The extension's \"Premium\" speed preset means X Premium accounts, not GrowX Premium, and the wording will be made less confusing.",
+              "**Next: clearer naming.** The extension's \"Premium\" speed preset means X Premium accounts, not GrowX Premium, and the wording will be made less confusing.",
             ],
           },
           {
@@ -501,7 +501,7 @@ export const posts: Post[] = [
         blocks: [
           {
             type: "p",
-            text: "Feature requests and bug reports go straight to the developer. [Contact support](/contact) or [create a free account](/signup) to be ready when account linking and Premium launch.",
+            text: "Feature requests and bug reports go straight to the developer. [Contact support](/contact) or [create a free account](/signup) and try Premium free for 30 days.",
           },
         ],
       },

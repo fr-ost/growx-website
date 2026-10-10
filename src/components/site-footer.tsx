@@ -66,7 +66,7 @@ export function SiteFooter() {
       <div className="border-t border-border">
         <Container className="flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted sm:flex-row">
           <p>&copy; {new Date().getFullYear()} GrowX · {site.author}</p>
-          <p>Premium checkout is not available yet. Prices shown are planned.</p>
+          <p>Premium plans are paid in crypto via NOWPayments. 30-day free trial, no credit card.</p>
         </Container>
       </div>
     </footer>
