@@ -16,7 +16,10 @@
 - [ ] Early adopter defaults to confirm: over-cap paid purchases are auto-refunded; refunds do not free a slot.
 - [ ] Free daily manual-unfollow allowance and whether Free limits source profiles (`FEATURE_SPLIT.md`).
 - [ ] Create the Google OAuth client and enable it, if wanted.
-- [ ] Paddle business verification, NOWPayments account, supported crypto networks.
+- [ ] Paddle business verification, NOWPayments account, supported crypto networks (see `BILLING.md` for the sandbox steps and the live checklist).
+- [ ] Create the Paddle sandbox products/prices and NOWPayments sandbox keys and put the values in Vercel (I never create or invent provider ids).
+- [ ] Confirm: crypto plans are prepaid periods (30/365 days) with no automatic renewal; refund/chargeback revokes access immediately; late early-adopter payments with no inventory are refunded manually.
+- [ ] Approve switching to live mode only after the sandbox checklist passes (`BILLING_LIVE_APPROVED`).
 - [ ] Whether to add website analytics (affects the privacy policy).
 - [ ] Rename the extension's "premium" speed preset (means X Premium) to avoid confusion.
 - [ ] Update the extension's store listing/privacy text, which currently says 100% free and that nothing but anonymous counts is sent.

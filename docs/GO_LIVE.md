@@ -11,7 +11,7 @@ The build environment that produced this code cannot reach your live site or das
 - [ ] **Redeploy** after changing any `NEXT_PUBLIC_*` variable (they are baked in at build time).
 
 ## 2. Supabase
-- [ ] **SQL Editor:** run all four files in `supabase/migrations/` in order (already done on production `zyzfufifzitjmwxfqbqx`), then the read-only `supabase/verify.sql` (every row `ok = true`). The Vercel integration does **not** do this for you. Details and troubleshooting: `SUPABASE_PRODUCTION.md`.
+- [ ] **SQL Editor:** run all five files in `supabase/migrations/` in order (all applied on production `zyzfufifzitjmwxfqbqx`, the last one, `billing_core`, on 2026-10-10), then the read-only `supabase/verify.sql` (every row `ok = true`). The Vercel integration does **not** do this for you. Details and troubleshooting: `SUPABASE_PRODUCTION.md`.
 - [ ] **Auth > URL Configuration:**
   - Site URL: `https://www.growxapp.org`
   - Redirect URLs: `https://www.growxapp.org/**`, `https://growxapp.org/**`, `http://localhost:3000/**` (plus your `*.vercel.app` preview URL if you test there). Remove any growxapp.net entries.
@@ -40,5 +40,5 @@ The build environment that produced this code cannot reach your live site or das
 ## 5. Before charging money
 - Vercel Firewall rate limits for `/api/*`, `/login`, `/signup`, `/forgot-password`.
 - Legal review of `/privacy` and `/terms`.
-- Paddle / NOWPayments integration with verified webhooks and end-to-end tests (see `PAYMENTS.md`).
+- Paddle / NOWPayments: the sandbox integration exists but has not been run against the real providers. Follow `BILLING.md` (sandbox setup, end-to-end checklist, then the "Before enabling LIVE payments" list). Live mode needs `*_ENV=production` AND `BILLING_LIVE_APPROVED=true`.
 - Extension update (see `EXTENSION_INTEGRATION.md`).

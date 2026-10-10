@@ -1,13 +1,8 @@
 /**
- * Single source of truth for pricing. UI, docs and (later) checkout code read
- * from here. Prices are the planned launch prices supplied by the owner.
- *
- * Payments are NOT live. `CHECKOUT_AVAILABLE` stays false until the Paddle /
- * NOWPayments integrations, verified webhooks and server-side enforcement of
- * the early-adopter limit exist. Do not flip it for a demo.
+ * Single source of truth for pricing (display + the trusted server catalog in
+ * src/lib/billing/catalog.ts). Whether checkout is actually available is a
+ * server-side decision made from provider configuration, not a constant here.
  */
-export const CHECKOUT_AVAILABLE = false;
-
 export type PaidPlanId = "PRO_MONTHLY" | "PRO_YEARLY" | "PRO_LIFETIME";
 export type PricingTierId = "FREE" | "PRO_MONTHLY" | "PRO_YEARLY" | "PRO_LIFETIME" | "EARLY_ADOPTER_LIFETIME";
 
@@ -89,21 +84,15 @@ export const pricingTiers: readonly PricingTier[] = [
 ] as const;
 
 /**
- * Early-adopter offer lifecycle:
- *   planned   - not on sale (current state; no checkout, no enforcement yet)
- *   available - on sale; set only once checkout + verified webhooks exist and
- *               the DB function `early_adopter_available()` backs this value
- *   sold_out  - all 100 verified purchases claimed: the tier is hidden and the
- *               regular prices apply
- * No remaining-slot count is ever shown; only this status.
+ * Early-adopter offer state shown in the UI. It is decided by the SERVER
+ * (database inventory + configuration), never by this file: "available" means
+ * purchasable now, "unavailable" means not on sale, "sold_out" hides the tier.
+ * No remaining-slot count is ever exposed.
  */
-export type EarlyAdopterStatus = "planned" | "available" | "sold_out";
-export const EARLY_ADOPTER_STATUS: EarlyAdopterStatus = "planned";
-
-export const EARLY_ADOPTER_PURCHASABLE = CHECKOUT_AVAILABLE && (EARLY_ADOPTER_STATUS as EarlyAdopterStatus) === "available";
+export type EarlyAdopterStatus = "unavailable" | "temporarily_unavailable" | "available" | "sold_out";
 
 /** Tiers to display, honouring the early-adopter lifecycle. */
-export function visibleTiers(status: EarlyAdopterStatus = EARLY_ADOPTER_STATUS): readonly PricingTier[] {
+export function visibleTiers(status: EarlyAdopterStatus = "unavailable"): readonly PricingTier[] {
   return status === "sold_out" ? pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME") : pricingTiers;
 }
 

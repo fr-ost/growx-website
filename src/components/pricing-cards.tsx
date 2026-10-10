@@ -1,7 +1,10 @@
-import { IconCheck, IconGift, IconInfinity, IconStar } from "@/components/icons";
-import { Button, LinkButton } from "@/components/ui/button";
+import { BuyButtons } from "@/components/billing/buy-buttons";
+import { EarlyAdopterBanner } from "@/components/billing/early-adopter-banner";
+import { IconCheck, IconInfinity, IconStar } from "@/components/icons";
+import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/primitives";
-import { CHECKOUT_AVAILABLE, EARLY_ADOPTER_PURCHASABLE, visibleTiers, type PricingTier } from "@/config/pricing";
+import { pricingTiers } from "@/config/pricing";
+import type { ProductId } from "@/lib/billing/catalog";
 
 const perks: Record<string, string[]> = {
   FREE: ["Safe & Balanced autopilot", "Sources, scored queue, core filters", "History, analytics, backup", "Cleanup scan & manual unfollow"],
@@ -10,25 +13,9 @@ const perks: Record<string, string[]> = {
   PRO_LIFETIME: ["Everything in Premium", "Pay once", "No renewal payments"],
 };
 
-function PaidButton({ t }: { t: PricingTier }) {
-  const purchasable = t.id === "EARLY_ADOPTER_LIFETIME" ? EARLY_ADOPTER_PURCHASABLE : CHECKOUT_AVAILABLE;
-  return (
-    <Button
-      variant={t.highlight ? "primary" : "secondary"}
-      className="w-full"
-      disabled={!purchasable}
-      aria-disabled={!purchasable}
-      title={purchasable ? undefined : "Checkout is not available yet"}
-    >
-      {purchasable ? "Buy now" : "Coming soon"}
-    </Button>
-  );
-}
-
 export function PricingCards() {
-  const tiers = visibleTiers();
-  const main = tiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME");
-  const early = tiers.find((t) => t.id === "EARLY_ADOPTER_LIFETIME");
+  const main = pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME");
+  const early = pricingTiers.find((t) => t.id === "EARLY_ADOPTER_LIFETIME");
   return (
     <div className="space-y-6">
       <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -66,7 +53,7 @@ export function PricingCards() {
                     Start free
                   </LinkButton>
                 ) : (
-                  <PaidButton t={t} />
+                  <BuyButtons product={t.id as ProductId} primary={!!t.highlight} />
                 )}
               </div>
             </div>
@@ -74,28 +61,7 @@ export function PricingCards() {
         ))}
       </ul>
 
-      {early ? (
-        <div className="reveal relative overflow-hidden rounded-3xl border border-accent/25 bg-gradient-to-r from-accent-soft via-white to-accent-soft p-6 sm:p-8">
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
-            <span className="bg-brand flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-white shadow-[var(--shadow-red)]">
-              <IconGift size={26} />
-            </span>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h3 className="text-xl font-extrabold">{early.name}</h3>
-                <Badge tone="neutral">Planned · not on sale yet</Badge>
-              </div>
-              <p className="mt-1.5 text-text-2">
-                Permanent Premium for <strong>{early.priceLabel}</strong> one-time, for the first {early.purchaseLimit} successful, verified
-                purchases. Once they are gone, regular prices apply.
-              </p>
-            </div>
-            <div className="w-full md:w-48">
-              <PaidButton t={early} />
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {early ? <EarlyAdopterBanner tier={early} /> : null}
     </div>
   );
 }

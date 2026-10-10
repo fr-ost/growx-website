@@ -38,10 +38,11 @@ Production project: `growx`, ref `zyzfufifzitjmwxfqbqx` (confirmed: the site's S
 | `20261009193003_billing_grace_and_early_adopter.sql` | `subscriptions.past_due_since`, `early_adopter_slots`, slot functions |
 | `20261009193016_production_hardening.sql` | profile backfill, explicit grants, `ensure_my_profile()` (idempotent) |
 | `20261009193347_advisor_followups.sql` | revoke API EXECUTE on trigger functions; index `subscriptions.source_payment_id` (idempotent) |
+| `20261010050903_billing_core.sql` | Phase 3 billing: `checkout_orders`, `payment_adjustments`, new payment/subscription/webhook columns, order/webhook functions (applied 2026-10-10 after dry run + approval; see `BILLING.md`) |
 
 Verification run on production after applying: `supabase/verify.sql` 34/34 ok; a rolled-back role test (16/16): users see only their own rows, cannot write trials/subscriptions/payments or call `start_trial`, anon has no access, repeat trials are refused, the signup trigger creates profiles.
 
-For a fresh project (e.g. staging), run the four files in order, then `supabase/verify.sql`. Do not use `db reset` on production.
+For a fresh project (e.g. staging), run all five files in order, then `supabase/verify.sql`. Do not use `db reset` on production.
 
 ## Manual Supabase Dashboard changes
 1. **Authentication > URL Configuration**

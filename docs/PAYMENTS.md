@@ -1,6 +1,8 @@
-# Payment architecture (design only: nothing is integrated)
+# Payment architecture
 
-No checkout, webhook or payment endpoint exists. `CHECKOUT_AVAILABLE=false` in `src/config/pricing.ts`; paid buttons are disabled. A browser redirect must **never** grant Premium.
+> **Phase 3 implemented the sandbox integration described in [`BILLING.md`](BILLING.md)** (Paddle cards, NOWPayments crypto, verified webhooks, unified orders/payments/subscriptions). This file is the original design and still states the principles; where it differs, `BILLING.md` wins (e.g. crypto is prepaid with no renewals, and checkout availability comes from provider configuration, not a constant). Live payments are NOT enabled.
+
+A browser redirect must **never** grant Premium.
 
 ## Principles
 1. Only a **verified webhook** (signature checked against the raw body) changes billing state.

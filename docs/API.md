@@ -45,5 +45,15 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
 ## Trial activation (not an HTTP endpoint)
 `startTrialAction` is a Next.js Server Action on `/dashboard`. It requires a verified session and a confirmed email, uses the session user id (never form input), and calls `public.start_trial` with the service role. Database constraints guarantee at most one trial per account and one per self-reported X username. It is intentionally **not** exposed to the extension yet.
 
-## Reserved (not implemented, intentionally no stubs)
-`/api/webhooks/paddle`, `/api/webhooks/nowpayments`, checkout session creation. See `PAYMENTS.md`.
+## Billing endpoints (Phase 3, sandbox-ready; see `BILLING.md`)
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `GET /api/billing/options` | public | availability only (card/crypto products, early-adopter state: `unavailable|available|temporarily_unavailable|sold_out`); no keys, ids or counts |
+| `POST /api/billing/paddle/checkout` `{product}` | session, same-origin | creates an order + Paddle transaction, returns the transaction id for Paddle.js |
+| `POST /api/billing/crypto/checkout` `{product, payCurrency}` | session, same-origin | creates an order + NOWPayments payment, returns address/amount/asset/expiry |
+| `GET /api/billing/orders/{id}` | session (own orders only) | status polling; never grants anything |
+| `POST /api/billing/paddle/cancel`, `/manage` | session, same-origin | cancel at period end / payment-method update link for the caller's own subscription |
+| `POST /api/webhooks/paddle` | Paddle signature | verified events only |
+| `POST /api/webhooks/nowpayments` | `x-nowpayments-sig` | verified IPN only |
+
+Errors never include provider payloads or secrets. These endpoints answer 503 `checkout_unavailable` while the provider is not configured.

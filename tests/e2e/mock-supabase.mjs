@@ -60,6 +60,7 @@ http.createServer(async (req, res) => {
   const u = authUser(req);
   const isService = (req.headers.authorization || "").includes("service-key");
   if (p === "/rest/v1/rpc/early_adopter_available") return isService ? send(res, 200, true) : send(res, 401, { code: "42501", message: "permission denied" });
+  if (p === "/rest/v1/rpc/early_adopter_state") return isService ? send(res, 200, "available") : send(res, 401, { code: "42501", message: "permission denied" });
   if (p === "/rest/v1/rpc/start_trial") {
     if (!isService) return send(res, 401, { code: "42501", message: "permission denied for function start_trial" });
     const uid = body.p_user_id;
@@ -80,7 +81,7 @@ http.createServer(async (req, res) => {
   const eqUser = (url.searchParams.get("user_id") || "").replace("eq.", "");
   if (eqUser && eqUser !== u.id) return send(res, 200, []); // RLS
   if (table === "trials") return send(res, 200, trials.has(u.id) ? [trials.get(u.id)] : []);
-  if (table === "subscriptions" || table === "payments") return send(res, 200, []);
+  if (["subscriptions", "payments", "checkout_orders", "subscription_details"].includes(table)) return send(res, 200, []);
   if (table === "x_profiles") {
     if (req.method === "GET") return send(res, 200, xprofiles.has(u.id) ? [xprofiles.get(u.id)] : []);
     if (req.method === "POST") { if (body.user_id !== u.id) return send(res, 403, { code: "42501", message: "rls" }); xprofiles.set(u.id, { user_id: u.id, x_username: body.x_username }); return send(res, 201); }

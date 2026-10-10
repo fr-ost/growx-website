@@ -15,6 +15,8 @@ export interface SubscriptionRecord {
   provider?: string;
   /** When a recurring payment first failed; required for any past_due grace. */
   past_due_since?: string | null;
+  /** Set by a verified refund/chargeback: Premium is denied whatever the status says. */
+  access_revoked_at?: string | null;
 }
 
 /** Grace days after a failed recurring payment, by provider. 0 = no grace. */
