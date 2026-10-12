@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
       // Setting NAMES that are missing or invalid, never values. Payments are optional for "ok".
       billing: {
         crypto: { available: cryptoStatus.available, environment: cryptoStatus.environment, problems: cryptoStatus.problems },
-        earlyAdopterEnabled: process.env.EARLY_ADOPTER_ENABLED === "true",
+        earlyBirdEnabled: process.env.EARLY_ADOPTER_ENABLED !== "false",
       },
       warnings,
       manualChecks: [

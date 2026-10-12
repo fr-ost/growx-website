@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
-import { cryptoCheckoutBodySchema, decimalToMinor, getProduct } from "@/lib/billing/catalog";
+import { cryptoCheckoutBodySchema, decimalToMinor, getProduct, type ProductId } from "@/lib/billing/catalog";
+import { getEarlyBird } from "@/lib/billing/early-bird";
 import { nowPaymentsStatus } from "@/lib/billing/config";
 import { createNowInvoice, isNowPaymentsUrl } from "@/lib/billing/nowpayments";
 import { createOrder } from "@/lib/billing/service";
@@ -11,9 +12,10 @@ export const dynamic = "force-dynamic";
 
 const ORDER_ERRORS: Record<string, [number, string]> = {
   already_owned: [409, "You already have lifetime Premium."],
-  early_sold_out: [409, "The early-adopter offer is sold out."],
-  early_unavailable: [409, "The early-adopter offer is temporarily unavailable. Try again shortly."],
-  early_already_held: [409, "You already have an early-adopter purchase in progress or completed."],
+  // The early-bird price changed between viewing the page and clicking: never silently charge a different price.
+  early_sold_out: [409, "The early-bird spots just sold out. Reload the pricing page to see the current price."],
+  early_unavailable: [409, "The remaining early-bird spots are reserved by other buyers right now. Reload the pricing page and try again shortly."],
+  early_already_held: [409, "You already have an early-bird payment in progress. Finish it, or wait up to an hour for it to expire, then try again."],
 };
 
 /** How long an unpaid invoice order (and an early-adopter reservation) stays open. */
@@ -31,12 +33,14 @@ export async function POST(request: NextRequest) {
 
   const parsed = cryptoCheckoutBodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return errorResponse(400, "invalid_request");
-  const { product } = parsed.data;
+  const requested = parsed.data.product;
 
   const status = nowPaymentsStatus();
-  if (!status.available || !status.products.includes(product)) return errorResponse(503, "checkout_unavailable", "Crypto checkout is not available yet.");
+  if (!status.available || !status.products.includes(requested)) return errorResponse(503, "checkout_unavailable", "Crypto checkout is not available yet.");
 
   const admin = createAdminClient();
+  // The SERVER decides the price: lifetime buyers get the early-bird order while spots remain.
+  const product: ProductId = requested === "PRO_LIFETIME" && (await getEarlyBird(admin)).state === "available" ? "PRO_LIFETIME_EARLY" : requested;
   const p = getProduct(product);
   const order = await createOrder(admin, { userId: auth.user.id, provider: "nowpayments", product, ttlSeconds: ORDER_TTL_SECONDS });
   if (!order.ok) {

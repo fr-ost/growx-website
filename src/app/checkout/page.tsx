@@ -4,7 +4,10 @@ import { StartCryptoCheckout } from "@/components/billing/start-checkout";
 import { IconLock } from "@/components/icons";
 import { LinkButton } from "@/components/ui/button";
 import { Notice } from "@/components/ui/primitives";
-import { getProduct, isProductId, minorToDecimal } from "@/lib/billing/catalog";
+import { getProduct, isPurchasableProduct, minorToDecimal, type ProductId } from "@/lib/billing/catalog";
+import { getEarlyBird } from "@/lib/billing/early-bird";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getSupabaseServiceKey } from "@/lib/env";
 import { pageMetadata } from "@/lib/seo";
 import { requireUser } from "@/lib/supabase/require-user";
 
@@ -14,12 +17,16 @@ export const dynamic = "force-dynamic";
 /** Invoice summary for one plan. The price shown and charged is the server's, never the browser's. */
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   const { plan } = await searchParams;
-  const product = plan && isProductId(plan) ? plan : null;
-  const user = await requireUser(product ? `/checkout?plan=${product}` : "/pricing");
-  if (!product) redirect("/pricing");
+  const requested = plan && isPurchasableProduct(plan) ? plan : null;
+  const user = await requireUser(requested ? `/checkout?plan=${requested}` : "/pricing");
+  if (!requested) redirect("/pricing");
 
+  // Same server-side rule as the checkout API: lifetime buyers get the early-bird price while spots remain.
+  const early = requested === "PRO_LIFETIME" && getSupabaseServiceKey() ? await getEarlyBird(createAdminClient()) : null;
+  const product: ProductId = early?.state === "available" ? "PRO_LIFETIME_EARLY" : requested;
   const p = getProduct(product);
   const price = `$${minorToDecimal(p.amountMinor)}`;
+  const regular = p.isEarlyAdopter ? `$${minorToDecimal(getProduct("PRO_LIFETIME").amountMinor)}` : null;
   const term = p.cryptoPeriodDays ? `${p.cryptoPeriodDays} days of Premium, prepaid` : "Permanent Premium, one-time payment";
 
   return (
@@ -45,17 +52,22 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           </div>
           <div className="flex items-center justify-between gap-4 bg-surface-2 px-4 py-4">
             <dt className="font-bold">Total</dt>
-            <dd className="text-right font-display text-2xl font-extrabold">{price} <span className="text-sm font-semibold text-muted">USD</span></dd>
+            <dd className="text-right font-display text-2xl font-extrabold">{regular ? <s className="mr-2 text-base font-semibold text-muted">{regular}</s> : null}{price} <span className="text-sm font-semibold text-muted">USD</span></dd>
           </div>
         </dl>
 
         <div className="mt-5 space-y-4">
+          {regular ? (
+            <Notice tone="success" title="Early-bird price applied">
+              You pay {price} instead of {regular} because you are among the first {early?.total ?? 100} lifetime buyers.
+            </Notice>
+          ) : null}
           <Notice tone="info" title="Pay with the coin you prefer">
             On the next page you choose the cryptocurrency (Ethereum and BNB Smart Chain / BEP20 coins). The exact coin amount for {price} is calculated there.
             {p.cryptoPeriodDays ? " Crypto plans do not renew automatically and nothing is ever debited from your wallet." : ""}
           </Notice>
           {user.email_confirmed_at ? (
-            <StartCryptoCheckout product={product} />
+            <StartCryptoCheckout product={requested} />
           ) : (
             <Notice tone="warn" title="Confirm your email first">Open the confirmation link we emailed you, then come back to this page.</Notice>
           )}

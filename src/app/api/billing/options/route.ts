@@ -1,34 +1,25 @@
 import { NextResponse } from "next/server";
+import { EARLY_BIRD_LIMIT } from "@/config/pricing";
 import { nowPaymentsStatus } from "@/lib/billing/config";
+import { getEarlyBird, type EarlyBird } from "@/lib/billing/early-bird";
 import { getSupabaseServiceKey } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Public. What the pricing UI may offer right now. Exposes availability only:
- * no keys, price ids, counts or remaining-slot numbers.
+ * Public. What the pricing UI may offer right now: availability plus the early-bird counter
+ * (real data from the database). No keys, price ids or user information.
  */
 export async function GET() {
   const crypto = nowPaymentsStatus();
-  const providerOn = crypto.available;
-
-  let earlyAdopter: "unavailable" | "available" | "temporarily_unavailable" | "sold_out" = "unavailable";
-  const earlyEnabled = process.env.EARLY_ADOPTER_ENABLED === "true";
-  if (earlyEnabled && providerOn && getSupabaseServiceKey()) {
-    try {
-      const { data, error } = await createAdminClient().rpc("early_adopter_state");
-      if (!error && (data === "available" || data === "sold_out")) earlyAdopter = data;
-      else if (!error && data === "unavailable") earlyAdopter = "temporarily_unavailable";
-    } catch {
-      earlyAdopter = "unavailable";
-    }
-  }
+  let earlyBird: EarlyBird = { state: "off", total: EARLY_BIRD_LIMIT, remaining: null };
+  if (crypto.available && getSupabaseServiceKey()) earlyBird = await getEarlyBird(createAdminClient());
 
   return NextResponse.json(
     {
       crypto: { available: crypto.available, environment: crypto.environment, products: crypto.products, prepaid: true },
-      earlyAdopter,
+      earlyBird,
     },
     { headers: { "Cache-Control": "no-store" } },
   );

@@ -12,7 +12,7 @@ const ENV = {
 
 describe("product catalog and amounts", () => {
   it("amounts are fixed server-side in exact minor units", () => {
-    expect(PRODUCT_IDS.map((p) => [p, getProduct(p).amountMinor])).toEqual([["PRO_MONTHLY", 199], ["PRO_YEARLY", 1499], ["PRO_LIFETIME", 2999], ["PRO_LIFETIME_EARLY", 99]]);
+    expect(PRODUCT_IDS.map((p) => [p, getProduct(p).amountMinor])).toEqual([["PRO_MONTHLY", 199], ["PRO_YEARLY", 1499], ["PRO_LIFETIME", 5999], ["PRO_LIFETIME_EARLY", 2999]]);
     expect(getProduct("PRO_LIFETIME_EARLY").plan).toBe("PRO_LIFETIME");
     expect(getProduct("PRO_MONTHLY").cryptoPeriodDays).toBe(30);
     expect(getProduct("PRO_YEARLY").cryptoPeriodDays).toBe(365);
@@ -22,7 +22,7 @@ describe("product catalog and amounts", () => {
     expect(decimalToMinor("1.99")).toBe(199);
     expect(decimalToMinor(14.99)).toBe(1499);
     expect(decimalToMinor("29.99")).toBe(2999);
-    expect(decimalToMinor("0.99")).toBe(99);
+    expect(decimalToMinor("59.99")).toBe(5999);
     expect(decimalToMinor("5")).toBe(500);
     expect(decimalToMinor("5.1")).toBe(510);
     for (const bad of ["1.999", "-1", "abc", "", "1e3", null, undefined, "1,99"]) expect(decimalToMinor(bad)).toBeNull();
@@ -45,11 +45,13 @@ describe("provider configuration gates", () => {
     expect(s.problems).toEqual(expect.arrayContaining(["NOWPAYMENTS_API_KEY", "NOWPAYMENTS_IPN_SECRET"]));
     expect(JSON.stringify(nowPaymentsStatus(ENV))).not.toContain("np_ipn_secret");
   });
-  it("sandbox config enables the products; the early offer needs its own flag", () => {
+  it("sandbox config enables the three purchasable products; the early-bird product is applied by the server, never offered directly", () => {
     const s = nowPaymentsStatus(ENV);
     expect(s).toMatchObject({ available: true, environment: "sandbox" });
     expect(s.products).toEqual(["PRO_MONTHLY", "PRO_YEARLY", "PRO_LIFETIME"]);
-    expect(nowPaymentsStatus({ ...ENV, EARLY_ADOPTER_ENABLED: "true" }).products).toContain("PRO_LIFETIME_EARLY");
+    expect(nowPaymentsStatus({ ...ENV, EARLY_ADOPTER_ENABLED: "true" }).products).not.toContain("PRO_LIFETIME_EARLY");
+    expect(cryptoCheckoutBodySchema.safeParse({ product: "PRO_LIFETIME_EARLY" }).success).toBe(false);
+    expect(getProduct("PRO_LIFETIME_EARLY").name).toMatch(/Early Bird/);
   });
   it("live is the default environment but takes payments only with explicit approval", () => {
     const live = { NOWPAYMENTS_API_KEY: "np_key", NOWPAYMENTS_IPN_SECRET: "np_ipn_secret" };

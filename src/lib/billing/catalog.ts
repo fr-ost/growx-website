@@ -26,7 +26,7 @@ const tierFor: Record<ProductId, PricingTierId> = {
   PRO_MONTHLY: "PRO_MONTHLY",
   PRO_YEARLY: "PRO_YEARLY",
   PRO_LIFETIME: "PRO_LIFETIME",
-  PRO_LIFETIME_EARLY: "EARLY_ADOPTER_LIFETIME",
+  PRO_LIFETIME_EARLY: "PRO_LIFETIME",
 };
 
 const meta: Record<ProductId, { plan: PaidPlan; recurring: boolean; days: number | null }> = {
@@ -38,13 +38,15 @@ const meta: Record<ProductId, { plan: PaidPlan; recurring: boolean; days: number
 
 export function getProduct(id: ProductId): Product {
   const tier = getTier(tierFor[id]);
-  if (tier.priceCents === null || tier.priceCents <= 0) throw new Error(`Product ${id} has no price`);
+  const early = id === "PRO_LIFETIME_EARLY";
+  const cents = early ? tier.earlyBird?.priceCents : tier.priceCents;
+  if (cents === null || cents === undefined || cents <= 0) throw new Error(`Product ${id} has no price`);
   const m = meta[id];
   return {
     id,
     plan: m.plan,
-    name: tier.name,
-    amountMinor: tier.priceCents,
+    name: early ? `${tier.name} (Early Bird)` : tier.name,
+    amountMinor: cents,
     currency: "USD",
     recurring: m.recurring,
     cryptoPeriodDays: m.days,
@@ -54,10 +56,18 @@ export function getProduct(id: ProductId): Product {
 
 export const isProductId = (v: unknown): v is ProductId => typeof v === "string" && (PRODUCT_IDS as readonly string[]).includes(v);
 
+/**
+ * Products a customer can ASK for. The early-bird lifetime product is never requested by the
+ * browser: the server substitutes it for PRO_LIFETIME while the early-bird offer is available.
+ */
+export const PURCHASABLE_PRODUCT_IDS = ["PRO_MONTHLY", "PRO_YEARLY", "PRO_LIFETIME"] as const;
+export type PurchasableProductId = (typeof PURCHASABLE_PRODUCT_IDS)[number];
+export const isPurchasableProduct = (v: unknown): v is PurchasableProductId => typeof v === "string" && (PURCHASABLE_PRODUCT_IDS as readonly string[]).includes(v);
+
 /** Request bodies accept ONLY a product id. Any extra field (amount, priceId, ...) is rejected. */
-export const checkoutBodySchema = z.object({ product: z.enum(PRODUCT_IDS) }).strict();
+export const checkoutBodySchema = z.object({ product: z.enum(PURCHASABLE_PRODUCT_IDS) }).strict();
 /** Crypto checkout: only the product. The customer chooses the coin on the NOWPayments invoice page. */
-export const cryptoCheckoutBodySchema = z.object({ product: z.enum(PRODUCT_IDS) }).strict();
+export const cryptoCheckoutBodySchema = z.object({ product: z.enum(PURCHASABLE_PRODUCT_IDS) }).strict();
 
 /** Exact decimal string -> minor units. Rejects floats with >2 decimals and anything non-numeric. */
 export function decimalToMinor(value: unknown): number | null {

@@ -7,8 +7,8 @@ Paddle was removed (it rejected the product). Payments are **cryptocurrency only
 |---|---|---|---|
 | `PRO_MONTHLY` | PRO_MONTHLY | $1.99 | prepaid 30 days, does not renew |
 | `PRO_YEARLY` | PRO_YEARLY | $14.99 | prepaid 365 days, does not renew |
-| `PRO_LIFETIME` | PRO_LIFETIME | $29.99 once | never expires |
-| `PRO_LIFETIME_EARLY` | PRO_LIFETIME | $0.99 once | first 100 successful purchases; off until `EARLY_ADOPTER_ENABLED=true` |
+| `PRO_LIFETIME` | PRO_LIFETIME | $59.99 once | never expires; regular price |
+| `PRO_LIFETIME_EARLY` | PRO_LIFETIME | $29.99 once | **early-bird price for the first 100 lifetime purchases.** Never requested by the browser: the server substitutes it for `PRO_LIFETIME` while spots remain |
 
 ## How it works (hosted invoice)
 ```
@@ -31,7 +31,7 @@ server: verify x-nowpayments-sig (HMAC-SHA512 of key-sorted JSON) → re-fetch t
 * Only a `finished` payment with `actually_paid >= pay_amount`, matching the order's amount, asset and product, grants access. `waiting`, `confirming`, `confirmed`, `sending`, `partially_paid`, `failed`, `expired` never do. `refunded` revokes.
 * A renewal is a new payment: it extends one subscription row per (user, plan) by 30/365 days, stacking on remaining time.
 * `billing_apply()` is idempotent per event, atomic and out-of-order safe; refunds are applied once per adjustment.
-* Early adopter: first 100 verified purchases, enforced under one advisory lock (tested with 150 concurrent real connections). Only `available | temporarily unavailable | sold out` is ever shown, never a count. A paid early order with no inventory left is not granted: it becomes `refund_required` and you refund it manually.
+* **Early bird:** lifetime is $59.99; the first 100 successful lifetime purchases pay $29.99. The server decides (checkout API and the `/checkout` page use the same rule): while the database reports spots available, a lifetime request becomes a `PRO_LIFETIME_EARLY` order at $29.99; otherwise a regular $59.99 order. If the situation changes between viewing and clicking, the buyer gets a 409 message, never a silently different price. A spot is used only by a verified successful payment (enforced under one advisory lock, tested with 150 concurrent real connections); unpaid checkouts only reserve a spot for up to an hour. The pricing page shows the real remaining count and a progress bar (`GET /api/billing/options` -> `earlyBird`); it is read from `early_adopter_slots`, not invented. A paid early order with no spot left is not granted: it becomes `refund_required` and you refund it manually.
 * Entitlement has no grace period for crypto (`BILLING_GRACE_DAYS_CRYPTO=0`).
 
 ## Environment variables (Vercel → Production)
@@ -41,7 +41,7 @@ server: verify x-nowpayments-sig (HMAC-SHA512 of key-sorted JSON) → re-fetch t
 | `NOWPAYMENTS_IPN_SECRET` (**secret**) | IPN secret key |
 | `BILLING_LIVE_APPROVED` | set to `true` to take real payments (the on-switch) |
 | `NOWPAYMENTS_ENV` | optional; live is the default, `sandbox` only for testing |
-| `EARLY_ADOPTER_ENABLED` | `true` to offer the $0.99 plan (leave off until you have verified purchases work) |
+| `EARLY_ADOPTER_ENABLED` | optional; the early-bird price is ON by default. Set to `false` to switch it off (everyone pays $59.99) |
 
 Checkout stays "Coming soon" until the key, IPN secret and `BILLING_LIVE_APPROVED=true` are all set. `GET /api/health` lists the *names* of anything missing under `billing.crypto.problems`.
 

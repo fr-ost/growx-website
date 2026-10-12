@@ -1,5 +1,5 @@
 import { BuyButtons } from "@/components/billing/buy-buttons";
-import { EarlyAdopterBanner } from "@/components/billing/early-adopter-banner";
+import { LifetimePrice } from "@/components/billing/lifetime-price";
 import { IconCheck, IconInfinity, IconStar } from "@/components/icons";
 import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/primitives";
@@ -14,8 +14,7 @@ const perks: Record<string, string[]> = {
 };
 
 export function PricingCards() {
-  const main = pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME");
-  const early = pricingTiers.find((t) => t.id === "EARLY_ADOPTER_LIFETIME");
+  const main = pricingTiers;
   return (
     <div className="space-y-6">
       <ul className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
@@ -35,10 +34,14 @@ export function PricingCards() {
                 <h3 className="font-bold">{t.name}</h3>
                 {t.id === "FREE" ? <Badge tone="ok">Available</Badge> : t.id === "PRO_LIFETIME" ? <IconInfinity size={20} className="text-accent" /> : <IconStar size={18} className="text-accent" />}
               </div>
-              <p className="mt-5 flex flex-wrap items-baseline gap-x-1.5">
-                <span className="font-display text-[2.6rem] font-extrabold leading-none tracking-tight">{t.priceLabel}</span>
-                <span className="whitespace-nowrap text-sm text-muted">{t.cadence}</span>
-              </p>
+              {t.id === "PRO_LIFETIME" ? (
+                <LifetimePrice />
+              ) : (
+                <p className="mt-5 flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="font-display text-[2.6rem] font-extrabold leading-none tracking-tight">{t.priceLabel}</span>
+                  <span className="whitespace-nowrap text-sm text-muted">{t.cadence}</span>
+                </p>
+              )}
               <p className="mt-2 text-sm text-text-2">{t.blurb}</p>
               <ul className="mt-6 flex-1 space-y-2.5 text-sm text-text-2">
                 {(perks[t.id] ?? []).map((p) => (
@@ -61,7 +64,6 @@ export function PricingCards() {
         ))}
       </ul>
 
-      {early ? <EarlyAdopterBanner tier={early} /> : null}
     </div>
   );
 }

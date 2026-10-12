@@ -6,7 +6,13 @@ const rpc = vi.fn();
 const createNowInvoice = vi.fn();
 
 vi.mock("@/lib/supabase/user", () => ({ getCurrentUser: () => getCurrentUser() }));
-vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ rpc }) }));
+let claimedSlots: number | null = 0;
+vi.mock("@/lib/supabase/admin", () => ({
+  createAdminClient: () => ({
+    rpc,
+    from: () => ({ select: () => Promise.resolve(claimedSlots === null ? { count: null, error: { code: "42P01" } } : { count: claimedSlots, error: null }) }),
+  }),
+}));
 vi.mock("@/lib/origin", () => ({ requestOrigin: async () => "https://www.growxapp.org" }));
 vi.mock("@/lib/billing/nowpayments", async (orig) => ({ ...(await orig<typeof import("@/lib/billing/nowpayments")>()), createNowInvoice: (i: unknown) => createNowInvoice(i) }));
 
@@ -28,8 +34,9 @@ beforeEach(() => {
   for (const k of KEYS) delete process.env[k];
   Object.assign(process.env, ENV);
   getCurrentUser.mockReset().mockResolvedValue(USER);
-  rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : { data: null, error: null }));
+  rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_adopter_state" ? { data: "available", error: null } : { data: null, error: null }));
   createNowInvoice.mockReset();
+  claimedSlots = 0;
 });
 
 describe("POST /api/billing/crypto/checkout (hosted invoice)", () => {
@@ -102,31 +109,92 @@ describe("POST /api/billing/crypto/checkout (hosted invoice)", () => {
   });
 });
 
+describe("lifetime price and the early bird (server decides)", () => {
+  const good = { id: "9", invoice_url: "https://nowpayments.io/payment/?iid=9", order_id: ORDER_ID };
+  const orderCall = () => rpc.mock.calls.find((c) => c[0] === "create_checkout_order")![1];
+  const buy = (product = "PRO_LIFETIME") => cryptoCheckout(req("/api/billing/crypto/checkout", { product }));
+
+  it("lifetime buyers get the $29.99 early-bird order while spots are available", async () => {
+    createNowInvoice.mockResolvedValue({ ...good, price_amount: "29.99" });
+    expect((await buy()).status).toBe(200);
+    expect(orderCall()).toMatchObject({ p_product: "PRO_LIFETIME_EARLY", p_plan: "PRO_LIFETIME", p_amount_minor: 2999 });
+    expect(createNowInvoice).toHaveBeenCalledWith(expect.objectContaining({ productId: "PRO_LIFETIME_EARLY" }));
+  });
+  it("when sold out, reserved, off or unreadable the regular $59.99 applies", async () => {
+    createNowInvoice.mockResolvedValue({ ...good, price_amount: "59.99" });
+    for (const state of ["sold_out", "unavailable", "weird"]) {
+      rpc.mockClear();
+      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_adopter_state" ? { data: state, error: null } : { data: null, error: null }));
+      expect((await buy()).status, state).toBe(200);
+      expect(orderCall(), state).toMatchObject({ p_product: "PRO_LIFETIME", p_amount_minor: 5999 });
+    }
+    process.env.EARLY_ADOPTER_ENABLED = "false";
+    rpc.mockClear();
+    await buy();
+    expect(orderCall()).toMatchObject({ p_product: "PRO_LIFETIME", p_amount_minor: 5999 });
+  });
+  it("monthly and yearly never become early-bird orders, and the browser cannot ask for the early product", async () => {
+    createNowInvoice.mockResolvedValue(good);
+    await buy("PRO_YEARLY");
+    expect(orderCall()).toMatchObject({ p_product: "PRO_YEARLY", p_amount_minor: 1499 });
+    expect((await buy("PRO_LIFETIME_EARLY")).status).toBe(400);
+  });
+  it("an invoice that does not match the early-bird price is refused", async () => {
+    createNowInvoice.mockResolvedValue({ ...good, price_amount: "59.99" }); // asked for 29.99
+    expect((await buy()).status).toBe(502);
+  });
+  it("a changed early-bird situation never silently charges another price", async () => {
+    for (const code of ["early_sold_out", "early_unavailable", "early_already_held"]) {
+      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "error", code }, error: null } : fn === "early_adopter_state" ? { data: "available", error: null } : { data: null, error: null }));
+      const res = await buy();
+      expect(res.status, code).toBe(409);
+      expect((await res.json()).error.message).toMatch(/early-bird/i);
+    }
+    expect(createNowInvoice).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/billing/options", () => {
-  it("exposes availability only (no keys, price ids or counts)", async () => {
+  it("exposes availability and the early-bird counter only (no keys, price ids or user data)", async () => {
+    claimedSlots = 37;
     const body = await (await options()).json();
     expect(body.card).toBeUndefined();
     expect(body.crypto).toMatchObject({ available: true, prepaid: true });
     expect(body.crypto.payCurrencies).toBeUndefined();
-    expect(body.earlyAdopter).toBe("unavailable");
+    expect(body.earlyBird).toEqual({ state: "available", total: 100, remaining: 63 });
     const text = JSON.stringify(body);
     for (const secret of ["service-role-secret", "np-ipn", "np-key"]) expect(text).not.toContain(secret);
   });
 
-  it("nothing is available while unconfigured, and the early offer stays off", async () => {
+  it("nothing is available while unconfigured, and no early-bird data is read", async () => {
     for (const k of Object.keys(ENV)) if (/^NOWPAY/.test(k)) delete process.env[k];
     const off = await (await options()).json();
     expect(off.crypto.available).toBe(false);
-    expect(off.earlyAdopter).toBe("unavailable");
+    expect(off.earlyBird).toEqual({ state: "off", total: 100, remaining: null });
+    expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("early-adopter state comes from the database function and never includes a count", async () => {
-    process.env.EARLY_ADOPTER_ENABLED = "true";
-    for (const [db, ui] of [["available", "available"], ["sold_out", "sold_out"], ["unavailable", "temporarily_unavailable"]] as const) {
+  it("early-bird state and remaining spots come from the database", async () => {
+    const cases: [string, number | null, unknown][] = [
+      ["available", 0, { state: "available", total: 100, remaining: 100 }],
+      ["available", 99, { state: "available", total: 100, remaining: 1 }],
+      ["unavailable", 90, { state: "temporarily_unavailable", total: 100, remaining: 10 }],
+      ["sold_out", 100, { state: "sold_out", total: 100, remaining: 0 }],
+      ["available", 100, { state: "sold_out", total: 100, remaining: 0 }],
+      ["available", null, { state: "available", total: 100, remaining: null }],
+    ];
+    for (const [db, claimed, expected] of cases) {
+      claimedSlots = claimed;
       rpc.mockResolvedValueOnce({ data: db, error: null });
-      const body = await (await options()).json();
-      expect(body.earlyAdopter).toBe(ui);
-      expect(JSON.stringify(body)).not.toMatch(/remaining|left|count/i);
+      expect((await (await options()).json()).earlyBird, `${db}/${claimed}`).toEqual(expected);
     }
+  });
+
+  it("is off when disabled or when the database cannot be read (regular price applies)", async () => {
+    process.env.EARLY_ADOPTER_ENABLED = "false";
+    expect((await (await options()).json()).earlyBird.state).toBe("off");
+    delete process.env.EARLY_ADOPTER_ENABLED;
+    rpc.mockResolvedValueOnce({ data: null, error: { code: "42883" } });
+    expect((await (await options()).json()).earlyBird.state).toBe("off");
   });
 });

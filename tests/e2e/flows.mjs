@@ -272,8 +272,8 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
 // ---------- billing: nothing is configured in this environment, so checkout must be unavailable
 {
   const opt = await (await fetch(BASE + "/api/billing/options")).json();
-  ok("billing options: no provider available when unconfigured", opt.crypto.available === false && opt.earlyAdopter === "unavailable", JSON.stringify(opt).slice(0, 200));
-  ok("billing options expose no keys, price ids or counts", !/pri_|apikey|secret|remaining|count/i.test(JSON.stringify(opt)));
+  ok("billing options: no provider available when unconfigured", opt.crypto.available === false && opt.earlyBird.state === "off", JSON.stringify(opt).slice(0, 200));
+  ok("billing options expose no keys, price ids or counts", !/pri_|apikey|secret|email|user_id/i.test(JSON.stringify(opt)));
   for (const path of ["/api/billing/crypto/checkout"]) {
     const r = await fetch(BASE + path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ product: "PRO_LIFETIME", price: 1 }) });
     ok(`${path} refuses signed-out requests`, r.status === 401 || r.status === 403, String(r.status));
@@ -293,7 +293,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("pricing: paid plans show disabled 'Currently unavailable' while unconfigured", soon >= 3 && (await bp.locator("a:has-text('Pay with crypto')").count()) === 0, String(soon));
   ok("pricing: 'Currently unavailable' buttons are disabled", await bp.locator("button:has-text('Currently unavailable')").evaluateAll((els) => els.every((e) => e.disabled)));
   const priceText = await bp.locator("main").innerText();
-  ok("pricing shows fixed prices", ["$1.99", "$14.99", "$29.99"].every((x) => priceText.includes(x)));
+  ok("pricing shows fixed prices", ["$1.99", "$14.99", "$59.99"].every((x) => priceText.includes(x)) && !priceText.includes("$0.99"));
   ok("pricing never shows a remaining-slots number", !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(priceText));
   await bp.close();
 
@@ -302,7 +302,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const mp = await mctx.newPage();
   const merrs = []; mp.on("pageerror", (e) => merrs.push(String(e)));
   const ORDER = "00000000-0000-4000-8000-0000000000aa";
-  const options = { crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], prepaid: true }, earlyAdopter: "unavailable" };
+  const options = { crypto: { available: true, environment: "sandbox", products: ["PRO_MONTHLY", "PRO_LIFETIME"], prepaid: true }, earlyBird: { state: "off", total: 100, remaining: null } };
   let orderState = { product: "PRO_MONTHLY", status: "pending", paymentStatus: null, providerStatus: null };
   let checkoutBody = null;
   let checkoutReply = { status: 200, json: { orderId: ORDER, invoiceUrl: "https://nowpayments.io/payment/?iid=4522625843" } };
@@ -335,7 +335,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   // provider error on the invoice page
   checkoutReply = { status: 502, json: { error: { code: "provider_error", message: "Could not start crypto checkout. Please try again. (ref: 400)" } } };
   await mp.goto(BASE + "/checkout?plan=PRO_LIFETIME", { waitUntil: "networkidle" });
-  ok("lifetime invoice shows $29.99 one-time", /\$29\.99/.test(await mp.locator("main").innerText()) && /one-time payment/i.test(await mp.locator("main").innerText()));
+  { const t = await mp.locator("main").innerText(); ok("lifetime invoice applies the server's early-bird price: $59.99 struck, $29.99 charged", (await mp.locator("main s", { hasText: "$59.99" }).count()) === 1 && /\$29\.99\s*USD/.test(t) && /Early-bird price applied/.test(t) && /one-time payment/i.test(t), t.slice(0, 300)); }
   await mp.click("button:has-text('Continue to payment')");
   ok("provider error is shown with its reference and the button is usable again", await mp.locator("text=(ref: 400)").waitFor({ timeout: 10000 }).then(() => true, () => false) && (await mp.locator("button:has-text('Continue to payment')").isEnabled()));
   await mp.goto(BASE + "/checkout?plan=NOT_A_PLAN");
@@ -360,20 +360,32 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("status: refund-required explained", await seen("Payment received but not activated"));
   ok("no runtime errors in billing UI", merrs.length === 0, merrs.join(" | ").slice(0, 300));
 
-  // early-adopter offer states (server-reported)
-  for (const [state, expect] of [["available", "Limited offer"], ["temporarily_unavailable", "Temporarily unavailable"], ["unavailable", null]]) {
-    await mctx.unroute("**/api/billing/options");
-    await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, crypto: { ...options.crypto, products: ["PRO_LIFETIME_EARLY", "PRO_LIFETIME"] }, earlyAdopter: state } }));
-    await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-    ok(`early-adopter state '${state}' -> ${expect ? `'${expect}'` : "offer hidden"}`, expect ? (await mp.locator(`text=${expect}`).count()) >= 1 : (await mp.locator("h3:has-text('Early Adopter')").count()) === 0);
-    const t = await mp.locator("main").innerText();
-    ok(`early-adopter state '${state}' shows no remaining-slot number`, !/\b\d+\s*(slots?|spots?|left|remaining)\b/i.test(t));
+  // lifetime card: early-bird price + progress bar (server-reported numbers)
+  const card = (st) => ({ json: { ...options, crypto: { ...options.crypto, products: ["PRO_MONTHLY", "PRO_YEARLY", "PRO_LIFETIME"] }, earlyBird: st } });
+  const life = () => mp.locator("li:has(h3:has-text('Premium Lifetime'))");
+  const setBird = async (st) => { await mctx.unroute("**/api/billing/options"); await mctx.route("**/api/billing/options", (r) => r.fulfill(card(st))); await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" }); await mp.waitForTimeout(400); };
+
+  await setBird({ state: "available", total: 100, remaining: 63 });
+  let lt = await life().innerText();
+  ok("lifetime card: regular $59.99 is struck through and $29.99 is the price", (await life().locator("s", { hasText: "$59.99" }).count()) === 1 && lt.includes("$29.99"), lt.slice(0, 200));
+  ok("lifetime card: names the first-100 early bird and the real spots left", /first 100 buyers/i.test(lt) && /63 of 100 spots left/.test(lt) && /then \$59\.99/.test(lt));
+  const bar = life().locator('[role=progressbar]');
+  ok("lifetime card: progress bar shows 37 of 100 claimed", (await bar.getAttribute("aria-valuenow")) === "37" && (await bar.getAttribute("aria-valuemax")) === "100" && /37%/.test(await bar.locator("div").getAttribute("style")));
+  ok("no separate early-adopter section or $0.99 price anywhere", (await mp.locator("h3:has-text('Early Adopter')").count()) === 0 && !(await mp.locator("main").innerText()).includes("$0.99"));
+
+  await setBird({ state: "available", total: 100, remaining: 1 });
+  ok("last spot: '1 of 100 spots left'", /1 of 100 spots left/.test(await life().innerText()));
+  await setBird({ state: "available", total: 100, remaining: null });
+  lt = await life().innerText();
+  ok("counter unreadable: price still shown, no invented number or bar", lt.includes("$29.99") && (await life().locator("[role=progressbar]").count()) === 0 && !/spots left/.test(lt));
+  await setBird({ state: "temporarily_unavailable", total: 100, remaining: 10 });
+  lt = await life().innerText();
+  ok("all spots reserved: regular price with an explanation, no strike-through", /\$59\.99/.test(lt) && (await life().locator("s").count()) === 0 && /reserved by people checking out/.test(lt));
+  for (const st of [{ state: "sold_out", total: 100, remaining: 0 }, { state: "off", total: 100, remaining: null }]) {
+    await setBird(st);
+    lt = await life().innerText();
+    ok(`early bird '${st.state}': only the regular $59.99 is shown`, lt.includes("$59.99") && !lt.includes("$29.99") && (await life().locator("[role=progressbar]").count()) === 0);
   }
-  await mctx.unroute("**/api/billing/options");
-  await mctx.route("**/api/billing/options", (r) => r.fulfill({ json: { ...options, earlyAdopter: "sold_out" } }));
-  await mp.goto(BASE + "/pricing", { waitUntil: "networkidle" });
-  await mp.waitForTimeout(500);
-  { const h = await mp.locator("h3:has-text('Early Adopter')").count(); ok("early-adopter sold out hides the offer banner", h === 0, `banner headings=${h}`); }
   await mctx.close();
 }
 

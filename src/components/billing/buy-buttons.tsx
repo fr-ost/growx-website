@@ -5,17 +5,16 @@ import type { ProductId } from "@/lib/billing/catalog";
 import { useBillingOptions } from "./use-billing-options";
 
 /** Purchase control for one product. Enabled only when the server reports crypto checkout as available. */
-export function BuyButtons({ product, primary = false, early = false }: { product: ProductId; primary?: boolean; early?: boolean }) {
+export function BuyButtons({ product, primary = false }: { product: ProductId; primary?: boolean }) {
   const opts = useBillingOptions();
 
   if (opts === undefined) return <Button variant="secondary" className="w-full" disabled>Checking…</Button>;
   const crypto = !!opts?.crypto.products.includes(product);
-  const blockedByOffer = early && opts?.earlyAdopter !== "available";
 
-  if (!opts || !crypto || blockedByOffer) {
+  if (!opts || !crypto) {
     return (
       <Button variant="secondary" className="w-full" disabled aria-disabled="true" title="Checkout is temporarily unavailable">
-        {early && opts?.earlyAdopter === "temporarily_unavailable" ? "Temporarily unavailable" : "Currently unavailable"}
+        Currently unavailable
       </Button>
     );
   }

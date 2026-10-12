@@ -5,7 +5,7 @@ import type { ProductId } from "@/lib/billing/catalog";
 
 export interface BillingOptions {
   crypto: { available: boolean; environment: "sandbox" | "production"; products: ProductId[]; prepaid: boolean };
-  earlyAdopter: "unavailable" | "available" | "temporarily_unavailable" | "sold_out";
+  earlyBird: { state: "available" | "temporarily_unavailable" | "sold_out" | "off"; total: number; remaining: number | null };
 }
 
 let cache: Promise<BillingOptions | null> | null = null;

@@ -87,7 +87,7 @@ const faqs = [
   { q: "Do I need to give GrowX my X password?", a: "No. GrowX works through the X session that is already signed in in your Chrome browser. It never sees or stores your X password, and it does not use X OAuth." },
   { q: "Is it safe for my account?", a: "No tool can promise zero risk; X decides. GrowX is built to behave like a careful person: randomised delays, breaks, hourly and daily caps, active hours, warm-up and an automatic slow-down whenever X shows a warning." },
   { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, add your X username and start the trial from your dashboard when you are ready. It runs for ${TRIAL_DAYS} days, needs no payment details, and each account can use it once.` },
-  { q: "Can I buy Premium today?", a: "Yes. Premium is available now for $1.99 for 30 days, $14.99 for 365 days or $29.99 lifetime, paid in cryptocurrency through NOWPayments. You can also try every Premium feature free for 30 days, with no credit card and no commitment." },
+  { q: "Can I buy Premium today?", a: "Yes. Premium is available now for $1.99 for 30 days, $14.99 for 365 days or $59.99 lifetime (just $29.99 for the first 100 buyers), paid in cryptocurrency through NOWPayments. You can also try every Premium feature free for 30 days, with no credit card and no commitment." },
 ];
 
 export default function HomePage() {
@@ -294,7 +294,7 @@ export default function HomePage() {
                 <p className="mt-3">
                   <span className="font-display text-5xl font-extrabold">{yearly.priceLabel}</span> <span className="text-muted">/ year</span>
                 </p>
-                <p className="mt-1 text-sm text-muted">or $1.99 / month · $29.99 lifetime</p>
+                <p className="mt-1 text-sm text-muted">or $1.99 / 30 days · lifetime $59.99 ($29.99 early bird)</p>
                 <ul className="mt-6 space-y-3 text-sm text-text-2">
                   {["Everything in Free", "Turbo & X Premium paces", "Advanced keyword, location & age filters", "Bulk import & high-volume cleanup"].map((t) => (
                     <li key={t} className="flex gap-2">

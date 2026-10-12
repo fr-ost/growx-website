@@ -4,7 +4,7 @@
  * server-side decision made from provider configuration, not a constant here.
  */
 export type PaidPlanId = "PRO_MONTHLY" | "PRO_YEARLY" | "PRO_LIFETIME";
-export type PricingTierId = "FREE" | "PRO_MONTHLY" | "PRO_YEARLY" | "PRO_LIFETIME" | "EARLY_ADOPTER_LIFETIME";
+export type PricingTierId = "FREE" | "PRO_MONTHLY" | "PRO_YEARLY" | "PRO_LIFETIME";
 
 export interface PricingTier {
   id: PricingTierId;
@@ -18,8 +18,8 @@ export interface PricingTier {
   priceLabel: string;
   cadence: string;
   blurb: string;
-  /** Early-adopter tier only: purchase cap, enforced server-side in a later phase. */
-  purchaseLimit?: number;
+  /** Lifetime tier only: early-bird price for the first `earlyBird.limit` successful purchases (enforced in the database). */
+  earlyBird?: { priceCents: number; priceLabel: string; limit: number };
   highlight?: boolean;
 }
 
@@ -62,39 +62,18 @@ export const pricingTiers: readonly PricingTier[] = [
     id: "PRO_LIFETIME",
     entitlementPlan: "PRO_LIFETIME",
     name: "Premium Lifetime",
-    priceCents: 2999,
+    priceCents: 5999,
     currency: "USD",
     interval: "once",
-    priceLabel: "$29.99",
+    priceLabel: "$59.99",
     cadence: "one-time",
     blurb: "Pay once. No renewal.",
-  },
-  {
-    id: "EARLY_ADOPTER_LIFETIME",
-    entitlementPlan: "PRO_LIFETIME",
-    name: "Early Adopter Lifetime",
-    priceCents: 99,
-    currency: "USD",
-    interval: "once",
-    priceLabel: "$0.99",
-    cadence: "one-time",
-    blurb: "Launch offer: permanent Premium for the first 100 successful, verified purchases.",
-    purchaseLimit: 100,
+    earlyBird: { priceCents: 2999, priceLabel: "$29.99", limit: 100 },
   },
 ] as const;
 
-/**
- * Early-adopter offer state shown in the UI. It is decided by the SERVER
- * (database inventory + configuration), never by this file: "available" means
- * purchasable now, "unavailable" means not on sale, "sold_out" hides the tier.
- * No remaining-slot count is ever exposed.
- */
-export type EarlyAdopterStatus = "unavailable" | "temporarily_unavailable" | "available" | "sold_out";
-
-/** Tiers to display, honouring the early-adopter lifecycle. */
-export function visibleTiers(status: EarlyAdopterStatus = "unavailable"): readonly PricingTier[] {
-  return status === "sold_out" ? pricingTiers.filter((t) => t.id !== "EARLY_ADOPTER_LIFETIME") : pricingTiers;
-}
+/** Early-bird lifetime price: the first EARLY_BIRD_LIMIT successful lifetime purchases pay this instead of the regular price. */
+export const EARLY_BIRD_LIMIT = 100;
 
 export const TRIAL_DAYS = 30;
 

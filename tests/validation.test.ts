@@ -40,15 +40,15 @@ describe("pricing config", () => {
       ["FREE", 0],
       ["PRO_MONTHLY", 199],
       ["PRO_YEARLY", 1499],
-      ["PRO_LIFETIME", 2999],
-      ["EARLY_ADOPTER_LIFETIME", 99],
+      ["PRO_LIFETIME", 5999],
     ]);
-    expect(getTier("EARLY_ADOPTER_LIFETIME").purchaseLimit).toBe(100);
+    expect(getTier("PRO_LIFETIME").earlyBird).toEqual({ priceCents: 2999, priceLabel: "$29.99", limit: 100 });
+    expect(EARLY_BIRD_LIMIT).toBe(100);
   });
 });
 
 import { getGracePolicy } from "@/lib/billing/grace";
-import { visibleTiers } from "@/config/pricing";
+import { EARLY_BIRD_LIMIT } from "@/config/pricing";
 
 describe("grace policy config", () => {
   it("defaults to 3 days card / 0 crypto and ignores invalid values", () => {
@@ -56,14 +56,5 @@ describe("grace policy config", () => {
     expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "5", BILLING_GRACE_DAYS_CRYPTO: "1" })).toEqual({ paddle: 5, nowpayments: 1 });
     expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "-1", BILLING_GRACE_DAYS_CRYPTO: "abc" })).toEqual({ paddle: 3, nowpayments: 0 });
     expect(getGracePolicy({ BILLING_GRACE_DAYS_CARD: "99" }).paddle).toBe(3);
-  });
-});
-
-describe("early adopter visibility", () => {
-  it("is shown while planned/available and hidden when sold out, regular prices remain", () => {
-    expect(visibleTiers("unavailable").some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(true);
-    const sold = visibleTiers("sold_out");
-    expect(sold.some((t) => t.id === "EARLY_ADOPTER_LIFETIME")).toBe(false);
-    expect(sold.map((t) => t.priceLabel)).toEqual(["$0", "$1.99", "$14.99", "$29.99"]);
   });
 });

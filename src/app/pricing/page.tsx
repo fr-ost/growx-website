@@ -11,7 +11,7 @@ import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
   title: "GrowX Pricing: Free Plan, Premium & 30-Day Trial",
-  description: "GrowX is free forever. Premium: $1.99 for 30 days, $14.99 for 365 days or $29.99 lifetime, with a free 30-day trial and no credit card. Compare Free vs Premium.",
+  description: "GrowX is free forever. Premium from $1.99: 30 days, 365 days or lifetime ($29.99 for the first 100 buyers, then $59.99). Free 30-day trial, no credit card.",
   path: "/pricing",
   keywords: ["GrowX pricing", "GrowX Premium", "free X auto follow", "Twitter growth tool pricing"],
 });
@@ -20,7 +20,7 @@ const faqs = [
   { q: "How do I pay?", a: "With cryptocurrency through a secure NOWPayments invoice page, where you choose the coin: Ethereum (ETH) and BNB Smart Chain (BEP20) coins. Monthly and yearly plans are prepaid for 30 or 365 days and do not renew automatically; lifetime is a single payment. Premium turns on automatically once your payment is confirmed on the network." },
   { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, confirm your email, add your X username and start the trial from your dashboard. It lasts ${TRIAL_DAYS} days, needs no card, and each account and X username can use it once.` },
   { q: "Will the free version stay useful?", a: "Yes. Core features stay free: the Safe and Balanced autopilot, sources, queue, core filters, history, analytics, backup, the cleanup scan and manual unfollows." },
-  { q: "What is the Early Adopter Lifetime offer?", a: "A $0.99 one-time price for permanent Premium, limited to the first 100 successful, verified purchases. When the 100 are sold, the offer ends and regular prices apply." },
+  { q: "What is the early-bird lifetime price?", a: "Lifetime Premium is $59.99, but the first 100 people who buy it pay only $29.99. The counter on the Lifetime card shows how many early-bird spots are left; a spot is used only when a payment is fully confirmed. After the 100 spots are taken, the regular $59.99 applies." },
   { q: "What happens when my prepaid period ends?", a: "Premium ends on the date shown in your account and you return to the Free plan. Nothing is charged automatically; pay again whenever you want to continue. Lifetime purchases never expire." },
 ];
 

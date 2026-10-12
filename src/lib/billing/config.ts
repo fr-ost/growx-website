@@ -51,6 +51,6 @@ export function nowPaymentsStatus(env: Env = process.env): ProviderStatus {
   if (!c.ipnSecret) problems.push("NOWPAYMENTS_IPN_SECRET");
   if (c.liveBlocked) problems.push("BILLING_LIVE_APPROVED (live mode not approved)");
   const available = problems.length === 0;
-  const products = PRODUCT_IDS.filter((p) => p !== "PRO_LIFETIME_EARLY" || env.EARLY_ADOPTER_ENABLED === "true");
+  const products = PRODUCT_IDS.filter((p) => p !== "PRO_LIFETIME_EARLY"); // early bird is applied by the server to PRO_LIFETIME
   return { available, environment: c.environment, products: available ? [...products] : [], problems };
 }
