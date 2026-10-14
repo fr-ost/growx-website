@@ -16,6 +16,12 @@ const makeFrom = () => (table: string) => ({
   }),
 });
 
+const checkActiveSession = vi.fn();
+const sessionIdOf = vi.fn();
+vi.mock("@/lib/session/active", () => ({
+  checkActiveSession: (...a: unknown[]) => checkActiveSession(...a),
+  verifiedSessionId: (...a: unknown[]) => sessionIdOf(...a),
+}));
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({ auth: { getUser: getUserBearer }, from: makeFrom() })),
 }));
@@ -36,6 +42,8 @@ beforeEach(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://x.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "pk";
   process.env.ALLOWED_EXTENSION_ORIGINS = EXT;
+  checkActiveSession.mockReset().mockResolvedValue("active");
+  sessionIdOf.mockReset().mockResolvedValue("55555555-5555-4555-8555-555555555555");
 });
 
 describe("GET /api/entitlement", () => {
@@ -117,5 +125,56 @@ describe("CORS", () => {
     process.env.ALLOWED_EXTENSION_ORIGINS = "*, https://evil.example, chrome-extension://short";
     expect(OPTIONS(req({ origin: "*" })).status).toBe(403);
     expect(OPTIONS(req({ origin: "https://evil.example" })).status).toBe(403);
+  });
+
+  describe("single active session", () => {
+    const SID = "55555555-5555-4555-8555-555555555555";
+    const user = { data: { user: { id: "u-1" } }, error: null };
+
+    it("a revoked bearer session gets a DEFINITIVE 401 session_revoked and no entitlement data is read", async () => {
+      getUserBearer.mockResolvedValue(user);
+      checkActiveSession.mockResolvedValue("revoked");
+      const res = await GET(req({ authorization: "Bearer a.b.c", origin: EXT }));
+      expect(res.status).toBe(401);
+      expect((await res.json()).error.code).toBe("session_revoked");
+      expect(checkActiveSession).toHaveBeenCalledWith("u-1", SID, "extension");
+      expect(fromCalls).toHaveLength(0);
+    });
+
+    it("a failing check is 503 (unknown), never a revocation verdict and never Premium", async () => {
+      getUserBearer.mockResolvedValue(user);
+      checkActiveSession.mockResolvedValue("error");
+      const res = await GET(req({ authorization: "Bearer a.b.c" }));
+      expect(res.status).toBe(503);
+      expect((await res.json()).error.code).toBe("session_check_unavailable");
+      expect(fromCalls).toHaveLength(0);
+    });
+
+    it("a verified token without a usable session id is refused", async () => {
+      getUserBearer.mockResolvedValue(user);
+      sessionIdOf.mockResolvedValue(null);
+      expect((await GET(req({ authorization: "Bearer a.b.c" }))).status).toBe(401);
+      expect(checkActiveSession).not.toHaveBeenCalled();
+    });
+
+    it("the active session still gets its entitlement (trial, paid and gifted rows resolve as before)", async () => {
+      getUserBearer.mockResolvedValue(user);
+      rows = {
+        trials: [{ status: "active", started_at: "2026-01-01T00:00:00Z", expires_at: "2099-01-01T00:00:00Z" }],
+        subscriptions: [{ plan: "PRO_LIFETIME", status: "active", current_period_end: null, provider: "nowpayments" }],
+      };
+      const res = await GET(req({ authorization: "Bearer a.b.c" }));
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ plan: "PRO_LIFETIME", isPremium: true });
+    });
+
+    it("cookie sessions are checked as 'web' and bearer sessions as 'extension'", async () => {
+      getUserCookie.mockResolvedValue(user);
+      await GET(req());
+      expect(checkActiveSession).toHaveBeenLastCalledWith("u-1", SID, "web");
+      getUserBearer.mockResolvedValue(user);
+      await GET(req({ authorization: "Bearer a.b.c" }));
+      expect(checkActiveSession).toHaveBeenLastCalledWith("u-1", SID, "extension");
+    });
   });
 });

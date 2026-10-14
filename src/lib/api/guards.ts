@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "@/lib/env";
-import { getCurrentUser } from "@/lib/supabase/user";
+import { getAuthState } from "@/lib/supabase/user";
 
 const NO_STORE = { "Cache-Control": "no-store" } as const;
 
@@ -28,8 +28,11 @@ export type AuthResult = { ok: true; user: User } | { ok: false; response: NextR
 export async function requireApiUser(request: NextRequest, opts: { mutating?: boolean; verifiedEmail?: boolean } = {}): Promise<AuthResult> {
   if (opts.mutating && !isSameOrigin(request)) return { ok: false, response: errorResponse(403, "bad_origin") };
   if (!isSupabaseConfigured()) return { ok: false, response: errorResponse(503, "not_configured") };
-  const user = await getCurrentUser();
-  if (!user) return { ok: false, response: errorResponse(401, "unauthenticated") };
+  const state = await getAuthState();
+  if (state.status === "revoked") return { ok: false, response: errorResponse(401, "session_revoked", "This session was ended because the account signed in elsewhere.") };
+  if (state.status === "error") return { ok: false, response: errorResponse(503, "session_check_unavailable", "Could not verify your session. Try again.") };
+  if (state.status !== "active") return { ok: false, response: errorResponse(401, "unauthenticated") };
+  const user = state.user;
   if (opts.verifiedEmail && !user.email_confirmed_at) return { ok: false, response: errorResponse(403, "email_not_verified", "Confirm your email address before purchasing.") };
   return { ok: true, user };
 }

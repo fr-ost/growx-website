@@ -269,6 +269,76 @@ ok("cross-site signout blocked", cs.status === 403, String(cs.status));
 
 ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").slice(0, 300));
 
+// ---------- single active login per account
+{
+  const MOCK = "http://localhost:54321";
+  const state = async () => (await fetch(MOCK + "/__state")).json();
+  const login = async (page, email) => {
+    await page.goto(BASE + "/login");
+    await page.fill("#email", email); await page.fill("#password", "correct-horse-1");
+    await page.click("button[type=submit]"); await page.waitForURL("**/dashboard", { timeout: 15000 });
+  };
+  const bearerLogin = async (email) => { // what the extension does: sign in against Supabase directly, then register
+    const r = await (await fetch(MOCK + "/auth/v1/token?grant_type=password", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password: "correct-horse-1" }) })).json();
+    return { token: r.access_token, refresh: r.refresh_token };
+  };
+  const api = (token, path, method = "GET") => fetch(BASE + path, { method, headers: { authorization: `Bearer ${token}` } });
+  const code = async (r) => (await r.json()).error?.code;
+
+  // website: device A, then device B, same account
+  const devA = await (await b.newContext()).newPage(), devB = await (await b.newContext()).newPage(), other = await (await b.newContext()).newPage();
+  await login(devA, "other@example.com");
+  await login(other, "instant@example.com");
+  ok("device A is signed in and can use protected pages", (await devA.goto(BASE + "/account")).status() === 200 && devA.url().endsWith("/account"));
+  await login(devB, "other@example.com");
+  ok("device B (same account) becomes the active session", devB.url().endsWith("/dashboard"));
+  await devA.goto(BASE + "/dashboard");
+  await devA.waitForURL("**/login**", { timeout: 15000 }).catch(() => {});
+  ok("device A is signed out and told why", devA.url().includes("/login") && devA.url().includes("error=session_replaced"), devA.url());
+  ok("device A sees the 'signed in on another device' message", (await devA.locator("main").innerText()).includes("signed in on another device"));
+  await devA.goto(BASE + "/account");
+  await devA.waitForURL("**/login**", { timeout: 15000 }).catch(() => {});
+  ok("device A cannot get back in with its old cookies", devA.url().includes("/login"), devA.url());
+  await devB.goto(BASE + "/account");
+  ok("device B stays signed in", devB.url().endsWith("/account"));
+  await other.goto(BASE + "/dashboard");
+  ok("an unrelated user's session is unaffected", other.url().endsWith("/dashboard"));
+  const st = await state();
+  ok("exactly one live web session remains for the replaced account (the new one)", st.sessions.filter(([, u]) => u === "00000000-0000-4000-8000-000000000003").length === 1 && st.active.some(([k]) => k === "00000000-0000-4000-8000-000000000003:web"), JSON.stringify(st.active));
+  // device A signs in again on purpose: it becomes active and B is the one replaced
+  await login(devA, "other@example.com");
+  await devB.goto(BASE + "/dashboard");
+  await devB.waitForURL("**/login**", { timeout: 15000 }).catch(() => {});
+  ok("logging in again on A replaces B (last login wins)", devB.url().includes("error=session_replaced"), devB.url());
+  // explicit logout leaves no way back
+  await devA.click("button:has-text('Sign out')"); await devA.waitForURL(BASE + "/");
+  await devA.goto(BASE + "/account");
+  ok("explicit logout ends the session", devA.url().includes("/login"));
+
+  // extension-style API clients (Bearer tokens)
+  const x1 = await bearerLogin("demo@example.com");
+  ok("unregistered pre-existing token: first check claims the slot (rollout rule) and passes", (await api(x1.token, "/api/session")).status === 200);
+  const reg1 = await api(x1.token, "/api/session", "POST");
+  ok("extension registers its session after login", reg1.status === 200 && (await reg1.json()).client === "extension");
+  const ent1 = await api(x1.token, "/api/entitlement");
+  ok("active extension session gets its entitlement", ent1.status === 200 && ["FREE", "TRIAL"].includes((await ent1.json()).plan));
+  const x2 = await bearerLogin("demo@example.com");
+  ok("second extension login registers and revokes the first", (await api(x2.token, "/api/session", "POST")).status === 200);
+  const old = await api(x1.token, "/api/session");
+  ok("old extension session gets a definitive 401 session_revoked", old.status === 401 && (await code(old)) === "session_revoked");
+  const oldEnt = await api(x1.token, "/api/entitlement");
+  ok("old extension session cannot read entitlement with its still-valid token", oldEnt.status === 401 && (await code(oldEnt)) === "session_revoked");
+  ok("old extension session cannot re-register itself", (await code(await api(x1.token, "/api/session", "POST"))) === "session_revoked");
+  const refreshOld = await fetch(MOCK + "/auth/v1/token?grant_type=refresh_token", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ refresh_token: x1.refresh }) });
+  ok("the revoked session's refresh token no longer works", refreshOld.status === 400);
+  ok("new extension session remains valid", (await api(x2.token, "/api/session")).status === 200 && (await api(x2.token, "/api/entitlement")).status === 200);
+  ok("website logins do not log the extension out (separate slots)", await (async () => { const w = await (await b.newContext()).newPage(); await login(w, "demo@example.com"); return (await api(x2.token, "/api/session")).status === 200; })());
+  ok("extension logout revokes its session", (await api(x2.token, "/api/session", "DELETE")).status === 200 && (await code(await api(x2.token, "/api/session"))) === "session_revoked");
+  ok("bad / missing tokens are plain 401 unauthenticated, not 'revoked'", (await code(await api("x.y.z", "/api/session"))) === "unauthenticated" && (await code(await fetch(BASE + "/api/session"))) === "unauthenticated");
+  ok("cross-site cookie POST to /api/session is refused", (await fetch(BASE + "/api/session", { method: "POST", headers: { origin: "https://evil.example" } })).status !== 200);
+  for (const pg of [devA, devB, other]) await pg.context().close();
+}
+
 // ---------- billing: nothing is configured in this environment, so checkout must be unavailable
 {
   const opt = await (await fetch(BASE + "/api/billing/options")).json();

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/auth-form";
+import { ClearStaleSession } from "@/components/clear-stale-session";
 import { AuthShell } from "@/components/auth-ui";
 import { GoogleButton } from "@/components/google-button";
 import { Notice } from "@/components/ui/primitives";
@@ -13,6 +14,7 @@ export const metadata = pageMetadata({ title: "Log in", description: "Log in to 
 
 const ERRORS: Record<string, string> = {
   auth_callback: "That sign-in link is invalid. Please log in or request a new link.",
+  session_replaced: "You were signed out because your GrowX account was signed in on another device. Please sign in again to continue.",
   link_expired: "That link has expired or was already used. Please log in, or request a new link.",
   link_other_browser: "Your email is confirmed. Please log in to continue (the link was opened in a different browser).",
   google_unavailable: "Google sign-in is not available.",
@@ -26,6 +28,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const err = sp.error ? ERRORS[sp.error] : undefined;
   return (
     <AuthShell title="Welcome back" subtitle="Log in to your GrowX account.">
+      {sp.error === "session_replaced" ? <ClearStaleSession /> : null}
       {err ? <Notice tone={sp.error === "link_other_browser" ? "success" : "error"}>{err}</Notice> : null}
       <GoogleButton next={next} />
       <AuthForm mode="login" action={loginAction} next={next} disabled={!isSupabaseConfigured()} />

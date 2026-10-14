@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { apiError, bearerToken, corsHeaders, json } from "@/lib/api/http";
 import { EntitlementLoadError, loadEntitlement } from "@/lib/entitlement/load";
 import { getSupabasePublicConfig } from "@/lib/env";
+import { checkActiveSession, verifiedSessionId } from "@/lib/session/active";
 import { createClient as createCookieClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +38,14 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = token ? await supabase.auth.getUser(token) : await supabase.auth.getUser();
     if (error || !data.user) return apiError(401, "unauthenticated", "Sign in required.", origin);
+
+    // A revoked session's access token is still a valid JWT until it expires: check the active session.
+    // 401 session_revoked is definitive ("signed in elsewhere"); 503 means "could not verify" and is never a verdict.
+    const sessionId = await verifiedSessionId(supabase, data.user.id, token);
+    if (!sessionId) return apiError(401, "unauthenticated", "Sign in required.", origin);
+    const session = await checkActiveSession(data.user.id, sessionId, token ? "extension" : "web");
+    if (session === "revoked") return apiError(401, "session_revoked", "This session was ended because the account signed in elsewhere.", origin);
+    if (session === "error") return apiError(503, "session_check_unavailable", "Could not verify the session. Try again.", origin);
 
     const entitlement = await loadEntitlement(supabase, data.user.id);
     return json(entitlement, { origin });

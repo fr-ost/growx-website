@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { registerWebSession } from "@/lib/session/web";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/validation/auth";
 
@@ -24,7 +25,13 @@ export async function GET(request: NextRequest) {
   if (code && isSupabaseConfigured()) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(next, origin));
+    if (!error) {
+      if (!(await registerWebSession(supabase))) {
+        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+        return NextResponse.redirect(new URL("/login?error=auth_callback", origin));
+      }
+      return NextResponse.redirect(new URL(next, origin));
+    }
     // Typical cause: link opened in a different browser than the one used to
     // sign up (PKCE verifier cookie missing). The email IS confirmed by then.
     return NextResponse.redirect(new URL("/login?error=link_other_browser", origin));

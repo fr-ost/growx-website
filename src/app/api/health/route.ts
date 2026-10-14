@@ -23,6 +23,7 @@ const TABLE_PROBES: Record<string, string> = {
   early_adopter_slots: "slot",
   checkout_orders: "id",
   payment_adjustments: "id",
+  active_sessions: "user_id",
 };
 
 /**
@@ -65,6 +66,9 @@ export async function GET(request: NextRequest) {
       functions.early_adopter_available = ea.error ? classifyDbError(ea.error) : "ok";
       const es = await admin.rpc("early_adopter_state");
       functions.early_adopter_state = es.error ? classifyDbError(es.error) : "ok"; // billing migration present
+      // check_active_session on a random user/session has no side effects (nothing to claim): proves the migration is present.
+      const as = await admin.rpc("check_active_session", { p_user: crypto.randomUUID(), p_session: crypto.randomUUID(), p_client: "web", p_strict: false });
+      functions.check_active_session = as.error ? classifyDbError(as.error) : "ok";
       const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: TRIAL_DAYS });
       functions.start_trial = st.error && /x_username_required/.test(st.error.message ?? "") ? "ok" : st.error ? classifyDbError(st.error) : "unknown";
       const allOk = [...Object.values(tables), ...Object.values(functions)].every((s) => s === "ok");

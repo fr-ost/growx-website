@@ -9,6 +9,8 @@ export const SUPABASE_STUBS = `
   create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
   create schema auth;
   create table auth.users (id uuid primary key, email text);
+  create table auth.sessions (id uuid primary key, user_id uuid not null references auth.users (id) on delete cascade, not_after timestamptz);
+  create table auth.refresh_tokens (id bigserial primary key, session_id uuid references auth.sessions (id) on delete cascade, revoked boolean not null default false);
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   grant usage on schema auth to anon, authenticated, service_role;
   grant usage on schema public to anon, authenticated, service_role;
@@ -44,4 +46,10 @@ export async function asRole<T>(db: PGlite, role: "anon" | "authenticated" | "se
   } finally {
     await db.exec("reset role");
   }
+}
+
+/** A live Supabase session (with one refresh token), as GoTrue would create on login. */
+export async function addSession(db: { exec: (s: string) => Promise<unknown> }, userId: string, id = uid()) {
+  await db.exec(`insert into auth.sessions (id, user_id) values ('${id}', '${userId}'); insert into auth.refresh_tokens (session_id) values ('${id}')`);
+  return id;
 }

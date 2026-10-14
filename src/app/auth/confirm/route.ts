@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { registerWebSession } from "@/lib/session/web";
 import { createClient } from "@/lib/supabase/server";
 import { safeNextPath } from "@/lib/validation/auth";
 
@@ -22,7 +23,13 @@ export async function GET(request: NextRequest) {
   if (tokenHash && type && TYPES.includes(type) && isSupabaseConfigured()) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) return NextResponse.redirect(new URL(next, url.origin));
+    if (!error) {
+      if (!(await registerWebSession(supabase))) {
+        await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+        return NextResponse.redirect(new URL("/login?error=auth_callback", url.origin));
+      }
+      return NextResponse.redirect(new URL(next, url.origin));
+    }
     return NextResponse.redirect(new URL("/login?error=link_expired", url.origin));
   }
   return NextResponse.redirect(new URL("/login?error=auth_callback", url.origin));

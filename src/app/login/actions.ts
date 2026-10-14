@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { googleAuthEnabled, isSupabaseConfigured } from "@/lib/env";
 import { requestOrigin } from "@/lib/origin";
+import { registerWebSession } from "@/lib/session/web";
 import { createClient } from "@/lib/supabase/server";
 import { credentialsSchema, safeNextPath } from "@/lib/validation/auth";
 
@@ -38,6 +39,11 @@ export async function loginAction(_prev: AuthState, formData: FormData): Promise
     if (error.status === 429) return { error: "Too many attempts. Please wait a minute and try again.", email };
     return { error: "Invalid email or password.", email };
   }
+  // This login becomes the active web session; the previous one is revoked.
+  if (!(await registerWebSession(supabase))) {
+    await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+    return { error: "We could not complete sign-in. Please try again.", email };
+  }
   redirect(safeNextPath(formData.get("next")));
 }
 
@@ -58,7 +64,14 @@ export async function signupAction(_prev: AuthState, formData: FormData): Promis
     if (error.code === "weak_password") return { fieldErrors: { password: "Choose a stronger password." }, email };
     return { error: "We could not create the account. Please check your details and try again.", email };
   }
-  if (data.session) redirect("/dashboard"); // email confirmation disabled in Supabase
+  if (data.session) {
+    // email confirmation disabled in Supabase: the sign-up created a session, so register it
+    if (!(await registerWebSession(supabase))) {
+      await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
+      return { error: "We could not complete sign-in. Please try again.", email };
+    }
+    redirect("/dashboard");
+  }
   return { success: "Almost done! We sent a confirmation link to your email. Open it to activate your account." };
 }
 

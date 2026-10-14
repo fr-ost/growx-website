@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { isSupabaseConfigured } from "@/lib/env";
+import { endWebSession } from "@/lib/session/web";
 import { createClient } from "@/lib/supabase/server";
 
 /** POST only, same-origin only, so other sites cannot sign users out. */
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
   }
   if (isSupabaseConfigured()) {
     const supabase = await createClient();
-    await supabase.auth.signOut();
+    await endWebSession(supabase);
   }
   return NextResponse.redirect(new URL("/", request.nextUrl.origin), { status: 303 });
 }

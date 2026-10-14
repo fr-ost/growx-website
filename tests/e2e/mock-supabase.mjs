@@ -8,7 +8,12 @@ const xprofiles = new Map(); // uid -> row
 const trials = new Map(); // uid -> row
 const trialNames = new Set();
 let n = 0;
+let sn = 0;
 const log = [];
+// Sessions as GoTrue keeps them (auth.sessions), and the server-side active-session slots (public.active_sessions).
+const sessions = new Map(); // session id -> user id
+const active = new Map(); // `${userId}:${slot}` -> session id
+const sid = () => `aaaaaaaa-0000-4000-8000-${String(++sn).padStart(12, "0")}`;
 
 function mkUser(email, confirmed) {
   const u = { id: `00000000-0000-4000-8000-${String(++n).padStart(12, "0")}`, aud: "authenticated", role: "authenticated", email,
@@ -16,12 +21,44 @@ function mkUser(email, confirmed) {
     app_metadata: { provider: "email", providers: ["email"] }, user_metadata: {}, identities: [{ id: "i", provider: "email" }] };
   users.set(email, u); return u;
 }
-function session(u) {
+/** A login creates a NEW session; a refresh keeps the session id (like GoTrue). */
+function session(u, existing) {
+  const id = existing ?? sid();
+  if (!existing) sessions.set(id, u.id);
   const exp = Math.floor(Date.now() / 1000) + 3600;
-  const t = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub: u.id, email: u.email, aud: "authenticated", role: "authenticated", exp, iat: exp - 3600, session_id: "s" + n })}.sig`;
+  const t = `${b64({ alg: "HS256", typ: "JWT" })}.${b64({ sub: u.id, email: u.email, aud: "authenticated", role: "authenticated", exp, iat: exp - 3600, session_id: id })}.sig`;
   tokens.set(t, u.email);
-  return { access_token: t, token_type: "bearer", expires_in: 3600, expires_at: exp, refresh_token: "r_" + u.email, user: u };
+  return { access_token: t, token_type: "bearer", expires_in: 3600, expires_at: exp, refresh_token: `r_${id}`, user: u };
 }
+const revokeSession = (id) => sessions.delete(id);
+const slotKey = (user, client, strict) => `${user}:${strict ? "account" : client}`;
+const rpcSessions = {
+  register({ p_user, p_session, p_client, p_strict }) {
+    if (sessions.get(p_session) !== p_user) return { status: "session_not_found" };
+    const key = slotKey(p_user, p_client, p_strict);
+    const old = active.get(key);
+    for (const [k, v] of active) if (v === p_session && k !== key) active.delete(k);
+    active.set(key, p_session);
+    let revoked = 0;
+    if (p_strict) { for (const [id, u] of [...sessions]) if (u === p_user && id !== p_session) { revokeSession(id); revoked++; } }
+    else if (old && old !== p_session && revokeSession(old)) revoked = 1;
+    return { status: "active", revoked };
+  },
+  check({ p_user, p_session, p_client, p_strict }) {
+    const exists = sessions.get(p_session) === p_user;
+    if ([...active].some(([k, v]) => v === p_session && k.startsWith(p_user))) return exists ? "active" : "revoked";
+    if (active.has(slotKey(p_user, p_client, p_strict))) return "revoked";
+    if (!exists) return "revoked";
+    active.set(slotKey(p_user, p_client, p_strict), p_session);
+    return "active";
+  },
+  release({ p_user, p_session }) {
+    let had = false;
+    for (const [k, v] of [...active]) if (v === p_session && k.startsWith(p_user)) { active.delete(k); had = true; }
+    if (sessions.get(p_session) === p_user) revokeSession(p_session);
+    return had;
+  },
+};
 mkUser("demo@example.com", true);
 mkUser("unconfirmed@example.com", false);
 mkUser("other@example.com", true);
@@ -29,15 +66,19 @@ mkUser("brokendb@example.com", true); // simulates a project without migrations
 mkUser("nopay@example.com", true); // only the payments table is missing
 
 const send = (res, status, body) => { res.writeHead(status, { "content-type": "application/json" }); res.end(body === undefined ? "" : JSON.stringify(body)); };
+// NOTE: like a worst-case GoTrue, an already-issued access token is still accepted here after its session was revoked:
+// the application's own active-session check is what must reject it.
 const authUser = (req) => { const m = (req.headers.authorization || "").match(/^Bearer (.+)$/); const e = m && tokens.get(m[1]); return e ? users.get(e) : null; };
+const sessionOfToken = (req) => { const m = (req.headers.authorization || "").match(/^Bearer (.+)$/); try { return m ? JSON.parse(Buffer.from(m[1].split(".")[1], "base64url").toString()).session_id : null; } catch { return null; } };
 
 http.createServer(async (req, res) => {
   let raw = ""; for await (const c of req) raw += c;
   const body = raw ? JSON.parse(raw) : {};
   const url = new URL(req.url, "http://x");
   const p = url.pathname;
-  log.push(`${req.method} ${p}${url.search}`);
+  log.push(`${req.method} ${p}${url.search}${p.includes("_active_session") ? " " + raw : ""}`);
   if (p === "/__log") return send(res, 200, log);
+  if (p === "/__state") return send(res, 200, { sessions: [...sessions], active: [...active] });
   if (p === "/auth/v1/health") return send(res, 200, { name: "GoTrue" });
   if (p === "/auth/v1/signup" && req.method === "POST") {
     if (users.has(body.email)) return send(res, 200, { ...users.get(body.email), identities: [] });
@@ -46,14 +87,18 @@ http.createServer(async (req, res) => {
   }
   if (p === "/auth/v1/token") {
     const gt = url.searchParams.get("grant_type");
-    if (gt === "refresh_token") { const e = String(body.refresh_token).slice(2); return users.has(e) ? send(res, 200, session(users.get(e))) : send(res, 400, { error_code: "refresh_token_not_found", msg: "bad" }); }
+    if (gt === "refresh_token") {
+      const id = String(body.refresh_token).slice(2); // a revoked session's refresh tokens are gone (ON DELETE CASCADE)
+      const uid = sessions.get(id); const u = uid && [...users.values()].find((x) => x.id === uid);
+      return u ? send(res, 200, session(u, id)) : send(res, 400, { error_code: "refresh_token_not_found", msg: "bad" });
+    }
     const u = users.get(body.email);
     if (!u || body.password !== "correct-horse-1") return send(res, 400, { code: 400, error_code: "invalid_credentials", msg: "Invalid login credentials" });
     if (!u.email_confirmed_at) return send(res, 400, { code: 400, error_code: "email_not_confirmed", msg: "Email not confirmed" });
     return send(res, 200, session(u));
   }
   if (p === "/auth/v1/user") { const u = authUser(req); if (!u) return send(res, 401, { code: 401, error_code: "bad_jwt", msg: "invalid JWT" }); return send(res, 200, u); }
-  if (p === "/auth/v1/logout") return send(res, 204);
+  if (p === "/auth/v1/logout") { const id = sessionOfToken(req); if (id && url.searchParams.get("scope") === "global") { const u = authUser(req); for (const [k, v] of [...sessions]) if (u && v === u.id) revokeSession(k); } else if (id) revokeSession(id); return send(res, 204); }
   if (p === "/auth/v1/recover") return send(res, 200, {});
 
   // PostgREST
@@ -61,6 +106,11 @@ http.createServer(async (req, res) => {
   const isService = (req.headers.authorization || "").includes("service-key");
   if (p === "/rest/v1/rpc/early_adopter_available") return isService ? send(res, 200, true) : send(res, 401, { code: "42501", message: "permission denied" });
   if (p === "/rest/v1/rpc/early_adopter_state") return isService ? send(res, 200, "available") : send(res, 401, { code: "42501", message: "permission denied" });
+  const rpcName = p.startsWith("/rest/v1/rpc/") ? p.slice("/rest/v1/rpc/".length) : null;
+  if (rpcName === "register_active_session" || rpcName === "check_active_session" || rpcName === "release_active_session") {
+    if (!isService) return send(res, 401, { code: "42501", message: "permission denied" });
+    return send(res, 200, rpcName === "register_active_session" ? rpcSessions.register(body) : rpcName === "check_active_session" ? rpcSessions.check(body) : rpcSessions.release(body));
+  }
   if (p === "/rest/v1/rpc/start_trial") {
     if (!isService) return send(res, 401, { code: "42501", message: "permission denied for function start_trial" });
     const uid = body.p_user_id;

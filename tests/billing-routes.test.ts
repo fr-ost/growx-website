@@ -5,7 +5,13 @@ const getCurrentUser = vi.fn();
 const rpc = vi.fn();
 const createNowInvoice = vi.fn();
 
-vi.mock("@/lib/supabase/user", () => ({ getCurrentUser: () => getCurrentUser() }));
+vi.mock("@/lib/supabase/user", () => ({
+  getCurrentUser: () => getCurrentUser(),
+  getAuthState: async () => {
+    const user = await getCurrentUser();
+    return user ? { user, status: "active" } : { user: null, status: "signed_out" };
+  },
+}));
 let claimedSlots: number | null = 0;
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
