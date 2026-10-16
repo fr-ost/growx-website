@@ -77,6 +77,33 @@ mkUser("unconfirmed@example.com", false);
 mkUser("other@example.com", true);
 mkUser("brokendb@example.com", true); // simulates a project without migrations
 mkUser("nopay@example.com", true); // only the payments table is missing
+const ADMIN_USER = mkUser("admin@example.com", true); // listed in public.admins
+// ---- admin state (public.admins, premium_gifts + events, early_bird_settings + events)
+const adminIds = new Set([ADMIN_USER.id]);
+const gifts = []; const giftEvents = []; const ebEvents = [];
+const eb = { enabled: true, cap: 100, alloc: 100, sold: 37, updated_at: new Date().toISOString() };
+const ebStatus = () => ({ state: !eb.enabled ? "off" : eb.sold >= eb.cap ? "sold_out" : "available", enabled: eb.enabled, sold: eb.sold, open_reservations: 0, sales_cap: eb.cap, campaign_allocation: eb.alloc, remaining: Math.max(0, eb.cap - eb.sold), updated_at: eb.updated_at });
+const emailOf = (id) => [...users.values()].find((u) => u.id === id)?.email ?? null;
+const DUR = { "7d": 7, "30d": 30, "90d": 90, "1y": 365 };
+const adminRpc = {
+  admin_find_user: ({ p_email }) => { const u = users.get(String(p_email).trim().toLowerCase()); return u ? { status: "ok", user_id: u.id, email: u.email, created_at: u.created_at } : { status: "not_found" }; },
+  admin_grant_gift: ({ p_admin, p_user, p_duration, p_reason }) => {
+    if (gifts.some((g) => g.user_id === p_user && g.status === "active" && (!g.expires_at || Date.parse(g.expires_at) > Date.now()))) return { status: "active_gift_exists" };
+    const now = new Date(); const g = { id: `9${String(gifts.length + 1).padStart(7, "0")}-0000-4000-8000-000000000000`, user_id: p_user, granted_by: p_admin, duration: p_duration, starts_at: now.toISOString(), expires_at: p_duration === "lifetime" ? null : new Date(now.getTime() + DUR[p_duration] * 864e5).toISOString(), status: "active", reason: p_reason, revoked_at: null, revoked_by: null, revoke_reason: null, created_at: now.toISOString() };
+    gifts.unshift(g); giftEvents.unshift({ id: giftEvents.length + 1, user_id: p_user, admin_id: p_admin, action: "grant", duration: p_duration, prev_expires_at: null, new_expires_at: g.expires_at, reason: p_reason, created_at: g.created_at });
+    return { status: "granted", gift_id: g.id, expires_at: g.expires_at };
+  },
+  admin_revoke_gift: ({ p_admin, p_gift, p_reason }) => { const g = gifts.find((x) => x.id === p_gift); if (!g) return { status: "not_found" }; if (g.status === "revoked") return { status: "already_revoked" }; Object.assign(g, { status: "revoked", revoked_at: new Date().toISOString(), revoked_by: p_admin, revoke_reason: p_reason }); giftEvents.unshift({ id: giftEvents.length + 1, user_id: g.user_id, admin_id: p_admin, action: "revoke", duration: g.duration, prev_expires_at: g.expires_at, new_expires_at: g.expires_at, reason: p_reason, created_at: g.revoked_at }); return { status: "revoked" }; },
+  admin_extend_gift: () => ({ status: "extended", expires_at: null }),
+  admin_set_early_bird: ({ p_admin, p_remaining, p_enabled, p_reason, p_expected_updated_at }) => {
+    if (p_expected_updated_at && p_expected_updated_at !== eb.updated_at) return { status: "stale" };
+    if (eb.sold + p_remaining > eb.alloc) return { status: "exceeds_allocation", max_remaining: eb.alloc - eb.sold };
+    ebEvents.unshift({ id: ebEvents.length + 1, admin_id: p_admin, action: "set_inventory", sold_at_change: eb.sold, prev_enabled: eb.enabled, new_enabled: p_enabled, prev_remaining: Math.max(0, eb.cap - eb.sold), new_remaining: p_remaining, prev_allocation: eb.alloc, new_allocation: eb.alloc, reason: p_reason, created_at: new Date().toISOString() });
+    Object.assign(eb, { cap: eb.sold + p_remaining, enabled: p_enabled, updated_at: new Date().toISOString() });
+    return { status: "saved" };
+  },
+  admin_increase_early_bird_allocation: () => ({ status: "saved" }),
+};
 
 const send = (res, status, body) => { res.writeHead(status, { "content-type": "application/json" }); res.end(body === undefined ? "" : JSON.stringify(body)); };
 // NOTE: like a worst-case GoTrue, an already-issued access token is still accepted here after its session was revoked:
@@ -120,6 +147,12 @@ http.createServer(async (req, res) => {
   if (p === "/rest/v1/rpc/early_adopter_available") return isService ? send(res, 200, true) : send(res, 401, { code: "42501", message: "permission denied" });
   if (p === "/rest/v1/rpc/early_adopter_state") return isService ? send(res, 200, "available") : send(res, 401, { code: "42501", message: "permission denied" });
   const rpcName = p.startsWith("/rest/v1/rpc/") ? p.slice("/rest/v1/rpc/".length) : null;
+  if (rpcName === "early_bird_status") return isService ? send(res, 200, ebStatus()) : send(res, 401, { code: "42501", message: "permission denied" });
+  if (rpcName && adminRpc[rpcName]) {
+    if (!isService) return send(res, 401, { code: "42501", message: "permission denied" });
+    if (!adminIds.has(body.p_admin)) return send(res, 403, { code: "42501", message: "not_admin" });
+    return send(res, 200, adminRpc[rpcName](body));
+  }
   if (rpcName === "register_active_session" || rpcName === "check_active_session" || rpcName === "release_active_session") {
     if (!isService) return send(res, 401, { code: "42501", message: "permission denied" });
     return send(res, 200, rpcName === "register_active_session" ? rpcSessions.register(body) : rpcName === "check_active_session" ? rpcSessions.check(body) : rpcSessions.release(body));
@@ -140,7 +173,15 @@ http.createServer(async (req, res) => {
   const table = p.replace("/rest/v1/", "");
   // trial: the server copies the first linked X account into x_profiles (service role upsert)
   if (isService && table === "x_profiles" && req.method === "POST") { for (const r of Array.isArray(body) ? body : [body]) xprofiles.set(r.user_id, { user_id: r.user_id, x_username: r.x_username }); return send(res, 201); }
-  if (isService && req.method === "GET") return send(res, 200, []); // health-check probes
+  if (isService && req.method === "GET") {
+    const eqId = (url.searchParams.get("user_id") || "").replace("eq.", "");
+    if (table === "admins") return send(res, 200, adminIds.has(eqId) ? [{ user_id: eqId }] : []);
+    if (table === "premium_gifts") return send(res, 200, gifts);
+    if (table === "premium_gift_events") return send(res, 200, giftEvents);
+    if (table === "early_bird_events") return send(res, 200, ebEvents);
+    if (table === "profiles") { const ids = (url.searchParams.get("id") || "").replace(/^in\.\(|\)$/g, "").split(",").filter(Boolean); return send(res, 200, ids.map((id) => ({ id, email: emailOf(id) }))); }
+    return send(res, 200, []); // health-check probes and empty tables
+  }
   if (!u) return send(res, 401, { code: "PGRST301", message: "JWT required" });
   const missing = (t) => send(res, 404, { code: "PGRST205", message: `Could not find the table 'public.${t}' in the schema cache` });
   if (u.email.startsWith("brokendb")) return missing(table);
@@ -149,6 +190,7 @@ http.createServer(async (req, res) => {
   if (eqUser && eqUser !== u.id) return send(res, 200, []); // RLS
   if (table === "trials") return send(res, 200, trials.has(u.id) ? [trials.get(u.id)] : []);
   if (["subscriptions", "payments", "checkout_orders", "subscription_details", "account_slot_grants"].includes(table)) return send(res, 200, []);
+  if (table === "premium_gifts") return send(res, 200, gifts.filter((g) => g.user_id === u.id).map(({ status, starts_at, expires_at }) => ({ status, starts_at, expires_at })));
   if (table === "x_account_bindings") {
     if (req.method !== "GET") return send(res, 403, { code: "42501", message: "permission denied for table x_account_bindings" });
     const mine = [...xbindings.values()].filter((b) => b.user_id === u.id);

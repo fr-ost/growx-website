@@ -187,7 +187,7 @@ await btn.click();
 await p.waitForSelector("text=Your trial is active", { timeout: 15000 });
 ok("trial started", true);
 await p.reload();
-ok("plan shows Premium trial", /Premium trial/.test(await p.locator("main").innerText()) && (await p.locator("button", { hasText: "Start my 30-day" }).count()) === 0);
+{ await p.locator("main", { hasText: "Premium trial" }).waitFor({ timeout: 10000 }).catch(() => {}); const mt = await p.locator("main").innerText(); ok("plan shows Premium trial", /Premium trial/.test(mt) && (await p.locator("button", { hasText: "Start my 30-day" }).count()) === 0, mt.slice(0, 400).replace(/\s+/g, " ")); }
 ok("days-left ring shows 30", (await p.locator('[role=img][aria-label*="days of Premium left"]').getAttribute("aria-label")).startsWith("30"));
 const ent = await p.evaluate(async () => (await fetch("/api/entitlement")).json());
 ok("/api/entitlement returns TRIAL via cookie", ent.plan === "TRIAL" && ent.isPremium === true, JSON.stringify(ent).slice(0, 120));
@@ -482,6 +482,63 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
     ok(`early bird '${st.state}': only the regular $59.99 is shown`, lt.includes("$59.99") && !lt.includes("$29.99") && (await life().locator("[role=progressbar]").count()) === 0);
   }
   await mctx.close();
+}
+
+// ---------- admin dashboard: access control, Premium gifts, early-bird editor
+{
+  const signIn = async (ctx, email) => { const pg = await ctx.newPage(); await pg.goto(BASE + "/login"); await pg.fill("#email", email); await pg.fill("#password", "correct-horse-1"); await pg.click("button[type=submit]"); await pg.waitForURL("**/dashboard", { timeout: 15000 }); return pg; };
+  const uctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+  const up = await signIn(uctx, "demo@example.com");
+  ok("non-admin: no Admin link on the dashboard", (await up.locator('a[href="/admin"]').count()) === 0);
+  const r404 = await up.goto(BASE + "/admin");
+  ok("non-admin: /admin is a 404", r404.status() === 404, String(r404.status()));
+  const apiNo = await up.evaluate(async () => [(await fetch("/api/admin/users?email=demo@example.com")).status, (await fetch("/api/admin/gifts", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ userId: "00000000-0000-4000-8000-000000000001", duration: "lifetime" }) })).status, (await fetch("/api/admin/early-bird", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ remaining: 100, enabled: true }) })).status]);
+  ok("non-admin: every admin API answers 404 (incl. self-granting)", apiNo.every((x) => x === 404), JSON.stringify(apiNo));
+
+  const actx = await b.newContext({ viewport: { width: 1280, height: 900 } });
+  const ap = await signIn(actx, "admin@example.com");
+  const aerrs = []; ap.on("pageerror", (e) => aerrs.push(String(e)));
+  ok("admin: Admin link on the dashboard", await ap.locator('a[href="/admin"]').first().waitFor({ timeout: 10000 }).then(() => true, () => false), (await ap.locator("nav").first().innerText()).replace(/\s+/g, " "));
+  await ap.goto(BASE + "/admin");
+  const at = await ap.locator("main").innerText();
+  ok("admin page: both sections", at.includes("Premium Gifts") && at.includes("Lifetime Early Bird"));
+  const stats = await ap.locator("[data-testid=early-bird-stats]").innerText();
+  ok("early bird stats: $59.99 / $29.99 / allocation 100 / 37 sold / 63 remaining / enabled", ["$59.99", "$29.99"].every((x) => stats.includes(x)) && /allocation\s*100/i.test(stats) && /purchases\s*37/i.test(stats) && /remaining\s*63/i.test(stats) && /enabled/i.test(stats), stats.replace(/\s+/g, " "));
+
+  await ap.fill("#gift_email", "demo@example.com");
+  await ap.click("button:has-text('Find user')");
+  await ap.locator("text=Recipient: demo@example.com").waitFor({ timeout: 10000 });
+  await ap.locator("[data-testid=gift-grant] label", { hasText: "Lifetime" }).click();
+  await ap.fill("#gift_reason", "Beta tester thank-you");
+  await ap.click("button:has-text('Grant Premium')");
+  await ap.click("button:has-text('Confirm grant')");
+  await ap.locator("text=Premium gifted to demo@example.com").waitFor({ timeout: 10000 });
+  await ap.locator("[data-testid=gift-row]", { hasText: "demo@example.com" }).waitFor({ timeout: 10000 });
+  const row = await ap.locator("[data-testid=gift-row]").first().innerText();
+  ok("gift granted: recipient, lifetime, admin, reason, active", /demo@example\.com/.test(row) && /Lifetime/.test(row) && /admin@example\.com/.test(row) && /Beta tester/.test(row) && /Active/.test(row), row.replace(/\s+/g, " "));
+  ok("gift audit log records the grant", /grant\s+Lifetime for demo@example\.com by admin@example\.com/.test(await ap.locator("[aria-label='Gift audit log']").innerText()));
+  const entGift = await up.evaluate(async () => (await fetch("/api/entitlement")).json());
+  ok("recipient's entitlement API recognises the gift", entGift.plan === "PRO_GIFT" && entGift.isPremium === true && entGift.gift?.lifetime === true, JSON.stringify(entGift).slice(0, 160));
+
+  await ap.locator("[data-testid=gift-row]").first().locator("button:has-text('Revoke')").click();
+  await ap.click("button:has-text('Confirm revoke')");
+  await ap.locator("[data-testid=gift-row]", { hasText: "Revoked" }).waitFor({ timeout: 10000 });
+  const entAfter = await up.evaluate(async () => (await fetch("/api/entitlement")).json());
+  ok("revoking the gift returns the user to their own plan (trial kept)", entAfter.plan === "TRIAL" && entAfter.gift === null, entAfter.plan);
+
+  await ap.fill("#eb_remaining", "-1");
+  ok("early bird: invalid remaining cannot be submitted", await ap.locator("button:has-text('Review change')").isDisabled());
+  await ap.fill("#eb_remaining", "10");
+  await ap.fill("#eb_reason", "Slow down the promo");
+  await ap.click("button:has-text('Review change')");
+  ok("early bird: confirmation shows old and new values", /Remaining 63 → 10/.test(await ap.locator("[data-testid=early-bird-editor]").innerText()));
+  await ap.click("button:has-text('Confirm and save')");
+  await ap.locator("[aria-label='Inventory history']").waitFor({ timeout: 10000 });
+  const hist = await ap.locator("[aria-label='Inventory history']").innerText();
+  ok("early bird: saved, audited with admin, previous/new value and reason", /admin@example\.com/.test(hist) && /remaining 63 → 10/.test(hist) && /Slow down the promo/.test(hist), hist.slice(0, 200));
+  ok("early bird: stats show the new remaining count", /remaining\s*10/i.test(await ap.locator("[data-testid=early-bird-stats]").innerText()));
+  ok("admin pages: no runtime errors", aerrs.length === 0, aerrs.join(" | "));
+  await uctx.close(); await actx.close();
 }
 
 await b.close();

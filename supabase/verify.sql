@@ -63,6 +63,20 @@ with checks(item, ok) as (
          and not has_function_privilege('authenticated', to_regprocedure('public.support_change_x_account(uuid,text,text,text,text)'), 'EXECUTE')
          and not has_function_privilege('anon', to_regprocedure('public.support_change_x_account(uuid,text,text,text,text)'), 'EXECUTE')
   union all
+  -- admin: gifts + early-bird editor (20261017000100_admin_gifts_early_bird)
+  select 'table public.' || t || ' (RLS on, no anon, no authenticated writes)',
+         to_regclass('public.' || t) is not null
+         and (select relrowsecurity from pg_class where oid = to_regclass('public.' || t))
+         and not has_table_privilege('anon', 'public.' || t, 'SELECT')
+         and not (has_table_privilege('authenticated', 'public.' || t, 'INSERT') or has_table_privilege('authenticated', 'public.' || t, 'UPDATE') or has_table_privilege('authenticated', 'public.' || t, 'DELETE'))
+  from unnest(array['admins','premium_gifts','premium_gift_events','early_bird_settings','early_bird_events']) t
+  union all
+  select 'early_bird_settings has its one row', to_regclass('public.early_bird_settings') is not null and (select count(*) from public.early_bird_settings) = 1
+  union all
+  select 'authenticated can NOT execute public.' || f,
+         to_regprocedure('public.' || f) is null or not has_function_privilege('authenticated', to_regprocedure('public.' || f), 'EXECUTE')
+  from unnest(array['admin_grant_gift(uuid,uuid,text,text)','admin_extend_gift(uuid,uuid,text,text)','admin_revoke_gift(uuid,uuid,text)','admin_set_early_bird(uuid,integer,boolean,text,timestamptz)','admin_increase_early_bird_allocation(uuid,integer,text)','admin_find_user(uuid,text)','early_bird_status()']) f
+  union all
   select 'every auth user has a profile',
          to_regclass('public.profiles') is not null
          and not exists (select 1 from auth.users u where not exists (select 1 from public.profiles p where p.id = u.id))

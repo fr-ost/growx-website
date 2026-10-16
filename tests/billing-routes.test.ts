@@ -35,12 +35,16 @@ const req = (url: string, body?: unknown, headers: Record<string, string> = { or
   new NextRequest(`https://www.growxapp.org${url}`, { method: body === undefined ? "GET" : "POST", headers: { "content-type": "application/json", ...headers }, body: body === undefined ? undefined : JSON.stringify(body) });
 const USER = { id: "11111111-1111-4111-8111-111111111111", email: "u@example.com", email_confirmed_at: "2026-10-01T00:00:00Z" };
 const ORDER_ID = "22222222-2222-4222-8222-222222222222";
+/** What public.early_bird_status() returns. remaining = sales_cap - sold. */
+const eb = (state: string, sold = 0, remaining = 100 - sold, enabled = state !== "off") => ({
+  state, enabled, sold, open_reservations: 0, sales_cap: sold + remaining, campaign_allocation: 100, remaining, updated_at: "2026-10-17T00:00:00Z",
+});
 
 beforeEach(() => {
   for (const k of KEYS) delete process.env[k];
   Object.assign(process.env, ENV);
   getCurrentUser.mockReset().mockResolvedValue(USER);
-  rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_adopter_state" ? { data: "available", error: null } : { data: null, error: null }));
+  rpc.mockReset().mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_bird_status" ? { data: eb("available"), error: null } : { data: null, error: null }));
   createNowInvoice.mockReset();
   claimedSlots = 0;
 });
@@ -130,7 +134,7 @@ describe("lifetime price and the early bird (server decides)", () => {
     createNowInvoice.mockResolvedValue({ ...good, price_amount: "59.99" });
     for (const state of ["sold_out", "unavailable", "weird"]) {
       rpc.mockClear();
-      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_adopter_state" ? { data: state, error: null } : { data: null, error: null }));
+      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "ok", order_id: ORDER_ID }, error: null } : fn === "early_bird_status" ? { data: eb(state), error: null } : { data: null, error: null }));
       expect((await buy()).status, state).toBe(200);
       expect(orderCall(), state).toMatchObject({ p_product: "PRO_LIFETIME", p_amount_minor: 5999 });
     }
@@ -151,7 +155,7 @@ describe("lifetime price and the early bird (server decides)", () => {
   });
   it("a changed early-bird situation never silently charges another price", async () => {
     for (const code of ["early_sold_out", "early_unavailable", "early_already_held"]) {
-      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "error", code }, error: null } : fn === "early_adopter_state" ? { data: "available", error: null } : { data: null, error: null }));
+      rpc.mockImplementation(async (fn: string) => (fn === "create_checkout_order" ? { data: { status: "error", code }, error: null } : fn === "early_bird_status" ? { data: eb("available"), error: null } : { data: null, error: null }));
       const res = await buy();
       expect(res.status, code).toBe(409);
       expect((await res.json()).error.message).toMatch(/early-bird/i);
@@ -162,7 +166,7 @@ describe("lifetime price and the early bird (server decides)", () => {
 
 describe("GET /api/billing/options", () => {
   it("exposes availability and the early-bird counter only (no keys, price ids or user data)", async () => {
-    claimedSlots = 37;
+    rpc.mockImplementation(async (fn: string) => (fn === "early_bird_status" ? { data: eb("available", 37), error: null } : { data: null, error: null }));
     const body = await (await options()).json();
     expect(body.card).toBeUndefined();
     expect(body.crypto).toMatchObject({ available: true, prepaid: true });
@@ -180,19 +184,23 @@ describe("GET /api/billing/options", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
-  it("early-bird state and remaining spots come from the database", async () => {
-    const cases: [string, number | null, unknown][] = [
-      ["available", 0, { state: "available", total: 100, remaining: 100 }],
-      ["available", 99, { state: "available", total: 100, remaining: 1 }],
-      ["unavailable", 90, { state: "temporarily_unavailable", total: 100, remaining: 10 }],
-      ["sold_out", 100, { state: "sold_out", total: 100, remaining: 0 }],
-      ["available", 100, { state: "sold_out", total: 100, remaining: 0 }],
-      ["available", null, { state: "available", total: 100, remaining: null }],
+  it("early-bird state and remaining spots come from the database (admin settings + verified sales)", async () => {
+    const cases: [ReturnType<typeof eb>, unknown][] = [
+      [eb("available", 0), { state: "available", total: 100, remaining: 100 }],
+      [eb("available", 99), { state: "available", total: 100, remaining: 1 }],
+      [eb("unavailable", 90), { state: "temporarily_unavailable", total: 100, remaining: 10 }],
+      [eb("sold_out", 100), { state: "sold_out", total: 100, remaining: 0 }],
+      [eb("available", 100, 0), { state: "sold_out", total: 100, remaining: 0 }],
+      // an admin set the remaining spots to 10 after 37 sales: the page shows exactly that (no invented numbers)
+      [eb("available", 37, 10), { state: "available", total: 47, remaining: 10 }],
+      // an admin set the remaining spots to 0: sold out at the regular price
+      [eb("sold_out", 37, 0), { state: "sold_out", total: 37, remaining: 0 }],
+      // an admin disabled the offer
+      [eb("off", 37, 63, false), { state: "off", total: 100, remaining: null }],
     ];
-    for (const [db, claimed, expected] of cases) {
-      claimedSlots = claimed;
+    for (const [db, expected] of cases) {
       rpc.mockResolvedValueOnce({ data: db, error: null });
-      expect((await (await options()).json()).earlyBird, `${db}/${claimed}`).toEqual(expected);
+      expect((await (await options()).json()).earlyBird, JSON.stringify(db)).toEqual(expected);
     }
   });
 

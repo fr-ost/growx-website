@@ -1,4 +1,4 @@
-import type { Entitlement, GracePolicy, Plan, SubscriptionRecord, TrialRecord } from "./types";
+import type { Entitlement, GiftRecord, GracePolicy, Plan, SubscriptionRecord, TrialRecord } from "./types";
 
 const DAY_MS = 86_400_000;
 
@@ -12,7 +12,23 @@ const PRIORITY: Record<Plan, number> = {
   PRO_MONTHLY: 2,
   PRO_YEARLY: 3,
   PRO_LIFETIME: 4,
+  PRO_GIFT: 0, // never compared by priority: gifts are resolved by coverage (see resolveEntitlement)
 };
+
+/** The valid gift that covers the longest (lifetime beats any date). Revoked, not yet started or expired gifts grant nothing. */
+function bestGift(gifts: GiftRecord[], now: number): { expiresAt: number | null } | null {
+  let best: { expiresAt: number | null } | null = null;
+  for (const g of gifts) {
+    if (g.status !== "active") continue;
+    const start = ts(g.starts_at);
+    if (start === null || start > now) continue;
+    if (g.expires_at === null) return { expiresAt: null };
+    const end = ts(g.expires_at);
+    if (end === null || end <= now) continue;
+    if (!best || (best.expiresAt !== null && end > best.expiresAt)) best = { expiresAt: end };
+  }
+  return best;
+}
 
 const ts = (v: string | null | undefined): number | null => {
   if (!v) return null;
@@ -65,7 +81,7 @@ function subscriptionGrant(
  * server-side reads, never from the browser.
  */
 export function resolveEntitlement(
-  input: { trials: TrialRecord[]; subscriptions: SubscriptionRecord[] },
+  input: { trials: TrialRecord[]; subscriptions: SubscriptionRecord[]; gifts?: GiftRecord[] },
   nowDate: Date = new Date(),
   grace: GracePolicy = DEFAULT_GRACE,
 ): Entitlement {
@@ -99,6 +115,20 @@ export function resolveEntitlement(
     }
   }
 
+  // Gifts: the paid/trial decision above is computed exactly as without gifts. A valid gift becomes the effective
+  // source only when it keeps Premium LONGER (no Premium otherwise; lifetime gift vs anything but paid lifetime;
+  // later end date). Ties go to the paid plan. Gifts never change, hide or end paid access.
+  const gift = bestGift(input.gifts ?? [], now);
+  if (gift) {
+    const longer = plan === "FREE" || (gift.expiresAt === null ? plan !== "PRO_LIFETIME" : expiresAt !== null && gift.expiresAt > expiresAt);
+    if (longer) {
+      plan = "PRO_GIFT";
+      expiresAt = gift.expiresAt;
+      source = "gift";
+      graceEndsAt = null;
+    }
+  }
+
   return {
     plan,
     isPremium: plan !== "FREE",
@@ -111,6 +141,7 @@ export function resolveEntitlement(
       startedAt: latestTrial ? new Date(ts(latestTrial.started_at) ?? 0).toISOString() : null,
       expiresAt: latestTrial ? new Date(ts(latestTrial.expires_at) ?? 0).toISOString() : null,
     },
+    gift: gift ? { lifetime: gift.expiresAt === null, expiresAt: gift.expiresAt === null ? null : new Date(gift.expiresAt).toISOString() } : null,
     checkedAt: nowDate.toISOString(),
   };
 }

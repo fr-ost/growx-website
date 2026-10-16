@@ -27,7 +27,7 @@ const healthyRpc = (name: string) =>
 describe("GET /api/health", () => {
   it("probes only real tables (named queries such as subscription_details map to their table)", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
-    const REAL = new Set(["profiles", "x_profiles", "x_profile_history", "trials", "subscriptions", "payments", "webhook_events", "early_adopter_slots", "checkout_orders", "payment_adjustments", "active_sessions", "x_account_bindings", "x_account_binding_events", "account_slot_grants"]);
+    const REAL = new Set(["profiles", "x_profiles", "x_profile_history", "trials", "subscriptions", "payments", "webhook_events", "early_adopter_slots", "checkout_orders", "payment_adjustments", "active_sessions", "x_account_bindings", "x_account_binding_events", "account_slot_grants", "admins", "premium_gifts", "premium_gift_events", "early_bird_settings", "early_bird_events"]);
     tableResult.mockImplementation(async (t: string) => (REAL.has(t) ? { data: [], error: null } : { data: null, error: { code: "PGRST205", message: `Could not find the table 'public.${t}'` } }));
     rpc.mockImplementation(healthyRpc);
     const body = await (await GET(req())).json();
@@ -43,7 +43,7 @@ describe("GET /api/health", () => {
     const body = await res.json();
     expect(body).toMatchObject({ ok: true, auth: "ok", database: "ok" });
     expect(Object.values(body.tables).every((s) => s === "ok")).toBe(true);
-    expect(body.functions).toEqual({ early_adopter_available: "ok", early_adopter_state: "ok", check_active_session: "ok", x_account_base_slots: "ok", start_trial: "ok" });
+    expect(body.functions).toEqual({ early_adopter_available: "ok", early_adopter_state: "ok", check_active_session: "ok", early_bird_status: "ok", x_account_base_slots: "ok", start_trial: "ok" });
     expect(body.billing.crypto.available).toBe(false); // payments not configured is reported, not an error
     expect(JSON.stringify(body.billing)).not.toContain("sr-secret-value");
     expect(JSON.stringify(body)).not.toContain("sr-secret-value");

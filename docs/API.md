@@ -28,9 +28,10 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
   "availableAccountSlots": 1
 }
 ```
-- `plan`: `FREE | TRIAL | PRO_MONTHLY | PRO_YEARLY | PRO_LIFETIME`
+- `plan`: `FREE | TRIAL | PRO_MONTHLY | PRO_YEARLY | PRO_LIFETIME | PRO_GIFT` (`PRO_GIFT` = complimentary Premium granted by an administrator; `isPremium` is the flag to rely on)
 - `expiresAt`: `null` for `FREE` and `PRO_LIFETIME`.
-- `source`: `none | trial | subscription`.
+- `source`: `none | trial | subscription | gift`.
+- `gift`: `null`, or `{ "lifetime": boolean, "expiresAt": ISO | null }` for the best currently valid gift (also when a paid plan is the effective source). Overlap rule: paid/trial access is decided first exactly as before; a gift becomes the effective plan only when it keeps Premium longer (ties go to the paid plan). Revoking or expiring a gift never changes paid access. If gifts cannot be read, they grant nothing and the paid/trial answer is still returned.
 - `paymentWarning`: `null`, or `{ "type": "past_due", "graceEndsAt": ISO }` while Premium is retained only because of the grace period (default 3 days for card subscriptions; `expiresAt` equals `graceEndsAt` then). After it passes the plan becomes `FREE`.
 - `checkedAt` is server time; clients must not use their own clock to decide expiry.
 - X account fields (added; every field above is unchanged). See [`X_ACCOUNTS.md`](X_ACCOUNTS.md).

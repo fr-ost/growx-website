@@ -18,6 +18,7 @@ import { pageMetadata } from "@/lib/seo";
 import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/require-user";
 import { loadXAccounts } from "@/lib/x-accounts";
+import { isAdmin } from "@/lib/admin/auth";
 
 export const metadata = pageMetadata({ title: "Dashboard", description: "Your GrowX account, plan, X accounts and payments.", path: "/dashboard", noindex: true });
 export const dynamic = "force-dynamic";
@@ -54,7 +55,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const supabase = await createClient();
 
   // Independent loads: one failing section never blanks the others.
-  const [ent, xAccounts, xProfile, payments, subs, orders, slotHistory] = await Promise.all([
+  const [ent, xAccounts, xProfile, payments, subs, orders, slotHistory, admin] = await Promise.all([
     tryLoadEntitlement(supabase, user.id),
     loadXAccounts(supabase, user.id).catch(() => null),
     supabase.from("x_profiles").select(COLUMNS.x_profiles).eq("user_id", user.id).maybeSingle(),
@@ -62,6 +63,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     supabase.from("subscriptions").select(COLUMNS.subscription_details).eq("user_id", user.id).order("created_at", { ascending: false }),
     supabase.from("checkout_orders").select(COLUMNS.checkout_orders).eq("user_id", user.id).in("status", ["created", "pending", "refund_required"]).order("created_at", { ascending: false }).limit(10),
     supabase.from("account_slot_grants").select(COLUMNS.slot_grant_history).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
+    isAdmin(user.id),
   ]);
 
   const issues: DbIssue[] = [...ent.issues];
@@ -86,7 +88,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const name = user.email?.split("@")[0] ?? "there";
 
   return (
-    <AppShell email={user.email}>
+    <AppShell email={user.email} admin={admin}>
       {sp.password === "updated" ? <Notice tone="success">Your password was updated.</Notice> : null}
       {sp.checkout === "return" ? (
         <Notice tone="info" title="Thanks! We're confirming your payment">

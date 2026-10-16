@@ -25,6 +25,10 @@ const TABLE_PROBES: Record<string, string> = {
   payment_adjustments: "id",
   active_sessions: "user_id",
   x_account_binding_events: "id",
+  admins: "user_id",
+  premium_gift_events: "id",
+  early_bird_settings: "id",
+  early_bird_events: "id",
 };
 
 /**
@@ -71,6 +75,9 @@ export async function GET(request: NextRequest) {
       const as = await admin.rpc("check_active_session", { p_user: crypto.randomUUID(), p_session: crypto.randomUUID(), p_client: "web", p_strict: false });
       functions.check_active_session = as.error ? classifyDbError(as.error) : "ok";
       // x_account_base_slots is pure (no reads/writes): proves the X account migration is present.
+      // early_bird_status is read-only: proves the admin/early-bird migration is present.
+      const ebs = await admin.rpc("early_bird_status");
+      functions.early_bird_status = ebs.error ? classifyDbError(ebs.error) : "ok";
       const xs = await admin.rpc("x_account_base_slots");
       functions.x_account_base_slots = xs.error ? classifyDbError(xs.error) : "ok";
       const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: TRIAL_DAYS });

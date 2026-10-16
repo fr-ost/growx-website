@@ -3,7 +3,7 @@ import { getGracePolicy } from "@/lib/billing/grace";
 import { logDbIssue, toDbIssue, type DbIssue } from "@/lib/db/errors";
 import { COLUMNS } from "@/lib/db/queries";
 import { resolveEntitlement } from "./resolve";
-import type { Entitlement, SubscriptionRecord, TrialRecord } from "./types";
+import type { Entitlement, GiftRecord, SubscriptionRecord, TrialRecord } from "./types";
 
 export class EntitlementLoadError extends Error {
   constructor(readonly issues: DbIssue[]) {
@@ -19,10 +19,14 @@ export class EntitlementLoadError extends Error {
  * grants or denies Premium, and it is logged (without user data).
  */
 export async function loadEntitlement(supabase: SupabaseClient, userId: string, now = new Date()): Promise<Entitlement> {
-  const [trials, subs] = await Promise.all([
+  const [trials, subs, gifts] = await Promise.all([
     supabase.from("trials").select(COLUMNS.trials).eq("user_id", userId),
     supabase.from("subscriptions").select(COLUMNS.subscriptions).eq("user_id", userId),
+    supabase.from("premium_gifts").select(COLUMNS.premium_gifts).eq("user_id", userId),
   ]);
+  // Gifts are an ADDITIONAL source: if they cannot be read, they grant nothing (logged), but the paid/trial answer
+  // is still returned. Trials and subscriptions failing is an error, as before.
+  if (gifts.error) logDbIssue(toDbIssue("premium_gifts", gifts.error), gifts.error);
   const issues: DbIssue[] = [];
   if (trials.error) issues.push(toDbIssue("trials", trials.error));
   if (subs.error) issues.push(toDbIssue("subscriptions", subs.error));
@@ -31,7 +35,11 @@ export async function loadEntitlement(supabase: SupabaseClient, userId: string, 
     throw new EntitlementLoadError(issues);
   }
   return resolveEntitlement(
-    { trials: (trials.data ?? []) as TrialRecord[], subscriptions: (subs.data ?? []) as SubscriptionRecord[] },
+    {
+      trials: (trials.data ?? []) as TrialRecord[],
+      subscriptions: (subs.data ?? []) as SubscriptionRecord[],
+      gifts: gifts.error ? [] : ((gifts.data ?? []) as unknown as GiftRecord[]),
+    },
     now,
     getGracePolicy(),
   );

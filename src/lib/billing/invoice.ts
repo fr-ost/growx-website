@@ -15,6 +15,7 @@ export const ORDER_ERRORS: Record<string, [number, string]> = {
   early_sold_out: [409, "The early-bird spots just sold out. Reload the pricing page to see the current price."],
   early_unavailable: [409, "The remaining early-bird spots are reserved by other buyers right now. Reload the pricing page and try again shortly."],
   early_already_held: [409, "You already have an early-bird payment in progress. Finish it, or wait up to an hour for it to expire, then try again."],
+  early_disabled: [409, "The early-bird offer just ended. Reload the pricing page to see the current price."],
   too_many_open_orders: [409, "You already have unpaid slot payments open. Finish one, or wait up to an hour for them to expire, then try again."],
 };
 

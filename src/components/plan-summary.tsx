@@ -9,6 +9,7 @@ export const PLAN_LABEL: Record<Plan, string> = {
   PRO_MONTHLY: "Premium Monthly",
   PRO_YEARLY: "Premium Yearly",
   PRO_LIFETIME: "Premium Lifetime",
+  PRO_GIFT: "Premium (gift)",
 };
 
 export const formatDate = (iso: string | null) =>
@@ -64,7 +65,7 @@ export function PlanSummary({ e }: { e: Entitlement }) {
       <div className="flex flex-wrap items-center gap-6">
         {left !== null ? (
           <Ring value={left} max={Math.max(ringMax, left)} label={`${left} days of Premium left`} />
-        ) : e.plan === "PRO_LIFETIME" ? (
+        ) : e.plan === "PRO_LIFETIME" || (e.plan === "PRO_GIFT" && !e.expiresAt) ? (
           <span className="bg-brand flex h-24 w-24 items-center justify-center rounded-full text-white shadow-[var(--shadow-red)]">
             <IconInfinity size={36} />
           </span>
@@ -81,8 +82,8 @@ export function PlanSummary({ e }: { e: Entitlement }) {
             </dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{e.plan === "PRO_LIFETIME" ? "Access" : "Premium until"}</dt>
-            <dd className="mt-1.5 text-base font-bold">{e.plan === "PRO_LIFETIME" ? "Never expires" : (formatDate(e.expiresAt) ?? "-")}</dd>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{e.isPremium && !e.expiresAt ? "Access" : "Premium until"}</dt>
+            <dd className="mt-1.5 text-base font-bold">{e.isPremium && !e.expiresAt ? "Never expires" : (formatDate(e.expiresAt) ?? "-")}</dd>
           </div>
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wider text-muted">Free trial</dt>
