@@ -1,31 +1,18 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { IconLayout, IconLogOut, IconUser } from "@/components/icons";
+import { IconLayout, IconLogOut } from "@/components/icons";
 import { Container } from "@/components/ui/primitives";
 
-const tabs = [
-  { href: "/dashboard", label: "Dashboard", icon: IconLayout },
-  { href: "/account", label: "Account", icon: IconUser },
-] as const;
-
-export function AppShell({ active, email, children }: { active: "/dashboard" | "/account"; email: string | undefined; children: ReactNode }) {
+/** Signed-in layout. There is one signed-in page: the dashboard. */
+export function AppShell({ email, children }: { email: string | undefined; children: ReactNode }) {
   return (
     <div className="relative flex-1 bg-surface-2">
       <div className="border-b border-border bg-white">
         <Container className="flex flex-wrap items-center justify-between gap-3 py-3">
           <nav aria-label="Account" className="flex gap-1">
-            {tabs.map((t) => (
-              <Link
-                key={t.href}
-                href={t.href}
-                aria-current={active === t.href ? "page" : undefined}
-                className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
-                  active === t.href ? "bg-accent-soft text-accent" : "text-text-2 hover:bg-surface-2 hover:text-text"
-                }`}
-              >
-                <t.icon size={17} /> {t.label}
-              </Link>
-            ))}
+            <Link href="/dashboard" className="inline-flex items-center gap-2 rounded-xl bg-accent-soft px-4 py-2 text-sm font-semibold text-accent">
+              <IconLayout size={17} /> Dashboard
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <span className="hidden max-w-[16rem] truncate text-sm text-muted sm:inline">{email}</span>

@@ -30,7 +30,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const term = p.cryptoPeriodDays ? `${p.cryptoPeriodDays} days of Premium, prepaid` : "Permanent Premium, one-time payment";
 
   return (
-    <AppShell active="/account" email={user.email}>
+    <AppShell email={user.email}>
       <div className="animate-fade-up">
         <h1 className="text-3xl font-extrabold tracking-tight">Checkout</h1>
         <p className="mt-1 text-text-2">Review your order, then pay on the secure NOWPayments invoice page.</p>

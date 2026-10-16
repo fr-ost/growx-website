@@ -138,6 +138,8 @@ http.createServer(async (req, res) => {
     trials.set(uid, row); trialNames.add(norm); return send(res, 200, row);
   }
   const table = p.replace("/rest/v1/", "");
+  // trial: the server copies the first linked X account into x_profiles (service role upsert)
+  if (isService && table === "x_profiles" && req.method === "POST") { for (const r of Array.isArray(body) ? body : [body]) xprofiles.set(r.user_id, { user_id: r.user_id, x_username: r.x_username }); return send(res, 201); }
   if (isService && req.method === "GET") return send(res, 200, []); // health-check probes
   if (!u) return send(res, 401, { code: "PGRST301", message: "JWT required" });
   const missing = (t) => send(res, 404, { code: "PGRST205", message: `Could not find the table 'public.${t}' in the schema cache` });
@@ -149,7 +151,9 @@ http.createServer(async (req, res) => {
   if (["subscriptions", "payments", "checkout_orders", "subscription_details", "account_slot_grants"].includes(table)) return send(res, 200, []);
   if (table === "x_account_bindings") {
     if (req.method !== "GET") return send(res, 403, { code: "42501", message: "permission denied for table x_account_bindings" });
-    return send(res, 200, [...xbindings.values()].filter((b) => b.user_id === u.id));
+    const mine = [...xbindings.values()].filter((b) => b.user_id === u.id);
+    const lim = Number(url.searchParams.get("limit") || 0);
+    return send(res, 200, lim ? mine.slice(0, lim) : mine);
   }
   if (table === "x_profiles") {
     if (req.method === "GET") return send(res, 200, xprofiles.has(u.id) ? [xprofiles.get(u.id)] : []);

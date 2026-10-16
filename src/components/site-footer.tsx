@@ -15,7 +15,7 @@ const cols = [
       { href: "/blog/growx-potential-best-practices-roadmap", label: "Roadmap" },
     ],
   },
-  { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/dashboard", label: "Dashboard" }, { href: "/account", label: "Account" }] },
+  { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/dashboard", label: "Dashboard" }] },
   { title: "Company", links: [{ href: "/about", label: "About" }, { href: "/contact", label: "Support" }, { href: "/privacy", label: "Privacy policy" }, { href: "/terms", label: "Terms of service" }, { href: "/refund-policy", label: "Refund policy" }] },
 ];
 

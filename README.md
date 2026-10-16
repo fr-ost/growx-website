@@ -2,7 +2,7 @@
 
 Marketing site, accounts and Premium-readiness backend for the **GrowX** Chrome extension (auto-follow and cleanup tools for X/Twitter).
 
-**Status: live** (product decisions in [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md)). Public pages, email/Google auth, protected dashboard/account, database schema with RLS, a 30-day trial action and an entitlement API are implemented. **Payments are live**: NOWPayments (crypto) hosted invoices with verified IPN (see [`docs/BILLING.md`](docs/BILLING.md)). The extension signs in with GrowX accounts and checks `/api/entitlement`.
+**Status: live** (product decisions in [`docs/PRODUCT_REQUIREMENTS.md`](docs/PRODUCT_REQUIREMENTS.md)). Public pages, email/Google auth, one protected dashboard (plan, trial, X accounts, payments, account), database schema with RLS, a 30-day trial action and an entitlement API are implemented. **Payments are live**: NOWPayments (crypto) hosted invoices with verified IPN (see [`docs/BILLING.md`](docs/BILLING.md)). The extension signs in with GrowX accounts and checks `/api/entitlement`.
 
 Stack: Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Supabase (Postgres + Auth, `@supabase/ssr`) · Vercel.
 

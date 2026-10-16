@@ -14,7 +14,7 @@ export default async function OrderPage({ params, searchParams }: { params: Prom
   const { canceled } = await searchParams;
   const user = await requireUser(`/checkout/${id}`);
   return (
-    <AppShell active="/account" email={user.email}>
+    <AppShell email={user.email}>
       <div className="animate-fade-up">
         <h1 className="text-3xl font-extrabold tracking-tight">Payment status</h1>
         <p className="mt-1 text-text-2">This page updates automatically.</p>

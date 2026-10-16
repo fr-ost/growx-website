@@ -4,7 +4,7 @@
 Browser ──> Next.js 16 (Vercel)
               ├─ Public pages (static): /, /features, /pricing, /contact, /privacy, /terms
               ├─ Auth pages: /login, /signup  (Server Actions -> Supabase Auth)
-              ├─ Protected pages (dynamic): /dashboard, /account
+              ├─ Protected page (dynamic): /dashboard (one page: plan + trial, X accounts, payments, account; /account redirects here)
               ├─ src/proxy.ts  (refreshes Supabase session cookies; redirects signed-out users)
               └─ Route handlers: /api/entitlement, /api/health, /auth/callback (OAuth/PKCE), /auth/confirm (email token links), /auth/signout
 Extension (later) ──Bearer token──> /api/entitlement

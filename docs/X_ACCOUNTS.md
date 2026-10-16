@@ -7,10 +7,10 @@ It also relies on `20261014000100_active_sessions.sql` (single active login), ap
 ## Rules
 * Every GrowX account can link **2** X usernames for free. Each extra username needs one extra slot: **$0.99, one-time** (`X_ACCOUNT_SLOT`).
 * `allowed slots = 2 + purchased slots that are paid and not refunded or charged back`. Only the database computes it (`public.x_account_allowed_slots`). No client value (body, local storage, return URL, frontend payment state) can change it.
-* A username is linked only after the user **explicitly confirms** (account page: review step + "I understand" checkbox; API: `confirm: true` is mandatory).
+* A username is linked only after the user **explicitly confirms** (dashboard: review step + "I understand" checkbox; API: `confirm: true` is mandatory).
 * Linked usernames are **permanent**. Users cannot change or remove them (the API answers `405` to PUT/PATCH/DELETE; the database refuses edits). Corrections go through support (below).
 * **Global uniqueness:** a username can be linked to only **one** GrowX account. Case and a leading `@` do not matter (`@MyName`, `myname` and `MYNAME` are the same). The error is always `This X username is already linked to another GrowX account.`, and it reveals nothing about the other account.
-* Linking or buying slots never creates, resets or edits trials, subscriptions, payments or `x_profiles`. The migration links nothing by itself: existing `x_profiles` / trial usernames are **not** converted into bindings. (The account page only pre-fills the trial username in the input; the user must still confirm it.)
+* Linking or buying slots never creates, resets or edits trials, subscriptions, payments or `x_profiles`. The migration links nothing by itself: existing `x_profiles` / trial usernames are **not** converted into bindings. (For older accounts the dashboard pre-fills the old trial username in the input; the user must still confirm it.)
 * A binding lists usernames GrowX may be used with. It does **not** prove which X account is signed in on x.com and does not verify ownership. GrowX never asks for X credentials.
 
 ## Architecture
@@ -26,7 +26,8 @@ It also relies on `20261014000100_active_sessions.sql` (single active login), ap
 | `GET/POST /api/x-accounts` | `src/app/api/x-accounts/route.ts` (cookie or extension Bearer, active-session check, CORS allowlist) |
 | `POST /api/x-accounts/slots/checkout` | `src/app/api/x-accounts/slots/checkout/route.ts` -> `src/lib/billing/invoice.ts` (shared with Premium checkout) |
 | Entitlement fields | `src/app/api/entitlement/route.ts` (contract in [`API.md`](API.md)) |
-| Account page "X Accounts" section | `src/app/account/page.tsx`, `src/components/x-accounts-manager.tsx` |
+| Dashboard "X accounts" section (the old editable username form was removed; `/account` redirects to `/dashboard`) | `src/app/dashboard/page.tsx`, `src/components/x-accounts-manager.tsx` |
+| Free trial | uses the first linked X account (`src/app/dashboard/actions.ts`) |
 
 ## Slot purchases (NOWPayments)
 1. `POST /api/x-accounts/slots/checkout {}` (logged in, verified email, same origin). The body must be empty.

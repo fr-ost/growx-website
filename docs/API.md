@@ -56,7 +56,7 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
 **Not implemented:** rate limiting (use Vercel Firewall / WAF rules before launch).
 
 ## Trial activation (not an HTTP endpoint)
-`startTrialAction` is a Next.js Server Action on `/dashboard`. It requires a verified session and a confirmed email, uses the session user id (never form input), and calls `public.start_trial` with the service role. Database constraints guarantee at most one trial per account and one per self-reported X username. It is intentionally **not** exposed to the extension yet.
+`startTrialAction` is a Next.js Server Action on `/dashboard`. It requires a verified session and a confirmed email, uses the session user id (never form input), and calls `public.start_trial` with the service role. The trial is tied to the account's first permanently linked X account (the server copies it into `x_profiles`, which `start_trial` reads, only while the account has never had a trial). Database constraints guarantee at most one trial per account and one per X username. It is intentionally **not** exposed to the extension yet.
 
 ## Billing endpoints (NOWPayments, live; see `BILLING.md`)
 | Endpoint | Auth | Purpose |

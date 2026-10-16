@@ -149,42 +149,27 @@ ok("login success -> dashboard (open redirect blocked)", new URL(p.url()).host =
 await p.locator("h1", { hasText: "Welcome" }).waitFor();
 ok("dashboard welcome", true);
 ok("header shows Dashboard when signed in", await p.locator("header >> text=Dashboard").first().isVisible());
-ok("trial button disabled without username", await p.locator("button", { hasText: "Start my 30-day" }).isDisabled());
+ok("trial button disabled until an X account is linked", await p.locator("button", { hasText: "Start my 30-day" }).isDisabled() && (await p.locator("main").innerText()).includes("Link your X account below first"));
 ok("new user without subscription sees the real Free plan", /current plan\s*free/i.test(await p.locator("main").innerText()));
 ok("no data-error banner for a healthy account", !(await p.locator("text=could not be loaded").count()));
-
-await p.fill("#x_username", "bad name!");
-await p.click("button:has-text('Save username')");
-await p.waitForSelector("text=Enter a valid X username");
-ok("invalid X username rejected", true);
-await p.fill("#x_username", "https://x.com/Demo_User");
-await p.click("button:has-text('Save username')");
-await p.waitForSelector("text=Saved.");
-ok("X username saved from profile URL", true);
-await p.reload();
-ok("username persisted (normalised from URL)", (await p.inputValue("#x_username")) === "Demo_User", await p.inputValue("#x_username"));
-
-const btn = p.locator("button", { hasText: "Start my 30-day" });
-ok("trial button enabled after username", await btn.isEnabled());
-await btn.click();
-await p.waitForSelector("text=Your trial is active", { timeout: 15000 });
-ok("trial started", true);
-ok("plan shows Premium trial", await p.locator("text=Premium trial").first().isVisible());
-ok("days-left ring shows 30", (await p.locator('[role=img][aria-label*="days of Premium left"]').getAttribute("aria-label")).startsWith("30"));
-
-const ent = await p.evaluate(async () => (await fetch("/api/entitlement")).json());
-ok("/api/entitlement returns TRIAL via cookie", ent.plan === "TRIAL" && ent.isPremium === true, JSON.stringify(ent).slice(0, 120));
-
-await p.goto(BASE + "/account");
-const seen = async (sel) => p.locator(sel).first().waitFor({ timeout: 10000 }).then(() => true, () => false);
-ok("account page shows username", await seen("text=@Demo_User"));
-ok("account page empty payments state", await seen("text=No payments yet"));
+ok("one page: no Account tab or link, no editable username form", (await p.locator('a[href="/account"]').count()) === 0 && (await p.locator("#x_username").count()) === 0 && !(await p.locator("button:has-text('Save username')").count()));
+{
+  const h2 = await p.locator("main h2").allInnerTexts();
+  ok("one page: plan, X accounts, payments and account sections", ["Your plan", "X accounts", "Payments", "Account"].every((t) => h2.some((h) => h.trim() === t)), JSON.stringify(h2));
+}
+ok("empty payments state", (await p.locator("main").innerText()).includes("No payments yet"));
+ok("old /account link lands on the dashboard", (await p.goto(BASE + "/account"), p.url().endsWith("/dashboard")), p.url());
 
 // ---------- X Accounts: permanent bindings with explicit confirmation
 const xa = () => p.locator("#x-accounts");
 ok("X Accounts: 2 free slots, none used", /Slots used\s*0 of 2/i.test(await xa().innerText()) && /Included free\s*2/i.test(await xa().innerText()));
 ok("X Accounts: permanence explained", /cannot be changed or removed from this page/.test(await xa().innerText()) && /contact support/i.test(await xa().innerText()));
-ok("X Accounts: trial username offered (not linked)", (await p.inputValue("#x_account_username")) === "Demo_User" && /No X usernames linked yet/.test(await xa().innerText()));
+ok("X Accounts: nothing linked yet", /No X usernames linked yet/.test(await xa().innerText()));
+await p.fill("#x_account_username", "bad name!");
+await p.click("button:has-text('Review and link')");
+await p.waitForSelector("text=Enter a valid X username");
+ok("invalid X username rejected", true);
+await p.fill("#x_account_username", "@Demo_User");
 await p.click("button:has-text('Review and link')");
 await p.waitForSelector("text=Permanently link @Demo_User?");
 ok("X Accounts: confirmation step before linking", await p.locator("button:has-text('Link @Demo_User permanently')").isDisabled());
@@ -194,6 +179,18 @@ await p.click("button:has-text('Link @Demo_User permanently')");
 await p.waitForSelector("text=is now permanently linked");
 await p.locator("#x-accounts li", { hasText: "@Demo_User" }).waitFor({ timeout: 10000 });
 ok("X Accounts: linked and listed as permanent", /Linked permanently/.test(await xa().innerText()) && /Slots used\s*1 of 2/i.test(await xa().innerText()));
+
+const btn = p.locator("button", { hasText: "Start my 30-day" });
+await p.waitForFunction(() => [...document.querySelectorAll("button")].some((b) => b.textContent.includes("Start my 30-day") && !b.disabled), null, { timeout: 10000 }).catch(() => {});
+ok("trial button enabled after linking an X account", await btn.isEnabled());
+await btn.click();
+await p.waitForSelector("text=Your trial is active", { timeout: 15000 });
+ok("trial started", true);
+await p.reload();
+ok("plan shows Premium trial", /Premium trial/.test(await p.locator("main").innerText()) && (await p.locator("button", { hasText: "Start my 30-day" }).count()) === 0);
+ok("days-left ring shows 30", (await p.locator('[role=img][aria-label*="days of Premium left"]').getAttribute("aria-label")).startsWith("30"));
+const ent = await p.evaluate(async () => (await fetch("/api/entitlement")).json());
+ok("/api/entitlement returns TRIAL via cookie", ent.plan === "TRIAL" && ent.isPremium === true, JSON.stringify(ent).slice(0, 120));
 await p.fill("#x_account_username", "@Second_Acct");
 await p.click("button:has-text('Review and link')");
 await p.locator("#x-accounts input[type=checkbox]").check();
@@ -210,6 +207,7 @@ ok("X Accounts API: confirmation required", xApi.noConfirm[0] === 400 && xApi.no
 ok("X Accounts API: change/remove refused (405)", xApi.patch[0] === 405 && xApi.del[0] === 405);
 ok("X Accounts API: client slot counts rejected", xApi.slots[0] === 400);
 ok("entitlement lists linked X accounts and slots", JSON.stringify(xApi.ent.linkedXAccounts) === JSON.stringify([{ username: "Demo_User", normalizedUsername: "demo_user" }, { username: "Second_Acct", normalizedUsername: "second_acct" }]) && xApi.ent.allowedAccountSlots === 2 && xApi.ent.availableAccountSlots === 0 && xApi.ent.plan === "TRIAL", JSON.stringify(xApi.ent).slice(0, 300));
+await p.reload(); await p.screenshot({ path: OUT + "shot-dashboard.png", fullPage: true });
 
 await p.click("button:has-text('Sign out')");
 await p.waitForURL(BASE + "/");
@@ -222,12 +220,6 @@ ok("/api/entitlement 401 after sign out", ent2 === 401, String(ent2));
 await p.goto(BASE + "/login");
 await p.fill("#email", "other@example.com"); await p.fill("#password", "correct-horse-1");
 await p.click("button[type=submit]"); await p.waitForURL("**/dashboard");
-await p.fill("#x_username", "demo_user"); await p.click("button:has-text('Save username')"); await p.waitForSelector("text=Saved.");
-await p.reload();
-await p.locator("button", { hasText: "Start my 30-day" }).click();
-await p.waitForSelector("text=already been used with this X username");
-ok("second account with same username refused", true);
-await p.goto(BASE + "/account");
 await p.fill("#x_account_username", "@DEMO_USER");
 await p.click("button:has-text('Review and link')");
 await p.locator("#x-accounts input[type=checkbox]").check();
@@ -247,12 +239,8 @@ ok("X Accounts: a username linked to another account is refused (any case/@), no
   const body = await bp.locator("main").innerText();
   if (process.env.E2E_DEBUG) console.log("DASH:", body.slice(0, 1500));
   ok("broken DB: dashboard shows actionable banner", body.includes("Some of your account data could not be loaded") && body.includes("migrations have not been applied"));
-  ok("broken DB: banner names query + code", body.includes("trials/table_missing (PGRST205)") && body.includes("x_profiles/table_missing"));
-  ok("broken DB: no fake plan shown", !/current plan/i.test(body) && body.includes("Your plan could not be loaded"));
-  await bp.goto(BASE + "/account");
-  await bp.locator("h1", { hasText: "Account" }).waitFor();
-  const acc = await bp.locator("main").innerText();
-  ok("broken DB: account shows plan + payments diagnostics", acc.includes("Could not load your plan") && acc.includes("Could not load payments") && acc.includes("payments/table_missing"));
+  ok("broken DB: banner names query + code", body.includes("trials/table_missing (PGRST205)") && body.includes("payments/table_missing"));
+  ok("broken DB: no fake plan shown", !/current plan/i.test(body) && body.includes("Your plan could not be loaded") && body.includes("Payments could not be loaded"));
   ok("broken DB: no runtime errors", berrs.length === 0, berrs.join(" | "));
   await bctx.close();
 
@@ -261,11 +249,10 @@ ok("X Accounts: a username linked to another account is refused (any case/@), no
   await np.goto(BASE + "/login");
   await np.fill("#email", "nopay@example.com"); await np.fill("#password", "correct-horse-1");
   await np.click("button[type=submit]"); await np.waitForURL("**/dashboard");
-  await np.goto(BASE + "/account");
-  await np.locator("h1", { hasText: "Account" }).waitFor();
+  await np.locator("h1", { hasText: "Welcome" }).waitFor();
   const na = await np.locator("main").innerText();
-  if (process.env.E2E_DEBUG) console.log("ACC:", na.slice(0, 1500));
-  ok("optional failure (payments) does not hide the plan", na.includes("Could not load payments") && /current plan/i.test(na) && /free/i.test(na) && !na.includes("Could not load your plan"), na.slice(0, 200));
+  if (process.env.E2E_DEBUG) console.log("DASH:", na.slice(0, 1500));
+  ok("optional failure (payments) does not hide the plan", na.includes("Payments could not be loaded") && /current plan/i.test(na) && /free/i.test(na) && !na.includes("Your plan could not be loaded"), na.slice(0, 200));
   await nctx.close();
 }
 
@@ -327,7 +314,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const devA = await (await b.newContext()).newPage(), devB = await (await b.newContext()).newPage(), other = await (await b.newContext()).newPage();
   await login(devA, "other@example.com");
   await login(other, "instant@example.com");
-  ok("device A is signed in and can use protected pages", (await devA.goto(BASE + "/account")).status() === 200 && devA.url().endsWith("/account"));
+  ok("device A is signed in and can use protected pages", (await devA.goto(BASE + "/dashboard")).status() === 200 && devA.url().endsWith("/dashboard"));
   await login(devB, "other@example.com");
   ok("device B (same account) becomes the active session", devB.url().endsWith("/dashboard"));
   await devA.goto(BASE + "/dashboard");
@@ -337,8 +324,8 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   await devA.goto(BASE + "/account");
   await devA.waitForURL("**/login**", { timeout: 15000 }).catch(() => {});
   ok("device A cannot get back in with its old cookies", devA.url().includes("/login"), devA.url());
-  await devB.goto(BASE + "/account");
-  ok("device B stays signed in", devB.url().endsWith("/account"));
+  await devB.goto(BASE + "/dashboard");
+  ok("device B stays signed in", devB.url().endsWith("/dashboard"));
   await other.goto(BASE + "/dashboard");
   ok("an unrelated user's session is unaffected", other.url().endsWith("/dashboard"));
   const st = await state();

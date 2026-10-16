@@ -6,77 +6,65 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentUser } from "@/lib/supabase/user";
 import { logDbIssue, toDbIssue } from "@/lib/db/errors";
-import { xUsernameSchema } from "@/lib/validation/xUsername";
 
 export interface FormState {
   ok?: boolean;
   message?: string;
 }
 
-export async function saveXUsernameAction(_prev: FormState, formData: FormData): Promise<FormState> {
-  const user = await getCurrentUser();
-  if (!user) return { message: "Please sign in again." };
-
-  const parsed = xUsernameSchema.safeParse(formData.get("x_username") ?? "");
-  if (!parsed.success) return { message: parsed.error.issues[0]?.message ?? "Invalid username." };
-
-  // User-scoped client: RLS restricts this to the caller's own row. The user id
-  // comes from the verified session, never from the form.
-  const supabase = await createClient();
-  const existing = await supabase.from("x_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
-  if (existing.error) {
-    const issue = toDbIssue("x_profiles", existing.error);
-    logDbIssue(issue, existing.error);
-    return { message: `Could not save your username (${issue.kind}${issue.code ? ` ${issue.code}` : ""}). Please try again or contact support.` };
-  }
-
-  const write = () =>
-    existing.data
-      ? supabase.from("x_profiles").update({ x_username: parsed.data.username }).eq("user_id", user.id)
-      : supabase.from("x_profiles").insert({ user_id: user.id, x_username: parsed.data.username });
-  let res = await write();
-  // 23503 = foreign key violation: this account has no profile row (it signed
-  // up before the database trigger existed). Create the caller's OWN profile
-  // via a narrow SECURITY DEFINER function, then retry once.
-  if (res.error?.code === "23503") {
-    const fix = await supabase.rpc("ensure_my_profile");
-    if (fix.error) logDbIssue(toDbIssue("ensure_my_profile", fix.error), fix.error);
-    else res = await write();
-  }
-  if (res.error) {
-    const issue = toDbIssue("x_profiles.write", res.error);
-    logDbIssue(issue, res.error);
-    return { message: `Could not save your username (${issue.kind}${issue.code ? ` ${issue.code}` : ""}). Please try again or contact support.` };
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/account");
-  return { ok: true, message: "Saved. This username is self-reported and is not verified." };
-}
-
 const TRIAL_MESSAGES = {
   email_not_verified: "Confirm your email address before starting a trial.",
-  x_username_required: "Add your X username first.",
+  x_username_required: "Link your X account first.",
   already_used: "Your account has already used its free trial.",
-  username_already_used: "A trial has already been used with this X username.",
+  username_already_used: "A trial has already been used with this X account.",
   error: "We could not start the trial. Please try again later.",
 } as const;
 
+/**
+ * Starts the one-time trial. The trial is tied to the account's FIRST permanently linked X account
+ * (there is no editable username any more). The user id comes from the verified session only.
+ */
 export async function startTrialAction(): Promise<FormState> {
   const user = await getCurrentUser();
   if (!user) return { message: "Please sign in again." };
+  if (!user.email_confirmed_at) return { message: TRIAL_MESSAGES.email_not_verified };
 
-  let result;
+  // User-scoped read (RLS): the caller's own oldest active binding.
+  const supabase = await createClient();
+  const first = await supabase.from("x_account_bindings").select("username").eq("user_id", user.id).eq("status", "active").order("created_at", { ascending: true }).limit(1).maybeSingle();
+  if (first.error) {
+    const issue = toDbIssue("x_account_bindings", first.error);
+    logDbIssue(issue, first.error);
+    return { message: `${TRIAL_MESSAGES.error} (reference: x_account_bindings/${issue.kind})` };
+  }
+  const username = (first.data as { username?: string } | null)?.username;
+  if (!username) return { message: TRIAL_MESSAGES.x_username_required };
+
+  let admin;
   try {
-    result = await startTrial(createAdminClient(), { id: user.id, emailConfirmed: !!user.email_confirmed_at });
+    admin = createAdminClient();
   } catch (e) {
     // Most likely SUPABASE_SERVICE_ROLE_KEY is not set in this deployment.
     console.error(JSON.stringify({ event: "start_trial_unavailable", message: e instanceof Error ? e.message.slice(0, 120) : "unknown" }));
     return { message: `${TRIAL_MESSAGES.error} (reference: start_trial/not_configured)` };
   }
+
+  // public.start_trial reads the trial username from x_profiles: set it to the linked account, but only
+  // while this account has never had a trial (a used trial and its history are never touched).
+  const existing = await admin.from("trials").select("user_id").eq("user_id", user.id).limit(1);
+  if (existing.error) return { message: `${TRIAL_MESSAGES.error} (reference: trials/${toDbIssue("trials", existing.error).kind})` };
+  if (!existing.data?.length) {
+    const sync = await admin.from("x_profiles").upsert({ user_id: user.id, x_username: username }, { onConflict: "user_id" });
+    if (sync.error) {
+      const issue = toDbIssue("x_profiles.sync", sync.error);
+      logDbIssue(issue, sync.error);
+      return { message: `${TRIAL_MESSAGES.error} (reference: x_profiles/${issue.kind})` };
+    }
+  }
+
+  const result = await startTrial(admin, { id: user.id, emailConfirmed: true });
   if (!result.ok) return { message: TRIAL_MESSAGES[result.reason] + (result.detail ? ` (reference: start_trial/${result.detail})` : "") };
 
   revalidatePath("/dashboard");
-  revalidatePath("/account");
   return { ok: true, message: "Your 30-day Premium trial has started." };
 }

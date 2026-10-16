@@ -54,7 +54,7 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
 
   const name = isBillableId(order.product) ? getBillable(order.product).name : order.product;
   const slot = order.product === "X_ACCOUNT_SLOT";
-  const retry = <LinkButton href={slot ? "/account#x-accounts" : isProductId(order.product) ? `/checkout?plan=${order.product}` : "/pricing"} variant="secondary">Start a new payment</LinkButton>;
+  const retry = <LinkButton href={slot ? "/dashboard#x-accounts" : isProductId(order.product) ? `/checkout?plan=${order.product}` : "/pricing"} variant="secondary">Start a new payment</LinkButton>;
   const s = order.providerStatus;
 
   return (
@@ -66,7 +66,7 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
           <div className="animate-pop mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ok text-2xl text-white">✓</div>
           <h2 className="text-xl font-bold">Payment confirmed</h2>
           <p className="text-text-2">{slot ? "Your extra X account slot is ready to use." : "Your Premium plan is active."} Thank you for supporting GrowX!</p>
-          <LinkButton href={slot ? "/account#x-accounts" : "/account"} className="w-full sm:w-auto">{slot ? "Link an X username" : "View your plan"}</LinkButton>
+          <LinkButton href={slot ? "/dashboard#x-accounts" : "/dashboard"} className="w-full sm:w-auto">{slot ? "Link an X username" : "View your plan"}</LinkButton>
         </div>
       ) : order.status === "refund_required" ? (
         <Notice tone="warn" title="Payment received but not activated">

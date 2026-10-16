@@ -55,7 +55,7 @@ Checkout stays "Coming soon" until the key, IPN secret and `BILLING_LIVE_APPROVE
 ## First live test (by you)
 1. Check `/api/health` shows `billing.crypto.available: true`.
 2. Log in with a confirmed account, choose the **monthly** plan, pay with the smallest-fee asset.
-3. `/account` must show Premium only after NOWPayments marks the payment `finished`. Check `webhook_events.result` (`applied`) and `payments`/`subscriptions` in Supabase.
+3. `/dashboard` must show Premium only after NOWPayments marks the payment `finished`. Check `webhook_events.result` (`applied`) and `payments`/`subscriptions` in Supabase.
 4. If `result` is `rejected:*` or `ignored`, send me the value; a mismatch with NOWPayments' real payloads fails safe (no access granted).
 
 ## Operations runbook
