@@ -42,7 +42,7 @@ export function LifetimePrice() {
               <div
                 className="mt-2 h-2.5 overflow-hidden rounded-full bg-white ring-1 ring-border"
                 role="progressbar"
-                aria-label="Early-bird spots claimed"
+                aria-label="Early-bird spots taken"
                 aria-valuemin={0}
                 aria-valuemax={total}
                 aria-valuenow={claimed ?? 0}

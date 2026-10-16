@@ -6,7 +6,7 @@ export type EarlyBirdState = "available" | "temporarily_unavailable" | "sold_out
 
 export interface EarlyBird {
   state: EarlyBirdState;
-  /** Spots in the current offer (successful early-bird sales + spots remaining). */
+  /** Size of the early-bird campaign (the allocation, 100 initially). Remaining is shown against this. */
   total: number;
   /** Spots not yet claimed by a verified purchase; null when it could not be read. Reservations of unpaid checkouts are not counted. */
   remaining: number | null;
@@ -43,7 +43,7 @@ export async function getEarlyBird(admin: SupabaseClient, env: Record<string, st
   if (!earlyBirdEnabled(env)) return off;
   try {
     const s = await readEarlyBirdStatus(admin);
-    const total = s.sold + s.remaining;
+    const total = s.campaign_allocation;
     if (s.state === "off" || !s.enabled) return { state: "off", total, remaining: null };
     if (s.state === "sold_out" || s.remaining <= 0) return { state: "sold_out", total, remaining: 0 };
     if (s.state === "available") return { state: "available", total, remaining: s.remaining };

@@ -191,10 +191,12 @@ describe("GET /api/billing/options", () => {
       [eb("unavailable", 90), { state: "temporarily_unavailable", total: 100, remaining: 10 }],
       [eb("sold_out", 100), { state: "sold_out", total: 100, remaining: 0 }],
       [eb("available", 100, 0), { state: "sold_out", total: 100, remaining: 0 }],
-      // an admin set the remaining spots to 10 after 37 sales: the page shows exactly that (no invented numbers)
-      [eb("available", 37, 10), { state: "available", total: 47, remaining: 10 }],
+      // an admin set the remaining spots to 91 with nothing sold: "91 of 100 spots left" (shown against the campaign size)
+      [eb("available", 0, 91), { state: "available", total: 100, remaining: 91 }],
+      // an admin set the remaining spots to 10 after 37 sales
+      [eb("available", 37, 10), { state: "available", total: 100, remaining: 10 }],
       // an admin set the remaining spots to 0: sold out at the regular price
-      [eb("sold_out", 37, 0), { state: "sold_out", total: 37, remaining: 0 }],
+      [eb("sold_out", 37, 0), { state: "sold_out", total: 100, remaining: 0 }],
       // an admin disabled the offer
       [eb("off", 37, 63, false), { state: "off", total: 100, remaining: null }],
     ];
