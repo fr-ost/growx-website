@@ -52,9 +52,12 @@ export function PricingCards() {
               </ul>
               <div className="mt-7">
                 {t.id === "FREE" ? (
-                  <LinkButton href="/signup" variant="secondary" className="w-full">
-                    Start free
-                  </LinkButton>
+                  <div className="space-y-2 text-center">
+                    <LinkButton href="/signup" variant="secondary" className="w-full">
+                      Start free
+                    </LinkButton>
+                    <p className="text-xs font-semibold text-text-2">Then try Premium free for 30 days. No credit card.</p>
+                  </div>
                 ) : (
                   <BuyButtons product={t.id as ProductId} primary={!!t.highlight} />
                 )}

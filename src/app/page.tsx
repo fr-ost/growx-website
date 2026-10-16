@@ -122,7 +122,7 @@ export default function HomePage() {
               </LinkButton>
             </div>
             <ul className="animate-fade-up mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-text-2 [animation-delay:320ms] lg:justify-start">
-              {["Free core features", `${TRIAL_DAYS}-day Premium trial`, "No X password needed"].map((t) => (
+              {["Free core features", `${TRIAL_DAYS}-day Premium trial: free, no credit card`, "No X password needed"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
                   <IconCheck size={16} className="text-accent" /> {t}
                 </li>
