@@ -1,6 +1,6 @@
 # Admin dashboard: Premium gifts + Lifetime Early Bird editor
 
-Page: `/admin` (signed-in administrators only; everyone else gets a 404). Migration: `supabase/migrations/20261017000100_admin_gifts_early_bird.sql`.
+Page: `/admin` (signed-in administrators only; everyone else gets a 404). Migration: `supabase/migrations/20261016165539_admin_gifts_early_bird.sql`. **Applied to production on 2026-10-16** and verified (RLS on all new tables, admin functions service-role only, early bird unchanged: enabled, 100 remaining, 0 sold). The owner account was added to `public.admins`.
 
 ## Who is an administrator
 * A user is an admin only if their auth user id is in `public.admins`. No API role can write that table: add or remove admins in the **Supabase SQL Editor**:

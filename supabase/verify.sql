@@ -63,7 +63,7 @@ with checks(item, ok) as (
          and not has_function_privilege('authenticated', to_regprocedure('public.support_change_x_account(uuid,text,text,text,text)'), 'EXECUTE')
          and not has_function_privilege('anon', to_regprocedure('public.support_change_x_account(uuid,text,text,text,text)'), 'EXECUTE')
   union all
-  -- admin: gifts + early-bird editor (20261017000100_admin_gifts_early_bird)
+  -- admin: gifts + early-bird editor (20261016165539_admin_gifts_early_bird)
   select 'table public.' || t || ' (RLS on, no anon, no authenticated writes)',
          to_regclass('public.' || t) is not null
          and (select relrowsecurity from pg_class where oid = to_regclass('public.' || t))
