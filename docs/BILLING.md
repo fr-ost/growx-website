@@ -8,6 +8,7 @@ Paddle was removed (it rejected the product). Payments are **cryptocurrency only
 | `PRO_MONTHLY` | PRO_MONTHLY | $1.99 | prepaid 30 days, does not renew |
 | `PRO_YEARLY` | PRO_YEARLY | $14.99 | prepaid 365 days, does not renew |
 | `PRO_LIFETIME` | PRO_LIFETIME | $59.99 once | never expires; regular price |
+| `X_ACCOUNT_SLOT` | none (add-on) | $0.99 once | one extra permanent X account slot (`account_slot_grants`), see [`X_ACCOUNTS.md`](X_ACCOUNTS.md). Coin minimums may block it: see "Is $0.99 payable?" there |
 | `PRO_LIFETIME_EARLY` | PRO_LIFETIME | $29.99 once | **early-bird price for the first 100 lifetime purchases.** Never requested by the browser: the server substitutes it for `PRO_LIFETIME` while spots remain |
 
 ## How it works (hosted invoice)

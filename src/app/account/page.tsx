@@ -3,7 +3,11 @@ import { IconLock, IconMail, IconStar, IconUser } from "@/components/icons";
 import { PlanSummary, formatDate } from "@/components/plan-summary";
 import { LinkButton } from "@/components/ui/button";
 import { Badge, Notice } from "@/components/ui/primitives";
-import { getProduct, isProductId } from "@/lib/billing/catalog";
+import { getBillable, isBillableId } from "@/lib/billing/catalog";
+import { nowPaymentsStatus } from "@/lib/billing/config";
+import { X_ACCOUNT_SLOT_PRICE_LABEL } from "@/config/pricing";
+import { XAccountsManager } from "@/components/x-accounts-manager";
+import { loadXAccounts } from "@/lib/x-accounts";
 import { site } from "@/config/site";
 import { DataIssue } from "@/components/data-issue";
 import { logDbIssue, toDbIssue } from "@/lib/db/errors";
@@ -16,7 +20,7 @@ import { requireUser } from "@/lib/supabase/require-user";
 export const metadata = pageMetadata({ title: "Account", description: "Your GrowX account and plan.", path: "/account", noindex: true });
 export const dynamic = "force-dynamic";
 
-const PRODUCT_NAME = (p: string) => (isProductId(p) ? getProduct(p).name : p);
+const PRODUCT_NAME = (p: string) => (isBillableId(p) ? getBillable(p).name : p);
 const PROVIDER_LABEL: Record<string, string> = { nowpayments: "Crypto (NOWPayments)" };
 const PAYMENT_LABEL: Record<string, { text: string; tone: "ok" | "warn" | "neutral" | "accent" }> = {
   succeeded: { text: "Paid", tone: "ok" },
@@ -36,12 +40,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const sp = await searchParams;
   const supabase = await createClient();
 
-  const [ent, x, payments, subs, orders] = await Promise.all([
+  const [ent, x, payments, subs, orders, xAccounts, slotHistory] = await Promise.all([
     tryLoadEntitlement(supabase, user.id),
     supabase.from("x_profiles").select(COLUMNS.x_profiles).eq("user_id", user.id).maybeSingle(),
     supabase.from("payments").select(COLUMNS.payments).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
     supabase.from("subscriptions").select(COLUMNS.subscription_details).eq("user_id", user.id).order("created_at", { ascending: false }),
     supabase.from("checkout_orders").select(COLUMNS.checkout_orders).eq("user_id", user.id).in("status", ["created", "pending", "refund_required"]).order("created_at", { ascending: false }).limit(10),
+    loadXAccounts(supabase, user.id).catch(() => null),
+    supabase.from("account_slot_grants").select(COLUMNS.slot_grant_history).eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
   ]);
   const entitlement = ent.entitlement;
   const xIssue = x.error ? toDbIssue("x_profiles", x.error) : null;
@@ -77,7 +83,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <dd className="mt-1.5">{user.email_confirmed_at ? <Badge tone="ok">Confirmed</Badge> : <Badge tone="warn">Not confirmed</Badge>}</dd>
           </div>
           <div>
-            <dt className="text-xs font-semibold uppercase tracking-wider text-muted">X username</dt>
+            <dt className="text-xs font-semibold uppercase tracking-wider text-muted">Trial X username</dt>
             <dd className="mt-1.5 font-semibold">{xIssue ? <span className="text-danger">Could not load</span> : xUsername ? `@${xUsername}` : "Not set"}</dd>
           </div>
           <div>
@@ -85,6 +91,29 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <dd className="mt-1.5 font-semibold">{formatDate(user.created_at)?.replace(/,? \d{1,2}:\d{2}.*$/, "")}</dd>
           </div>
         </dl>
+      </Panel>
+
+      <Panel title="X Accounts" icon={<IconUser size={17} />}>
+        {xAccounts ? (
+          <>
+            <XAccountsManager summary={xAccounts} priceLabel={X_ACCOUNT_SLOT_PRICE_LABEL} checkoutAvailable={nowPaymentsStatus().available} suggestion={xIssue ? null : xUsername} />
+            {slotHistory.data && slotHistory.data.length > 0 ? (
+              <div className="mt-6 border-t border-border pt-5">
+                <p className="text-sm font-semibold">Extra slot purchases</p>
+                <ul className="mt-2 space-y-1 text-sm text-text-2">
+                  {slotHistory.data.map((g) => (
+                    <li key={g.id} className="flex flex-wrap items-center gap-3">
+                      1 extra slot <span className="text-muted">{formatDate(g.created_at)}</span>
+                      {g.status === "active" ? <Badge tone="ok">Active</Badge> : <Badge tone="neutral">{g.revoked_reason === "chargeback" ? "Removed (chargeback)" : "Removed (refund)"}</Badge>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <DataIssue title="Could not load your X accounts" issues={[{ kind: "unknown", code: null, source: "x_account_bindings" }]} />
+        )}
       </Panel>
 
       <Panel title="Plan" icon={<IconStar size={17} />} action={<LinkButton href="/pricing" variant="ghost" size="sm">View plans</LinkButton>}>

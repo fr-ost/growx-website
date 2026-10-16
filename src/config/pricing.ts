@@ -77,6 +77,12 @@ export const EARLY_BIRD_LIMIT = 100;
 
 export const TRIAL_DAYS = 30;
 
+/** X accounts every GrowX account can link for free (mirrors public.x_account_base_slots() in the database). */
+export const BASE_X_ACCOUNT_SLOTS = 2;
+/** One extra X account slot: one-time, never renews. */
+export const X_ACCOUNT_SLOT_PRICE_CENTS = 99;
+export const X_ACCOUNT_SLOT_PRICE_LABEL = "$0.99";
+
 export function getTier(id: PricingTierId): PricingTier {
   const tier = pricingTiers.find((t) => t.id === id);
   if (!tier) throw new Error(`Unknown pricing tier: ${id}`);

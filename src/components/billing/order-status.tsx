@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Spinner } from "@/components/auth-form";
 import { LinkButton } from "@/components/ui/button";
 import { Notice } from "@/components/ui/primitives";
-import { getProduct, isProductId } from "@/lib/billing/catalog";
+import { getBillable, isBillableId, isProductId } from "@/lib/billing/catalog";
 
 interface OrderView {
   product: string;
@@ -52,8 +52,9 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
   if (missing) return <Notice tone="error" title="Order not found">This order does not exist or belongs to another account.</Notice>;
   if (!order) return <p className="flex items-center gap-2 text-text-2" role="status"><Spinner /> <span>Loading your order…</span></p>;
 
-  const name = isProductId(order.product) ? getProduct(order.product).name : order.product;
-  const retry = <LinkButton href={isProductId(order.product) ? `/checkout?plan=${order.product}` : "/pricing"} variant="secondary">Start a new payment</LinkButton>;
+  const name = isBillableId(order.product) ? getBillable(order.product).name : order.product;
+  const slot = order.product === "X_ACCOUNT_SLOT";
+  const retry = <LinkButton href={slot ? "/account#x-accounts" : isProductId(order.product) ? `/checkout?plan=${order.product}` : "/pricing"} variant="secondary">Start a new payment</LinkButton>;
   const s = order.providerStatus;
 
   return (
@@ -64,8 +65,8 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
         <div className="space-y-4 text-center">
           <div className="animate-pop mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ok text-2xl text-white">✓</div>
           <h2 className="text-xl font-bold">Payment confirmed</h2>
-          <p className="text-text-2">Your Premium plan is active. Thank you for supporting GrowX!</p>
-          <LinkButton href="/account" className="w-full sm:w-auto">View your plan</LinkButton>
+          <p className="text-text-2">{slot ? "Your extra X account slot is ready to use." : "Your Premium plan is active."} Thank you for supporting GrowX!</p>
+          <LinkButton href={slot ? "/account#x-accounts" : "/account"} className="w-full sm:w-auto">{slot ? "Link an X username" : "View your plan"}</LinkButton>
         </div>
       ) : order.status === "refund_required" ? (
         <Notice tone="warn" title="Payment received but not activated">
@@ -80,10 +81,10 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
         </div>
       ) : s === "partially_paid" ? (
         <Notice tone="warn" title="Partial payment received">
-          Less than the full amount arrived. Send the remaining amount from the NOWPayments invoice page or contact support. Premium is not active until the full amount is confirmed.
+          Less than the full amount arrived. Send the remaining amount from the NOWPayments invoice page or contact support. {slot ? "The slot is not added" : "Premium is not active"} until the full amount is confirmed.
         </Notice>
       ) : s && ["confirming", "confirmed", "sending"].includes(s) ? (
-        <Notice tone="info" title="Payment detected">Waiting for network confirmations. This can take several minutes; Premium activates automatically after final confirmation. You can close this page.</Notice>
+        <Notice tone="info" title="Payment detected">Waiting for network confirmations. This can take several minutes; {slot ? "the slot is added" : "Premium activates"} automatically after final confirmation. You can close this page.</Notice>
       ) : canceled ? (
         <div className="space-y-4">
           <Notice tone="info" title="Payment not finished">You left the payment page. Nothing was charged by GrowX. If you already sent funds, keep this page open: it updates when the payment is detected.</Notice>

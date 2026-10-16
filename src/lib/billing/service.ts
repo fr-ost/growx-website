@@ -1,6 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getProduct, isProductId, type ProductId } from "./catalog";
+import { getBillable, isBillableId, type BillableId } from "./catalog";
 import { getNowPaymentsConfig, type Env } from "./config";
 import type { BillingEffect } from "./effects";
 import { mapNowPayment, nowEventId, verifyIpnSignature, type NowPayment } from "./nowpayments";
@@ -137,21 +137,21 @@ async function bindInvoiceOrder(admin: SupabaseClient, orderId: string, paymentI
   if (ue && ue.code !== "23505") throw new Error(`bind_invoice_order failed: ${ue.code ?? "unknown"}`);
 }
 
-async function productForOrder(admin: SupabaseClient, orderId: string): Promise<ProductId | undefined> {
+async function productForOrder(admin: SupabaseClient, orderId: string): Promise<BillableId | undefined> {
   if (!/^[0-9a-f-]{36}$/i.test(orderId)) return undefined;
   const { data } = await admin.from("checkout_orders").select("product").eq("id", orderId).maybeSingle();
   const p = (data as { product?: string } | null)?.product;
-  return p && isProductId(p) ? p : undefined;
+  return p && isBillableId(p) ? p : undefined;
 }
 
 // ------------------------------------------------------------------ orders
-export type CreateOrderError = "already_owned" | "already_subscribed" | "early_unavailable" | "early_sold_out" | "early_already_held";
+export type CreateOrderError = "already_owned" | "already_subscribed" | "early_unavailable" | "early_sold_out" | "early_already_held" | "too_many_open_orders";
 
 export async function createOrder(
   admin: SupabaseClient,
-  input: { userId: string; provider: "paddle" | "nowpayments"; product: ProductId; asset?: string; ttlSeconds: number },
+  input: { userId: string; provider: "paddle" | "nowpayments"; product: BillableId; asset?: string; ttlSeconds: number },
 ): Promise<{ ok: true; orderId: string } | { ok: false; code: CreateOrderError | "error" }> {
-  const p = getProduct(input.product);
+  const p = getBillable(input.product);
   const { data, error } = await admin.rpc("create_checkout_order", {
     p_user_id: input.userId,
     p_provider: input.provider,

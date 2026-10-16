@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getTier, type PricingTierId } from "@/config/pricing";
+import { getTier, X_ACCOUNT_SLOT_PRICE_CENTS, type PricingTierId } from "@/config/pricing";
 
 /**
  * Trusted server-side product catalog. Prices come from the shared pricing
@@ -55,6 +55,37 @@ export function getProduct(id: ProductId): Product {
 }
 
 export const isProductId = (v: unknown): v is ProductId => typeof v === "string" && (PRODUCT_IDS as readonly string[]).includes(v);
+
+// ------------------------------------------------------------------ add-ons
+/** One-time add-ons that grant no Premium plan. X_ACCOUNT_SLOT: one extra permanent X account slot. */
+export const ADDON_IDS = ["X_ACCOUNT_SLOT"] as const;
+export type AddonId = (typeof ADDON_IDS)[number];
+export const isAddonId = (v: unknown): v is AddonId => typeof v === "string" && (ADDON_IDS as readonly string[]).includes(v);
+
+/** Anything a checkout order can be for (the database's checkout_orders.product values). */
+export type BillableId = ProductId | AddonId;
+export const isBillableId = (v: unknown): v is BillableId => isProductId(v) || isAddonId(v);
+
+export interface Billable {
+  id: BillableId;
+  /** Premium plan granted, or null for add-ons. */
+  plan: PaidPlan | null;
+  name: string;
+  amountMinor: number;
+  currency: "USD";
+  cryptoPeriodDays: number | null;
+}
+
+export function getBillable(id: BillableId): Billable {
+  if (id === "X_ACCOUNT_SLOT") {
+    return { id, plan: null, name: "Extra X account slot", amountMinor: X_ACCOUNT_SLOT_PRICE_CENTS, currency: "USD", cryptoPeriodDays: null };
+  }
+  const p = getProduct(id);
+  return { id, plan: p.plan, name: p.name, amountMinor: p.amountMinor, currency: p.currency, cryptoPeriodDays: p.cryptoPeriodDays };
+}
+
+/** Slot purchase body: nothing at all. The quantity is always one and the price is the server's. */
+export const slotCheckoutBodySchema = z.object({}).strict();
 
 /**
  * Products a customer can ASK for. The early-bird lifetime product is never requested by the

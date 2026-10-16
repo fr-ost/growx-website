@@ -19,7 +19,13 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
   "source": "trial",
   "paymentWarning": null,
   "trial": { "used": true, "active": true, "startedAt": "2026-10-09T12:00:00.000Z", "expiresAt": "2026-10-23T12:00:00.000Z" },
-  "checkedAt": "2026-10-09T12:05:00.000Z"
+  "checkedAt": "2026-10-09T12:05:00.000Z",
+  "linkedXAccounts": [{ "username": "MyMain", "normalizedUsername": "mymain" }],
+  "baseAccountSlots": 2,
+  "purchasedExtraSlots": 0,
+  "allowedAccountSlots": 2,
+  "usedAccountSlots": 1,
+  "availableAccountSlots": 1
 }
 ```
 - `plan`: `FREE | TRIAL | PRO_MONTHLY | PRO_YEARLY | PRO_LIFETIME`
@@ -27,8 +33,15 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
 - `source`: `none | trial | subscription`.
 - `paymentWarning`: `null`, or `{ "type": "past_due", "graceEndsAt": ISO }` while Premium is retained only because of the grace period (default 3 days for card subscriptions; `expiresAt` equals `graceEndsAt` then). After it passes the plan becomes `FREE`.
 - `checkedAt` is server time; clients must not use their own clock to decide expiry.
+- X account fields (added; every field above is unchanged). See [`X_ACCOUNTS.md`](X_ACCOUNTS.md).
+  - `linkedXAccounts`: the X usernames this GrowX account has **permanently** linked (active bindings, oldest first). `username` keeps the case the user typed (without `@`); `normalizedUsername` is lower case, for comparisons.
+  - `allowedAccountSlots = baseAccountSlots (2) + purchasedExtraSlots` (paid, not refunded or charged back), computed on the server.
+  - `usedAccountSlots` = number of linked usernames. It can exceed `allowedAccountSlots` after a slot was refunded: nothing is unlinked automatically.
+  - `availableAccountSlots = max(0, allowed - used)`.
+  - All six are `null` when they could not be read right now (the plan is still returned). Treat `null` as "unknown", never as permission.
+  - **Not a proof of identity:** these list usernames the user declared and confirmed. They do not prove which X account is signed in on x.com, and nothing here verifies ownership of the X account.
 
-**Errors:** `401 unauthenticated`, `503 unavailable` (database error: *never* treated as Premium; clients should keep a cached value), `503 not_configured`.
+**Errors:** `401 unauthenticated`, `401 session_revoked` (signed in elsewhere; definitive), `503 session_check_unavailable`, `503 unavailable` (database error: *never* treated as Premium; clients should keep a cached value), `503 not_configured`.
 
 **Rules implemented** (`src/lib/entitlement/resolve.ts`, covered by tests)
 - Trial grants Premium only if `status='active'` and `started_at <= now < expires_at`.
@@ -54,3 +67,11 @@ Returns the effective plan of the **authenticated caller**. There is no user-id 
 | `POST /api/webhooks/nowpayments` | `x-nowpayments-sig` | verified IPN only |
 
 Errors never include provider payloads or secrets. These endpoints answer 503 `checkout_unavailable` while the provider is not configured.
+
+## X accounts (see `X_ACCOUNTS.md`)
+| Endpoint | Auth | Purpose |
+|---|---|---|
+| `GET /api/x-accounts` | session cookie or extension Bearer token; active session | the caller's linked usernames, slot counts (same fields as entitlement, plus `linkedAt`) and `extraSlotPrice` |
+| `POST /api/x-accounts` `{username, confirm: true}` | same; cookie calls must be same-origin | permanently links one username. `201 {status:"linked"}`, `200 {status:"already_linked"}` (idempotent), `400 confirmation_required`, `400 invalid_username`, `409 x_username_taken` ("This X username is already linked to another GrowX account."), `409 no_slot_available` |
+| `PUT` / `PATCH` / `DELETE /api/x-accounts` | any | always `405 x_account_immutable`: there is no self-service change or removal |
+| `POST /api/x-accounts/slots/checkout` `{}` | session, verified email, same-origin | one extra slot ($0.99, one-time): server-owned order + NOWPayments hosted invoice, returns `{orderId, invoiceUrl}`. The body must be empty. The slot is added only by a verified IPN |

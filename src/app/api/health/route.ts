@@ -13,7 +13,7 @@ type Check = "ok" | "failed" | "not_configured";
 type ObjectStatus = "ok" | DbErrorKind;
 
 /** COLUMNS keys that are named queries rather than table names. */
-const QUERY_TABLE: Record<string, string> = { subscription_details: "subscriptions" };
+const QUERY_TABLE: Record<string, string> = { subscription_details: "subscriptions", slot_grant_history: "account_slot_grants" };
 
 /** Tables/columns the app reads, plus tables only the server writes. */
 const TABLE_PROBES: Record<string, string> = {
@@ -24,6 +24,7 @@ const TABLE_PROBES: Record<string, string> = {
   checkout_orders: "id",
   payment_adjustments: "id",
   active_sessions: "user_id",
+  x_account_binding_events: "id",
 };
 
 /**
@@ -69,6 +70,9 @@ export async function GET(request: NextRequest) {
       // check_active_session on a random user/session has no side effects (nothing to claim): proves the migration is present.
       const as = await admin.rpc("check_active_session", { p_user: crypto.randomUUID(), p_session: crypto.randomUUID(), p_client: "web", p_strict: false });
       functions.check_active_session = as.error ? classifyDbError(as.error) : "ok";
+      // x_account_base_slots is pure (no reads/writes): proves the X account migration is present.
+      const xs = await admin.rpc("x_account_base_slots");
+      functions.x_account_base_slots = xs.error ? classifyDbError(xs.error) : "ok";
       const st = await admin.rpc("start_trial", { p_user_id: crypto.randomUUID(), p_days: TRIAL_DAYS });
       functions.start_trial = st.error && /x_username_required/.test(st.error.message ?? "") ? "ok" : st.error ? classifyDbError(st.error) : "unknown";
       const allOk = [...Object.values(tables), ...Object.values(functions)].every((s) => s === "ok");

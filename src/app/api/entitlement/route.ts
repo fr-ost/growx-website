@@ -5,9 +5,26 @@ import { apiError, bearerToken, corsHeaders, json } from "@/lib/api/http";
 import { EntitlementLoadError, loadEntitlement } from "@/lib/entitlement/load";
 import { getSupabasePublicConfig } from "@/lib/env";
 import { checkActiveSession, verifiedSessionId } from "@/lib/session/active";
+import { loadXAccounts, type XAccountSummary } from "@/lib/x-accounts";
 import { createClient as createCookieClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * X account fields added to the entitlement response. null = could not be determined right now (the extension
+ * must then treat X account permissions as unknown, never as granted). These list the usernames the account
+ * has PERMANENTLY linked; they do not prove which X account is signed in on x.com.
+ */
+function xAccountFields(x: XAccountSummary | null) {
+  return {
+    linkedXAccounts: x ? x.linkedXAccounts.map((a) => ({ username: a.username, normalizedUsername: a.normalizedUsername })) : null,
+    baseAccountSlots: x?.baseAccountSlots ?? null,
+    purchasedExtraSlots: x?.purchasedExtraSlots ?? null,
+    allowedAccountSlots: x?.allowedAccountSlots ?? null,
+    usedAccountSlots: x?.usedAccountSlots ?? null,
+    availableAccountSlots: x?.availableAccountSlots ?? null,
+  };
+}
 
 export function OPTIONS(request: NextRequest) {
   const headers = corsHeaders(request.headers.get("origin"));
@@ -47,8 +64,12 @@ export async function GET(request: NextRequest) {
     if (session === "revoked") return apiError(401, "session_revoked", "This session was ended because the account signed in elsewhere.", origin);
     if (session === "error") return apiError(503, "session_check_unavailable", "Could not verify the session. Try again.", origin);
 
-    const entitlement = await loadEntitlement(supabase, data.user.id);
-    return json(entitlement, { origin });
+    const [entitlement, xAccounts] = await Promise.all([
+      loadEntitlement(supabase, data.user.id),
+      // X accounts never block the plan answer: if they cannot be read, the fields are null ("unknown").
+      loadXAccounts(supabase, data.user.id).catch(() => null),
+    ]);
+    return json({ ...entitlement, ...xAccountFields(xAccounts) }, { origin });
   } catch (e) {
     // Never leak internals; never fall back to granting Premium. The cause is
     // logged server-side (without user data) by loadEntitlement.

@@ -7,14 +7,21 @@ const fromCalls: Array<{ table: string; userId?: unknown }> = [];
 let dbError = false;
 let rows: Record<string, unknown[]> = { trials: [], subscriptions: [] };
 
-const makeFrom = () => (table: string) => ({
-  select: () => ({
-    eq: (_col: string, val: unknown) => {
-      fromCalls.push({ table, userId: val });
-      return Promise.resolve(dbError ? { data: null, error: { message: "x" } } : { data: rows[table], error: null });
+let errorTables: string[] = [];
+/** Chainable, awaitable query mock: select().eq().eq().order() all resolve to the table's rows. */
+const makeFrom = () => (table: string) => {
+  const q = {
+    select: () => q,
+    order: () => q,
+    eq: (col: string, val: unknown) => {
+      if (col === "user_id") fromCalls.push({ table, userId: val });
+      return q;
     },
-  }),
-});
+    then: (ok: (v: unknown) => unknown, bad?: (e: unknown) => unknown) =>
+      Promise.resolve(dbError || errorTables.includes(table) ? { data: null, error: { message: "x" } } : { data: rows[table] ?? [], error: null }).then(ok, bad),
+  };
+  return q;
+};
 
 const checkActiveSession = vi.fn();
 const sessionIdOf = vi.fn();
@@ -38,6 +45,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   fromCalls.length = 0;
   dbError = false;
+  errorTables = [];
   rows = { trials: [], subscriptions: [] };
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://x.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "pk";
@@ -176,5 +184,52 @@ describe("CORS", () => {
       await GET(req({ authorization: "Bearer a.b.c" }));
       expect(checkActiveSession).toHaveBeenLastCalledWith("u-1", SID, "extension");
     });
+  });
+});
+
+describe("X account fields (permanent bindings and slots)", () => {
+  const user = { data: { user: { id: "u1" } }, error: null };
+
+  it("adds the documented fields next to the unchanged entitlement fields", async () => {
+    getUserBearer.mockResolvedValue(user);
+    rows.x_account_bindings = [
+      { username: "MainAcct", normalized_username: "mainacct", confirmed_at: "2026-10-16T00:00:00Z", created_at: "2026-10-16T00:00:00Z" },
+      { username: "alt_one", normalized_username: "alt_one", confirmed_at: "2026-10-16T01:00:00Z", created_at: "2026-10-16T01:00:00Z" },
+    ];
+    rows.account_slot_grants = [{ slots: 1, status: "active", created_at: "2026-10-16T00:00:00Z" }];
+    const body = await (await GET(req({ authorization: "Bearer a.b.c" }))).json();
+    expect(body).toMatchObject({ plan: "FREE", isPremium: false, expiresAt: null, source: "none", paymentWarning: null });
+    expect(body.trial).toBeDefined();
+    expect(body.checkedAt).toEqual(expect.any(String));
+    expect(body.linkedXAccounts).toEqual([
+      { username: "MainAcct", normalizedUsername: "mainacct" },
+      { username: "alt_one", normalizedUsername: "alt_one" },
+    ]);
+    expect(body).toMatchObject({ baseAccountSlots: 2, purchasedExtraSlots: 1, allowedAccountSlots: 3, usedAccountSlots: 2, availableAccountSlots: 1 });
+    expect(fromCalls.filter((c) => c.table.startsWith("x_account") || c.table === "account_slot_grants").every((c) => c.userId === "u1")).toBe(true);
+  });
+
+  it("a new account has 2 free slots and nothing linked", async () => {
+    getUserBearer.mockResolvedValue(user);
+    const body = await (await GET(req({ authorization: "Bearer a.b.c" }))).json();
+    expect(body).toMatchObject({ linkedXAccounts: [], baseAccountSlots: 2, purchasedExtraSlots: 0, allowedAccountSlots: 2, usedAccountSlots: 0, availableAccountSlots: 2 });
+  });
+
+  it("if X accounts cannot be read, the plan is still returned and the X fields are null (unknown, never granted)", async () => {
+    getUserBearer.mockResolvedValue(user);
+    errorTables = ["x_account_bindings"];
+    const res = await GET(req({ authorization: "Bearer a.b.c" }));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.plan).toBe("FREE");
+    expect(body).toMatchObject({ linkedXAccounts: null, baseAccountSlots: null, purchasedExtraSlots: null, allowedAccountSlots: null, usedAccountSlots: null, availableAccountSlots: null });
+  });
+
+  it("available slots never go negative after a refunded slot", async () => {
+    getUserBearer.mockResolvedValue(user);
+    rows.x_account_bindings = ["a1", "a2", "a3"].map((n) => ({ username: n, normalized_username: n, confirmed_at: "2026-10-16T00:00:00Z", created_at: "2026-10-16T00:00:00Z" }));
+    rows.account_slot_grants = [];
+    const body = await (await GET(req({ authorization: "Bearer a.b.c" }))).json();
+    expect(body).toMatchObject({ allowedAccountSlots: 2, usedAccountSlots: 3, availableAccountSlots: 0 });
   });
 });

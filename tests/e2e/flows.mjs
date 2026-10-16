@@ -180,6 +180,37 @@ const seen = async (sel) => p.locator(sel).first().waitFor({ timeout: 10000 }).t
 ok("account page shows username", await seen("text=@Demo_User"));
 ok("account page empty payments state", await seen("text=No payments yet"));
 
+// ---------- X Accounts: permanent bindings with explicit confirmation
+const xa = () => p.locator("#x-accounts");
+ok("X Accounts: 2 free slots, none used", /Slots used\s*0 of 2/i.test(await xa().innerText()) && /Included free\s*2/i.test(await xa().innerText()));
+ok("X Accounts: permanence explained", /cannot be changed or removed from this page/.test(await xa().innerText()) && /contact support/i.test(await xa().innerText()));
+ok("X Accounts: trial username offered (not linked)", (await p.inputValue("#x_account_username")) === "Demo_User" && /No X usernames linked yet/.test(await xa().innerText()));
+await p.click("button:has-text('Review and link')");
+await p.waitForSelector("text=Permanently link @Demo_User?");
+ok("X Accounts: confirmation step before linking", await p.locator("button:has-text('Link @Demo_User permanently')").isDisabled());
+ok("X Accounts: nothing linked before confirmation", (await p.evaluate(async () => (await fetch("/api/x-accounts")).json())).usedAccountSlots === 0);
+await p.locator("#x-accounts input[type=checkbox]").check();
+await p.click("button:has-text('Link @Demo_User permanently')");
+await p.waitForSelector("text=is now permanently linked");
+await p.locator("#x-accounts li", { hasText: "@Demo_User" }).waitFor({ timeout: 10000 });
+ok("X Accounts: linked and listed as permanent", /Linked permanently/.test(await xa().innerText()) && /Slots used\s*1 of 2/i.test(await xa().innerText()));
+await p.fill("#x_account_username", "@Second_Acct");
+await p.click("button:has-text('Review and link')");
+await p.locator("#x-accounts input[type=checkbox]").check();
+await p.click("button:has-text('Link @Second_Acct permanently')");
+await p.locator("#x-accounts li", { hasText: "@Second_Acct" }).waitFor({ timeout: 10000 });
+await p.locator("text=All your X account slots are in use").waitFor({ timeout: 10000 });
+ok("X Accounts: at capacity the add form is replaced by the slot purchase option", (await p.locator("#x_account_username").count()) === 0 && /\$0\.99/.test(await xa().innerText()));
+const xApi = await p.evaluate(async () => {
+  const j = (m, b) => fetch("/api/x-accounts", { method: m, headers: { "content-type": "application/json" }, body: b ? JSON.stringify(b) : undefined }).then(async (r) => [r.status, await r.json()]);
+  return { third: await j("POST", { username: "third_acct", confirm: true }), noConfirm: await j("POST", { username: "third_acct" }), patch: await j("PATCH", { username: "x" }), del: await j("DELETE"), slots: await j("POST", { username: "x", confirm: true, allowedAccountSlots: 9 }), ent: await (await fetch("/api/entitlement")).json() };
+});
+ok("X Accounts API: third username refused without a slot", xApi.third[0] === 409 && xApi.third[1].error.code === "no_slot_available", JSON.stringify(xApi.third));
+ok("X Accounts API: confirmation required", xApi.noConfirm[0] === 400 && xApi.noConfirm[1].error.code === "confirmation_required");
+ok("X Accounts API: change/remove refused (405)", xApi.patch[0] === 405 && xApi.del[0] === 405);
+ok("X Accounts API: client slot counts rejected", xApi.slots[0] === 400);
+ok("entitlement lists linked X accounts and slots", JSON.stringify(xApi.ent.linkedXAccounts) === JSON.stringify([{ username: "Demo_User", normalizedUsername: "demo_user" }, { username: "Second_Acct", normalizedUsername: "second_acct" }]) && xApi.ent.allowedAccountSlots === 2 && xApi.ent.availableAccountSlots === 0 && xApi.ent.plan === "TRIAL", JSON.stringify(xApi.ent).slice(0, 300));
+
 await p.click("button:has-text('Sign out')");
 await p.waitForURL(BASE + "/");
 await p.goto(BASE + "/account");
@@ -196,6 +227,13 @@ await p.reload();
 await p.locator("button", { hasText: "Start my 30-day" }).click();
 await p.waitForSelector("text=already been used with this X username");
 ok("second account with same username refused", true);
+await p.goto(BASE + "/account");
+await p.fill("#x_account_username", "@DEMO_USER");
+await p.click("button:has-text('Review and link')");
+await p.locator("#x-accounts input[type=checkbox]").check();
+await p.click("button:has-text('Link @DEMO_USER permanently')");
+await p.waitForSelector("text=This X username is already linked to another GrowX account.");
+ok("X Accounts: a username linked to another account is refused (any case/@), nothing revealed", !/demo@example\.com/.test(await p.locator("main").innerText()) && /No X usernames linked yet/.test(await p.locator("#x-accounts").innerText()));
 
 // broken database: sections fail independently with diagnostics, page still works
 {

@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { decimalToMinor, getProduct, isProductId, minorToDecimal, type ProductId } from "./catalog";
+import { decimalToMinor, getBillable, isBillableId, minorToDecimal, type BillableId } from "./catalog";
 import { getNowPaymentsConfig, type Env } from "./config";
 import type { BillingEffect, PaymentStatus } from "./effects";
 
@@ -73,7 +73,7 @@ export interface NowInvoice {
 
 export interface CreateInvoiceInput {
   orderId: string;
-  productId: ProductId;
+  productId: BillableId;
   callbackUrl: string;
   successUrl: string;
   cancelUrl: string;
@@ -85,7 +85,7 @@ export interface CreateInvoiceInput {
  * sent: the customer picks any coin enabled in the NOWPayments account on the invoice page.
  */
 export async function createNowInvoice(i: CreateInvoiceInput): Promise<NowInvoice> {
-  const p = getProduct(i.productId);
+  const p = getBillable(i.productId);
   return api<NowInvoice>("/invoice", {
     method: "POST",
     env: i.env,
@@ -154,7 +154,8 @@ export function mapNowPayment(p: NowPayment, productHint?: string): BillingEffec
   const m = STATUS[status];
   if (!m) return { kind: "noop", reason: `unknown_status:${status}` };
 
-  const product = productHint && isProductId(productHint) ? productHint : "PRO_MONTHLY";
+  // An unknown order product maps to PRO_MONTHLY, which then fails the strict order check in billing_apply (never grants).
+  const product = productHint && isBillableId(productHint) ? productHint : "PRO_MONTHLY";
   let { status: pay, fulfill } = m;
   const expected = dec(p.pay_amount);
   const received = dec(p.actually_paid);
