@@ -42,7 +42,7 @@ Subscriptions, payments, trials and gifts are never read or written by any of th
 
 ## Deployment order
 **Do not merge to `main` (deploy) before step 1: the new login code calls the new database functions and logins would fail without them.**
-1. **Apply the migration** (additive; nothing changes for users until the code ships). Verify with `supabase/verify.sql` and `/api/health` (`active_sessions`, `check_active_session` = ok).
+1. **Apply the migration** (done 2026-10-16, via the SQL Editor; verified) (additive; nothing changes for users until the code ships). Verify with `supabase/verify.sql` and `/api/health` (`active_sessions`, `check_active_session` = ok).
 2. **Deploy the website.** Existing logins keep working (first live session per account claims its slot).
 3. **Release the extension** that registers after login, validates periodically, and stops everything on revocation (`extension-reference/INTEGRATION.md`).
    Until then, an old extension build that already calls `/api/entitlement` is still checked server-side (a revoked session gets `401 session_revoked`, and the first live session claims the slot), but it cannot stop itself cleanly and does not register its own logins.
