@@ -40,7 +40,7 @@ with checks(item, ok) as (
          to_regprocedure('public.' || f) is null or not has_function_privilege('authenticated', to_regprocedure('public.' || f), 'EXECUTE')
   from unnest(array['billing_apply(text,text,text,timestamptz,jsonb)','early_adopter_state()','create_checkout_order(uuid,text,text,text,bigint,text,text,integer,integer)','grant_crypto_period(uuid,text,integer,uuid)']) f
   union all
-  -- X account bindings + slots (20261016000100_x_account_bindings)
+  -- X account bindings + slots (20261016100712_x_account_bindings)
   select 'table public.' || t || ' (RLS on, authenticated read-only, no anon)',
          to_regclass('public.' || t) is not null
          and (select relrowsecurity from pg_class where oid = to_regclass('public.' || t))

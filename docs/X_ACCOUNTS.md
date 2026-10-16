@@ -1,6 +1,8 @@
 # X accounts: permanent bindings, slots and the $0.99 slot add-on
 
-Migration: `supabase/migrations/20261016000100_x_account_bindings.sql` (**not applied to production yet**; needs owner approval).
+Migration: `supabase/migrations/20261016100712_x_account_bindings.sql`: **applied to production on 2026-10-16** (owner-approved). Verified afterwards: RLS on all three tables, API roles read-only, global unique index and guard triggers present, the support function not executable by any API role, 0 bindings created, existing orders/payments/subscriptions/trials unchanged, no new security advisor findings.
+
+The website code that uses it is on branch `claude/funny-goodall-4axmz9` and also needs `20261014000100_active_sessions.sql` (single active login), which is **not applied yet**. Do not deploy the branch until that migration is applied.
 
 ## Rules
 * Every GrowX account can link **2** X usernames for free. Each extra username needs one extra slot: **$0.99, one-time** (`X_ACCOUNT_SLOT`).
