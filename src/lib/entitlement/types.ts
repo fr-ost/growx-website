@@ -1,5 +1,8 @@
-/** PRO_GIFT: complimentary Premium granted by a GrowX administrator (not a payment). */
-export const PLANS = ["FREE", "TRIAL", "PRO_MONTHLY", "PRO_YEARLY", "PRO_LIFETIME", "PRO_GIFT"] as const;
+/**
+ * The plan values of the entitlement contract. The extension rejects any other value, so NEVER add one without
+ * shipping the extension first: gifts are reported with these plans (see resolveEntitlement) and flagged in `gift`.
+ */
+export const PLANS = ["FREE", "TRIAL", "PRO_MONTHLY", "PRO_YEARLY", "PRO_LIFETIME"] as const;
 export type Plan = (typeof PLANS)[number];
 
 export interface TrialRecord {
@@ -11,6 +14,8 @@ export interface TrialRecord {
 /** An admin-granted gift (public.premium_gifts). expires_at null = lifetime. */
 export interface GiftRecord {
   status: string;
+  /** 7d | 30d | 90d | 1y | lifetime (decides which contract plan a gift is reported as). */
+  duration?: string;
   starts_at: string;
   expires_at: string | null;
 }
@@ -41,7 +46,8 @@ export interface Entitlement {
   /** ISO timestamp when Premium access ends; null for FREE and PRO_LIFETIME. */
   expiresAt: string | null;
   /** Where the effective plan came from. */
-  source: "none" | "trial" | "subscription" | "gift";
+  /** Contract values only (the extension accepts none | trial | subscription). Gifts report "subscription"; see `gift.effective`. */
+  source: "none" | "trial" | "subscription";
   /** Set while Premium is retained only because of a payment grace period. */
   paymentWarning: { type: "past_due"; graceEndsAt: string } | null;
   trial: {
@@ -52,7 +58,7 @@ export interface Entitlement {
     expiresAt: string | null;
   };
   /** The best currently valid gift, whether or not it is the effective source (null when none). */
-  gift: { lifetime: boolean; expiresAt: string | null } | null;
+  gift: { lifetime: boolean; expiresAt: string | null; effective: boolean } | null;
   /** Server time used for the decision. Clients must not use their own clock. */
   checkedAt: string;
 }

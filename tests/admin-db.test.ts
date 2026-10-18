@@ -21,7 +21,7 @@ const rpc = async (sql: string, p: unknown[]) => (await db.query<{ r: R }>(`sele
 const grant = (admin: string, user: string, d: string, reason: string | null = null) => rpc("public.admin_grant_gift($1, $2, $3, $4)", [admin, user, d, reason]);
 const extend = (admin: string, gift: string, d: string) => rpc("public.admin_extend_gift($1, $2, $3, null)", [admin, gift, d]);
 const revoke = (admin: string, gift: string, reason: string | null = null) => rpc("public.admin_revoke_gift($1, $2, $3)", [admin, gift, reason]);
-const giftsOf = (u: string) => rows<GiftRecord & { id: string }>("select id, status, starts_at, expires_at from public.premium_gifts where user_id = $1", [u]);
+const giftsOf = (u: string) => rows<GiftRecord & { id: string }>("select id, status, duration, starts_at, expires_at from public.premium_gifts where user_id = $1", [u]);
 const subsOf = (u: string) => rows<SubscriptionRecord>("select plan, status, current_period_end, provider, past_due_since, access_revoked_at from public.subscriptions where user_id = $1", [u]);
 const entitlementOf = async (u: string, at = new Date()) => resolveEntitlement({ trials: [], subscriptions: await subsOf(u), gifts: (await giftsOf(u)).map((g) => ({ ...g, starts_at: new Date(g.starts_at).toISOString(), expires_at: g.expires_at ? new Date(g.expires_at).toISOString() : null })) }, at);
 const DAY = 86_400_000;
@@ -64,7 +64,7 @@ describe("Premium gifts", () => {
       expect(Math.abs(exp - want)).toBeLessThan(5 * 60_000 + DAY); // calendar year may differ by a leap day
     }
     const e = await entitlementOf(u);
-    expect(e).toMatchObject({ plan: "PRO_GIFT", isPremium: true, source: "gift" });
+    expect(e).toMatchObject({ plan: days === null ? "PRO_LIFETIME" : days >= 90 ? "PRO_YEARLY" : "PRO_MONTHLY", isPremium: true, source: "subscription", gift: { effective: true } });
     expect(e.gift).toMatchObject({ lifetime: days === null });
   });
 
@@ -84,7 +84,7 @@ describe("Premium gifts", () => {
     const [{ expires_at: e2 }] = await rows<{ expires_at: string }>("select expires_at from public.premium_gifts where id = $1", [g]);
     expect(new Date(e2).getTime() - new Date(e1).getTime()).toBe(7 * DAY);
     expect((await extend(ADMIN, g, "lifetime")).status).toBe("extended");
-    expect((await entitlementOf(u)).gift).toEqual({ lifetime: true, expiresAt: null });
+    expect((await entitlementOf(u)).gift).toEqual({ lifetime: true, expiresAt: null, effective: true });
     expect((await extend(ADMIN, g, "30d")).status).toBe("already_lifetime");
     expect((await revoke(ADMIN, g, "Partnership ended")).status).toBe("revoked");
     expect((await revoke(ADMIN, g)).status).toBe("already_revoked");
@@ -109,10 +109,10 @@ describe("Premium gifts", () => {
     await db.query("insert into public.subscriptions (user_id, provider, plan, status, current_period_end) values ($1, 'nowpayments', 'PRO_YEARLY', 'active', now() + interval '200 days')", [u]);
     const subsBefore = await subsOf(u);
     const g = (await grant(ADMIN, u, "lifetime")).gift_id as string;
-    expect((await entitlementOf(u)).plan).toBe("PRO_GIFT"); // lifetime gift covers longer than the yearly plan
+    expect(await entitlementOf(u)).toMatchObject({ plan: "PRO_LIFETIME", gift: { effective: true } }); // lifetime gift covers longer than the yearly plan
     await revoke(ADMIN, g);
     expect(await subsOf(u)).toEqual(subsBefore);
-    expect(await entitlementOf(u)).toMatchObject({ plan: "PRO_YEARLY", source: "subscription", isPremium: true });
+    expect(await entitlementOf(u)).toMatchObject({ plan: "PRO_YEARLY", source: "subscription", isPremium: true, gift: null });
     expect(await rows("select 1 from public.payments where user_id = $1", [u])).toHaveLength(0); // no fake payment
     expect(await rows("select 1 from public.checkout_orders where user_id = $1", [u])).toHaveLength(0);
   });
@@ -144,7 +144,7 @@ describe("Premium gifts", () => {
     const other = await addUser(db);
     await grant(ADMIN, u, "30d", "secret internal note");
     await asRole(db, "authenticated", u, async () => {
-      expect((await db.query("select status, starts_at, expires_at from public.premium_gifts")).rows).toHaveLength(1);
+      expect((await db.query("select status, duration, starts_at, expires_at from public.premium_gifts")).rows).toHaveLength(1);
       await expect(db.query("select reason from public.premium_gifts")).rejects.toThrow(/permission denied/);
       await expect(db.query("select granted_by from public.premium_gifts")).rejects.toThrow(/permission denied/);
       await expect(db.query("select * from public.premium_gift_events")).rejects.toThrow(/permission denied/);

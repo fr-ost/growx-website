@@ -16,7 +16,7 @@ Page: `/admin` (signed-in administrators only; everyone else gets a 404). Migrat
 * Durations: 7 days, 30 days, 90 days, 1 year, Lifetime. Expiry is computed by the database (`now()`); lifetime has no expiry.
 * One running gift per user (granting again answers "extend it instead"). **Extend** adds time from the later of now and the current expiry (an expired gift restarts from now) or makes it lifetime. **Revoke** ends it at once.
 * A gift is **not** a payment: nothing is written to `payments`, `checkout_orders` or `subscriptions`, and no NOWPayments call is made.
-* Entitlement (`/api/entitlement`, the dashboard, the extension): paid and trial access is computed exactly as before; a valid gift becomes the effective plan (`PRO_GIFT`, `source: "gift"`) only when it keeps Premium **longer** (ties go to the paid plan). So revoking or expiring a gift can never remove purchased access, and a paid lifetime stays `PRO_LIFETIME`.
+* Entitlement (`/api/entitlement`, the dashboard, the extension): paid and trial access is computed exactly as before; a valid gift becomes the effective plan (reported as `PRO_MONTHLY` for 7/30 days, `PRO_YEARLY` for 90 days/1 year, `PRO_LIFETIME` for lifetime, with `source: "subscription"` and `gift.effective: true`, because the extension accepts only those values) only when it keeps Premium **longer** (ties go to the paid plan). So revoking or expiring a gift can never remove purchased access, and a paid lifetime stays `PRO_LIFETIME`.
 * Recipients can read their own gift's dates and status (RLS), never the internal reason or the admin.
 
 ## Lifetime Early Bird

@@ -216,7 +216,7 @@ http.createServer(async (req, res) => {
   if (table === "trials") return send(res, 200, trials.has(u.id) ? [trials.get(u.id)] : []);
   if (table === "payments") return send(res, 200, paymentsFor(url, u.id));
   if (["subscriptions", "checkout_orders", "subscription_details", "account_slot_grants"].includes(table)) return send(res, 200, []);
-  if (table === "premium_gifts") return send(res, 200, gifts.filter((g) => g.user_id === u.id).map(({ status, starts_at, expires_at }) => ({ status, starts_at, expires_at })));
+  if (table === "premium_gifts") return send(res, 200, gifts.filter((g) => g.user_id === u.id).map(({ status, duration, starts_at, expires_at }) => ({ status, duration, starts_at, expires_at })));
   if (table === "x_account_bindings") {
     if (req.method !== "GET") return send(res, 403, { code: "42501", message: "permission denied for table x_account_bindings" });
     const mine = [...xbindings.values()].filter((b) => b.user_id === u.id);

@@ -235,11 +235,11 @@ describe("X account fields (permanent bindings and slots)", () => {
 });
 
 describe("gifts in the entitlement API", () => {
-  it("a valid admin gift is recognized (PRO_GIFT, isPremium) and failing gift reads never block the plan", async () => {
+  it("a valid admin gift is recognized (contract plan, isPremium) and failing gift reads never block the plan", async () => {
     getUserBearer.mockResolvedValue({ data: { user: { id: "u1" } }, error: null });
-    rows.premium_gifts = [{ status: "active", starts_at: new Date(Date.now() - 1000).toISOString(), expires_at: null }];
+    rows.premium_gifts = [{ status: "active", duration: "lifetime", starts_at: new Date(Date.now() - 1000).toISOString(), expires_at: null }];
     const body = await (await GET(req({ authorization: "Bearer a.b.c" }))).json();
-    expect(body).toMatchObject({ plan: "PRO_GIFT", isPremium: true, source: "gift", gift: { lifetime: true, expiresAt: null } });
+    expect(body).toMatchObject({ plan: "PRO_LIFETIME", isPremium: true, source: "subscription", gift: { lifetime: true, expiresAt: null, effective: true } });
     errorTables = ["premium_gifts"];
     const res = await GET(req({ authorization: "Bearer a.b.c" }));
     expect(res.status).toBe(200);

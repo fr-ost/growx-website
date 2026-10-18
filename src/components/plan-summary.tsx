@@ -9,7 +9,6 @@ export const PLAN_LABEL: Record<Plan, string> = {
   PRO_MONTHLY: "Premium Monthly",
   PRO_YEARLY: "Premium Yearly",
   PRO_LIFETIME: "Premium Lifetime",
-  PRO_GIFT: "Premium (gift)",
 };
 
 export const formatDate = (iso: string | null) =>
@@ -65,7 +64,7 @@ export function PlanSummary({ e }: { e: Entitlement }) {
       <div className="flex flex-wrap items-center gap-6">
         {left !== null ? (
           <Ring value={left} max={Math.max(ringMax, left)} label={`${left} days of Premium left`} />
-        ) : e.plan === "PRO_LIFETIME" || (e.plan === "PRO_GIFT" && !e.expiresAt) ? (
+        ) : e.plan === "PRO_LIFETIME" ? (
           <span className="bg-brand flex h-24 w-24 items-center justify-center rounded-full text-white shadow-[var(--shadow-red)]">
             <IconInfinity size={36} />
           </span>
@@ -78,7 +77,7 @@ export function PlanSummary({ e }: { e: Entitlement }) {
           <div>
             <dt className="text-xs font-semibold uppercase tracking-wider text-muted">Current plan</dt>
             <dd className="mt-1.5 flex flex-wrap items-center gap-2 text-lg font-bold">
-              {PLAN_LABEL[e.plan]} <Badge tone={e.isPremium ? "solid" : "neutral"}>{e.isPremium ? "Premium" : "Free"}</Badge>
+              {PLAN_LABEL[e.plan]}{e.gift?.effective ? " (gift)" : ""} <Badge tone={e.isPremium ? "solid" : "neutral"}>{e.isPremium ? "Premium" : "Free"}</Badge>
             </dd>
           </div>
           <div>

@@ -518,7 +518,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("gift granted: recipient, lifetime, admin, reason, active", /demo@example\.com/.test(row) && /Lifetime/.test(row) && /admin@example\.com/.test(row) && /Beta tester/.test(row) && /Active/.test(row), row.replace(/\s+/g, " "));
   ok("gift audit log records the grant", /grant\s+Lifetime for demo@example\.com by admin@example\.com/.test(await ap.locator("[aria-label='Gift audit log']").innerText()));
   const entGift = await up.evaluate(async () => (await fetch("/api/entitlement")).json());
-  ok("recipient's entitlement API recognises the gift", entGift.plan === "PRO_GIFT" && entGift.isPremium === true && entGift.gift?.lifetime === true, JSON.stringify(entGift).slice(0, 160));
+  ok("recipient's entitlement API recognises the gift", entGift.plan === "PRO_LIFETIME" && entGift.source === "subscription" && entGift.isPremium === true && entGift.gift?.lifetime === true && entGift.gift?.effective === true, JSON.stringify(entGift).slice(0, 160));
 
   await ap.locator("[data-testid=gift-row]").first().locator("button:has-text('Revoke')").click();
   await ap.click("button:has-text('Confirm revoke')");

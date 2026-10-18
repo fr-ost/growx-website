@@ -160,13 +160,16 @@ describe("refund / chargeback revocation", () => {
 describe("gifts (admin-granted complimentary Premium) and overlap with paid access", () => {
   const NOW = new Date("2026-10-17T12:00:00Z");
   const at = (days: number) => new Date(NOW.getTime() + days * 86_400_000).toISOString();
-  const gift = (expiresInDays: number | null, extra: Partial<{ status: string; starts_at: string }> = {}) => ({ status: "active", starts_at: at(-1), expires_at: expiresInDays === null ? null : at(expiresInDays), ...extra });
+  const gift = (expiresInDays: number | null, extra: Partial<{ status: string; starts_at: string; duration: string }> = {}) => ({ status: "active", duration: expiresInDays === null ? "lifetime" : expiresInDays > 31 ? "90d" : "30d", starts_at: at(-1), expires_at: expiresInDays === null ? null : at(expiresInDays), ...extra });
   const paid = (plan: string, endsInDays: number | null) => ({ plan, status: "active", current_period_end: endsInDays === null ? null : at(endsInDays), provider: "nowpayments" });
   const r = (subscriptions: object[], gifts: object[], trials: object[] = []) => resolveEntitlement({ trials: trials as never, subscriptions: subscriptions as never, gifts: gifts as never }, NOW);
 
-  it("a valid gift alone grants Premium (PRO_GIFT, source gift)", () => {
-    expect(r([], [gift(30)])).toMatchObject({ plan: "PRO_GIFT", isPremium: true, source: "gift", expiresAt: at(30), gift: { lifetime: false, expiresAt: at(30) } });
-    expect(r([], [gift(null)])).toMatchObject({ plan: "PRO_GIFT", expiresAt: null, gift: { lifetime: true, expiresAt: null } });
+  it("a valid gift alone grants Premium, reported with a contract plan (extension-compatible)", () => {
+    expect(r([], [gift(30)])).toMatchObject({ plan: "PRO_MONTHLY", isPremium: true, source: "subscription", expiresAt: at(30), gift: { lifetime: false, expiresAt: at(30), effective: true } });
+    expect(r([], [gift(7, { duration: "7d" })])).toMatchObject({ plan: "PRO_MONTHLY", expiresAt: at(7) });
+    expect(r([], [gift(90, { duration: "90d" })])).toMatchObject({ plan: "PRO_YEARLY", expiresAt: at(90) });
+    expect(r([], [gift(365, { duration: "1y" })])).toMatchObject({ plan: "PRO_YEARLY", expiresAt: at(365) });
+    expect(r([], [gift(null)])).toMatchObject({ plan: "PRO_LIFETIME", expiresAt: null, gift: { lifetime: true, expiresAt: null, effective: true } });
   });
   it("revoked, expired and future gifts grant nothing", () => {
     expect(r([], [gift(30, { status: "revoked" })]).plan).toBe("FREE");
@@ -175,11 +178,11 @@ describe("gifts (admin-granted complimentary Premium) and overlap with paid acce
     expect(r([], [gift(-1)]).gift).toBeNull();
   });
   it("the grant that keeps Premium longest is effective; ties go to the paid plan", () => {
-    expect(r([paid("PRO_MONTHLY", 10)], [gift(30)])).toMatchObject({ plan: "PRO_GIFT", expiresAt: at(30) });
-    expect(r([paid("PRO_MONTHLY", 20)], [gift(7)])).toMatchObject({ plan: "PRO_MONTHLY", expiresAt: at(20), gift: { lifetime: false } });
+    expect(r([paid("PRO_MONTHLY", 10)], [gift(30)])).toMatchObject({ plan: "PRO_MONTHLY", expiresAt: at(30), gift: { effective: true } });
+    expect(r([paid("PRO_MONTHLY", 20)], [gift(7)])).toMatchObject({ plan: "PRO_MONTHLY", expiresAt: at(20), gift: { lifetime: false, effective: false } });
     expect(r([paid("PRO_YEARLY", 30)], [gift(30)])).toMatchObject({ plan: "PRO_YEARLY" });
-    expect(r([paid("PRO_LIFETIME", null)], [gift(null)])).toMatchObject({ plan: "PRO_LIFETIME", source: "subscription" });
-    expect(r([paid("PRO_YEARLY", 100)], [gift(null)])).toMatchObject({ plan: "PRO_GIFT", expiresAt: null });
+    expect(r([paid("PRO_LIFETIME", null)], [gift(null)])).toMatchObject({ plan: "PRO_LIFETIME", source: "subscription", gift: { effective: false } });
+    expect(r([paid("PRO_YEARLY", 100)], [gift(null)])).toMatchObject({ plan: "PRO_LIFETIME", expiresAt: null, gift: { effective: true } });
   });
   it("removing a gift leaves paid access exactly as without gifts", () => {
     const subs = [paid("PRO_YEARLY", 100)];
@@ -189,7 +192,7 @@ describe("gifts (admin-granted complimentary Premium) and overlap with paid acce
   it("a gift longer than an active trial wins; the trial history is reported unchanged", () => {
     const trial = { status: "active", started_at: at(-1), expires_at: at(29) };
     const e = r([], [gift(90)], [trial]);
-    expect(e).toMatchObject({ plan: "PRO_GIFT", trial: { used: true, active: true } });
+    expect(e).toMatchObject({ plan: "PRO_YEARLY", gift: { effective: true }, trial: { used: true, active: true } });
     expect(r([], [gift(7)], [trial])).toMatchObject({ plan: "TRIAL" });
   });
 });
