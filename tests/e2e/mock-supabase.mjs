@@ -9,6 +9,7 @@ const trials = new Map(); // uid -> row
 const trialNames = new Set();
 // Permanent X account bindings (public.x_account_bindings), keyed by normalized username: global uniqueness.
 const xbindings = new Map();
+const releasedBindings = []; const xEvents = []; let bindSeq = 0;
 const xDisplay = (v) => { const t = String(v ?? "").replace(/^[ \t\r\n]+|[ \t\r\n]+$/g, "").replace(/^@/, ""); return /^[A-Za-z0-9_]{1,15}$/.test(t) ? t : null; };
 function registerX({ p_user, p_username }) {
   const d = xDisplay(p_username); if (!d) return { status: "invalid_username" };
@@ -17,7 +18,7 @@ function registerX({ p_user, p_username }) {
   const used = [...xbindings.values()].filter((b) => b.user_id === p_user).length;
   if (used >= 2) return { status: "no_slot", used, allowed: 2 };
   const now = new Date().toISOString();
-  xbindings.set(norm, { user_id: p_user, username: d, normalized_username: norm, status: "active", confirmed_at: now, created_at: now });
+  xbindings.set(norm, { id: `dddddddd-0000-4000-8000-${String(++bindSeq).padStart(12, "0")}`, user_id: p_user, username: d, normalized_username: norm, status: "active", linked_by: "self", confirmed_at: now, created_at: now, released_at: null, released_by: null, release_reason: null });
   return { status: "linked", binding_id: "b-" + norm, username: d, normalized_username: norm, used: used + 1, allowed: 2 };
 }
 let n = 0;
@@ -103,6 +104,23 @@ const adminRpc = {
     return { status: "saved" };
   },
   admin_increase_early_bird_allocation: () => ({ status: "saved" }),
+  admin_change_x_account: ({ p_admin, p_binding_id, p_action, p_reason, p_new_username }) => {
+    if (String(p_reason || "").trim().length < 10) return { status: "reason_required" };
+    const cur = [...xbindings.values()].find((b) => b.id === p_binding_id);
+    if (!cur) return releasedBindings.some((b) => b.id === p_binding_id) ? { status: "not_active" } : { status: "not_found" };
+    const actor = `support:${emailOf(p_admin)}`;
+    let d = null;
+    if (p_action === "replace") { d = xDisplay(p_new_username); if (!d) return { status: "invalid_username" }; if (xbindings.has(d.toLowerCase())) return { status: d.toLowerCase() === cur.normalized_username ? "unchanged" : "taken" }; }
+    xbindings.delete(cur.normalized_username);
+    releasedBindings.push({ ...cur, status: "released", released_at: new Date().toISOString(), released_by: actor, release_reason: p_reason });
+    xEvents.unshift({ id: xEvents.length + 1, user_id: cur.user_id, action: "released", username: cur.username, actor, reason: p_reason, created_at: new Date().toISOString() });
+    if (d) {
+      const now = new Date().toISOString();
+      xbindings.set(d.toLowerCase(), { ...cur, id: `dddddddd-0000-4000-8000-${String(++bindSeq).padStart(12, "0")}`, username: d, normalized_username: d.toLowerCase(), linked_by: actor, confirmed_at: now, created_at: now });
+      xEvents.unshift({ id: xEvents.length + 1, user_id: cur.user_id, action: "linked", username: d, actor, reason: p_reason, created_at: now });
+    }
+    return { status: d ? "replaced" : "released" };
+  },
 };
 
 const send = (res, status, body) => { res.writeHead(status, { "content-type": "application/json" }); res.end(body === undefined ? "" : JSON.stringify(body)); };
@@ -179,6 +197,8 @@ http.createServer(async (req, res) => {
     if (table === "premium_gifts") return send(res, 200, gifts);
     if (table === "premium_gift_events") return send(res, 200, giftEvents);
     if (table === "early_bird_events") return send(res, 200, ebEvents);
+    if (table === "x_account_bindings") return send(res, 200, [...xbindings.values(), ...releasedBindings].filter((b) => b.user_id === eqId));
+    if (table === "x_account_binding_events") return send(res, 200, xEvents.filter((e) => e.user_id === eqId));
     if (table === "profiles") { const ids = (url.searchParams.get("id") || "").replace(/^in\.\(|\)$/g, "").split(",").filter(Boolean); return send(res, 200, ids.map((id) => ({ id, email: emailOf(id) }))); }
     return send(res, 200, []); // health-check probes and empty tables
   }

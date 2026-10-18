@@ -300,3 +300,51 @@ describe("Lifetime Early Bird editor", () => {
     expect(ev).toEqual({ action: "increase_allocation", prev_allocation: 100, new_allocation: 102, reason: "Second wave approved by owner" });
   });
 });
+
+describe("admin: change or unlink a user's linked X username", () => {
+  const change = (admin: string, binding: string, action: string, reason: string, name: string | null = null) =>
+    rpc("public.admin_change_x_account($1, $2, $3, $4, $5)", [admin, binding, action, reason, name]);
+  const link = (u: string, name: string) => rpc("public.register_x_account($1, $2)", [u, name]);
+  const bindingOf = async (u: string, norm: string) => (await rows<{ id: string }>("select id from public.x_account_bindings where user_id = $1 and normalized_username = $2 and status = 'active'", [u, norm]))[0]?.id;
+
+  it("only admins; browser roles cannot call it", async () => {
+    const u = await addUser(db);
+    await link(u, "AdminTarget1");
+    const id = await bindingOf(u, "admintarget1");
+    await expect(change(u, id, "release", "trying to unlink myself")).rejects.toThrow(/not_admin/);
+    await asRole(db, "authenticated", u, async () => {
+      await expect(db.query("select public.admin_change_x_account($1, $2, 'release', 'some long reason', null)", [u, id])).rejects.toThrow(/permission denied/);
+    });
+    expect(await bindingOf(u, "admintarget1")).toBe(id);
+  });
+
+  it("replaces a username atomically, audited with the admin's email and reason", async () => {
+    const u = await addUser(db);
+    await link(u, "Typo_Admn");
+    const id = await bindingOf(u, "typo_admn");
+    expect(await change(ADMIN, id, "replace", "short", "Fixed")).toEqual({ status: "reason_required" });
+    expect((await change(ADMIN, id, "replace", "Ticket 55: spelling fix", "@Fixed_Admin")).status).toBe("replaced");
+    expect(await bindingOf(u, "typo_admn")).toBeUndefined();
+    expect(await bindingOf(u, "fixed_admin")).toBeDefined();
+    const [{ email }] = await rows<{ email: string }>("select email from public.profiles where id = $1", [ADMIN]);
+    const ev = await rows<{ action: string; actor: string; reason: string }>("select action, actor, reason from public.x_account_binding_events where user_id = $1 and actor <> 'self' order by id", [u]);
+    expect(ev).toEqual([
+      { action: "released", actor: `support:${email}`, reason: "Ticket 55: spelling fix" },
+      { action: "linked", actor: `support:${email}`, reason: "Ticket 55: spelling fix" },
+    ]);
+    expect((await change(ADMIN, id, "replace", "Ticket 55: spelling fix", "Other1")).status).toBe("not_active"); // repeat: no change
+  });
+
+  it("never links a name that belongs to another account; unlink frees the name and the slot", async () => {
+    const a = await addUser(db);
+    const b = await addUser(db);
+    await link(a, "Owner_A1");
+    await link(b, "Owner_B1");
+    const idB = await bindingOf(b, "owner_b1");
+    expect(await change(ADMIN, idB, "replace", "Ticket 56: wants that name", "OWNER_A1")).toEqual({ status: "taken" });
+    expect(await bindingOf(b, "owner_b1")).toBe(idB); // unchanged
+    expect((await change(ADMIN, idB, "release", "Ticket 57: account sold")).status).toBe("released");
+    expect(await bindingOf(b, "owner_b1")).toBeUndefined();
+    expect((await link(a, "owner_b1")).status).toBe("linked"); // free for anyone now
+  });
+});

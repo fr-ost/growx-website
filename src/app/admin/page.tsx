@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 import { AllocationIncrease, EarlyBirdEditor } from "@/components/admin/early-bird-admin";
 import { GiftAudit, GiftList, GrantGift } from "@/components/admin/gifts-admin";
+import { XAccountsAdmin } from "@/components/admin/x-accounts-admin";
 import { AppShell, Panel } from "@/components/app-shell";
-import { IconGift, IconStar } from "@/components/icons";
+import { IconAt, IconGift, IconStar } from "@/components/icons";
 import { Notice } from "@/components/ui/primitives";
 import { getTier } from "@/config/pricing";
 import { isAdmin } from "@/lib/admin/auth";
@@ -30,7 +31,7 @@ export default async function AdminPage() {
     <AppShell email={user.email} admin active="/admin">
       <div className="animate-fade-up">
         <h1 className="text-3xl font-extrabold tracking-tight">Admin</h1>
-        <p className="mt-1 text-text-2">Premium gifts and the Lifetime early-bird offer. Every change is recorded with your account and the time.</p>
+        <p className="mt-1 text-text-2">Premium gifts, X accounts and the Lifetime early-bird offer. Every change is recorded with your account and the time.</p>
       </div>
 
       <Panel title="Premium Gifts" icon={<IconGift size={17} />}>
@@ -49,6 +50,11 @@ export default async function AdminPage() {
         ) : (
           <Notice tone="error">Gifts could not be loaded. Check that the admin migration is applied (/api/health).</Notice>
         )}
+      </Panel>
+
+      <Panel title="X Accounts" icon={<IconAt size={17} />}>
+        <p className="mb-4 text-sm text-text-2">Change or unlink any user&apos;s linked X username. A new name must not be linked to another account; every change is recorded with your account and the reason.</p>
+        <XAccountsAdmin />
       </Panel>
 
       <Panel title="Lifetime Early Bird" icon={<IconStar size={17} />}>

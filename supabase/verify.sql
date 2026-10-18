@@ -75,7 +75,7 @@ with checks(item, ok) as (
   union all
   select 'authenticated can NOT execute public.' || f,
          to_regprocedure('public.' || f) is null or not has_function_privilege('authenticated', to_regprocedure('public.' || f), 'EXECUTE')
-  from unnest(array['admin_grant_gift(uuid,uuid,text,text)','admin_extend_gift(uuid,uuid,text,text)','admin_revoke_gift(uuid,uuid,text)','admin_set_early_bird(uuid,integer,boolean,text,timestamptz)','admin_increase_early_bird_allocation(uuid,integer,text)','admin_find_user(uuid,text)','early_bird_status()']) f
+  from unnest(array['admin_grant_gift(uuid,uuid,text,text)','admin_extend_gift(uuid,uuid,text,text)','admin_revoke_gift(uuid,uuid,text)','admin_set_early_bird(uuid,integer,boolean,text,timestamptz)','admin_increase_early_bird_allocation(uuid,integer,text)','admin_find_user(uuid,text)','early_bird_status()','admin_change_x_account(uuid,uuid,text,text,text)']) f
   union all
   select 'every auth user has a profile',
          to_regclass('public.profiles') is not null

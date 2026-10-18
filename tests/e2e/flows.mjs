@@ -526,6 +526,27 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const entAfter = await up.evaluate(async () => (await fetch("/api/entitlement")).json());
   ok("revoking the gift returns the user to their own plan (trial kept)", entAfter.plan === "TRIAL" && entAfter.gift === null, entAfter.plan);
 
+  // X Accounts: change a user's linked username
+  await ap.fill("#xadmin_email", "demo@example.com");
+  await ap.click("form:has(#xadmin_email) button:has-text('Find user')");
+  await ap.locator("[data-testid=admin-binding]", { hasText: "@Demo_User" }).waitFor({ timeout: 10000 });
+  await ap.locator("[data-testid=admin-binding]", { hasText: "@Demo_User" }).locator("button:has-text('Change username')").click();
+  await ap.fill("[aria-label='New X username']", "@Demo_Fixed");
+  ok("x accounts admin: a reason is required before saving", await ap.locator("button:has-text('Confirm: change to @Demo_Fixed')").isDisabled());
+  await ap.fill("[data-testid=admin-binding] [aria-label='Reason']", "Ticket 42: spelling fix");
+  await ap.click("button:has-text('Confirm: change to @Demo_Fixed')");
+  await ap.locator("text=@Demo_User was changed to @Demo_Fixed").waitFor({ timeout: 10000 });
+  const xh = await ap.locator("[aria-label='X account history']").innerText();
+  ok("x accounts admin: change saved and audited with the admin and reason", /linked @Demo_Fixed by support:admin@example\.com/.test(xh) && /released @Demo_User by support:admin@example\.com/.test(xh) && /Ticket 42/.test(xh), xh.slice(0, 200));
+  const entX = await up.evaluate(async () => (await fetch("/api/entitlement")).json());
+  ok("x accounts admin: the user's entitlement shows the corrected username", JSON.stringify(entX.linkedXAccounts).includes("demo_fixed") && !JSON.stringify(entX.linkedXAccounts).includes("\"demo_user\""), JSON.stringify(entX.linkedXAccounts));
+  await ap.locator("[data-testid=admin-binding]", { hasText: "@Second_Acct" }).locator("button:has-text('Change username')").click();
+  await ap.fill("[aria-label='New X username']", "demo_fixed");
+  await ap.fill("[data-testid=admin-binding] [aria-label='Reason']", "Ticket 43: try a taken name");
+  await ap.click("button:has-text('Confirm: change to @demo_fixed')");
+  await ap.locator("text=This X username is already linked to another GrowX account.").waitFor({ timeout: 10000 });
+  ok("x accounts admin: a name already linked is refused", true);
+
   await ap.fill("#eb_remaining", "-1");
   ok("early bird: invalid remaining cannot be submitted", await ap.locator("button:has-text('Review change')").isDisabled());
   await ap.fill("#eb_remaining", "10");
