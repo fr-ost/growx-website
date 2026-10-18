@@ -19,6 +19,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/supabase/require-user";
 import { loadXAccounts } from "@/lib/x-accounts";
 import { isAdmin } from "@/lib/admin/auth";
+import { INVOICE_STATUSES, invoiceNumber } from "@/lib/invoices";
 
 export const metadata = pageMetadata({ title: "Dashboard", description: "Your GrowX account, plan, X accounts and payments.", path: "/dashboard", noindex: true });
 export const dynamic = "force-dynamic";
@@ -178,7 +179,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         )}
       </Panel>
 
-      <Panel title="Payments" icon={<IconMail size={17} />}>
+      <Panel title="Payments & invoices" icon={<IconMail size={17} />}>
         {openOrders.length > 0 ? (
           <ul className="mb-5 space-y-3">
             {openOrders.map((o) => (
@@ -208,6 +209,11 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                     {Number(p.refunded_minor) > 0 ? <span className="text-muted">(refunded {money(Number(p.refunded_minor), p.currency)})</span> : null}
                     <Badge tone={st.tone}>{st.text}</Badge>
                     <span className="text-muted">{formatDate(p.created_at)}</span>
+                    {(INVOICE_STATUSES as readonly string[]).includes(p.status) ? (
+                      <a href={`/invoices/${p.id}`} className="font-semibold text-accent underline-offset-2 hover:underline" data-testid="invoice-link">
+                        Invoice {invoiceNumber(p.id, p.created_at)}
+                      </a>
+                    ) : null}
                   </span>
                 </li>
               );

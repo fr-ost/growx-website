@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { readEarlyBirdStatus, type EarlyBirdStatus } from "@/lib/billing/early-bird";
+import { getBillable, isBillableId } from "@/lib/billing/catalog";
+import { INVOICE_STATUSES, invoiceNumber } from "@/lib/invoices";
 
 /** Admin-only reads (service role). Callers MUST have checked isAdmin() for the verified session user first. */
 
@@ -142,4 +144,35 @@ export async function loadEarlyBirdAdmin(admin: SupabaseClient): Promise<{ statu
       return { slot: s.slot, claimedAt: s.claimed_at, buyer: p ? (emails.get(p.user_id) ?? null) : null, amountMinor: p?.amount_minor ?? null, paymentStatus: p?.status ?? null };
     }),
   };
+}
+
+export interface InvoiceListRow {
+  paymentId: string;
+  number: string;
+  customer: string | null;
+  product: string;
+  amountMinor: number;
+  refundedMinor: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+}
+
+/** All confirmed payments (newest first) as invoices, for the admin invoice history. */
+export async function loadInvoices(admin: SupabaseClient, limit = 100): Promise<InvoiceListRow[]> {
+  const { data, error } = await admin.from("payments").select("id, user_id, product, amount_minor, refunded_minor, currency, status, created_at").in("status", [...INVOICE_STATUSES]).order("created_at", { ascending: false }).limit(limit);
+  if (error) throw new Error(`invoice read failed: ${error.code ?? "unknown"}`);
+  const rows = (data ?? []) as { id: string; user_id: string; product: string; amount_minor: number; refunded_minor: number; currency: string; status: string; created_at: string }[];
+  const emails = await emailsFor(admin, rows.map((r) => r.user_id));
+  return rows.map((r) => ({
+    paymentId: r.id,
+    number: invoiceNumber(r.id, r.created_at),
+    customer: emails.get(r.user_id) ?? null,
+    product: isBillableId(r.product) ? getBillable(r.product).name : r.product,
+    amountMinor: Number(r.amount_minor),
+    refundedMinor: Number(r.refunded_minor ?? 0),
+    currency: r.currency,
+    status: r.status,
+    createdAt: r.created_at,
+  }));
 }

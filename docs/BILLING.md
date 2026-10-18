@@ -67,3 +67,9 @@ Checkout stays "Coming soon" until the key, IPN secret and `BILLING_LIVE_APPROVE
 
 ## Database
 Schema from `20261010050903_billing_core.sql` (applied to production). It still allows a `paddle` provider value, which is simply unused; no data or schema change was needed to remove Paddle.
+
+## Invoices
+* Every confirmed payment (`payments.status` succeeded, refunded or disputed) has an invoice at `/invoices/{paymentId}`, generated from the verified payment record, so all past payments have one too. Pending, failed and expired attempts never get an invoice.
+* Number: `GX-YYYYMMDD-XXXXXXXX` (payment date + first 8 characters of the payment id), stable forever.
+* Contents: GrowX logo; seller (Shahriar Ahmed, Founder, GrowX; Co-founder, Unique Labs; Rajshahi, Bangladesh 6205; support@growxapp.org); bill-to (account email); product; amount, tax 0, amount paid, amount due 0 ("Paid in full"); invoice/paid date; expiry (subscription end it produced, or payment date + period; "Never (lifetime)"; "Permanent add-on"); method (NOWPayments + coin); transaction and order ids; refund info and the refunded amount/date when refunded; terms and conditions. "Print / Save as PDF" prints a clean document.
+* Access: the buyer (own payments only, RLS) and administrators. The dashboard lists them under "Payments & invoices"; `/admin` has the full invoice history.

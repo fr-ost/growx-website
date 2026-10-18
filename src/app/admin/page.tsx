@@ -3,11 +3,11 @@ import { AllocationIncrease, EarlyBirdEditor } from "@/components/admin/early-bi
 import { GiftAudit, GiftList, GrantGift } from "@/components/admin/gifts-admin";
 import { XAccountsAdmin } from "@/components/admin/x-accounts-admin";
 import { AppShell, Panel } from "@/components/app-shell";
-import { IconAt, IconGift, IconStar } from "@/components/icons";
+import { IconAt, IconGift, IconMail, IconStar } from "@/components/icons";
 import { Notice } from "@/components/ui/primitives";
 import { getTier } from "@/config/pricing";
 import { isAdmin } from "@/lib/admin/auth";
-import { loadEarlyBirdAdmin, loadGifts } from "@/lib/admin/data";
+import { loadEarlyBirdAdmin, loadGifts, loadInvoices } from "@/lib/admin/data";
 import { pageMetadata } from "@/lib/seo";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireUser } from "@/lib/supabase/require-user";
@@ -24,7 +24,7 @@ export default async function AdminPage() {
   if (!(await isAdmin(user.id))) notFound();
 
   const admin = createAdminClient();
-  const [gifts, eb] = await Promise.all([loadGifts(admin).catch(() => null), loadEarlyBirdAdmin(admin).catch(() => null)]);
+  const [gifts, eb, invoices] = await Promise.all([loadGifts(admin).catch(() => null), loadEarlyBirdAdmin(admin).catch(() => null), loadInvoices(admin).catch(() => null)]);
   const lifetime = getTier("PRO_LIFETIME");
 
   return (
@@ -49,6 +49,30 @@ export default async function AdminPage() {
           </div>
         ) : (
           <Notice tone="error">Gifts could not be loaded. Check that the admin migration is applied (/api/health).</Notice>
+        )}
+      </Panel>
+
+      <Panel title="Invoices" icon={<IconMail size={17} />}>
+        {invoices ? (
+          invoices.length ? (
+            <ul className="divide-y divide-border text-sm" aria-label="Invoices">
+              {invoices.map((i) => (
+                <li key={i.paymentId} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
+                  <span>
+                    <a href={`/invoices/${i.paymentId}`} className="font-mono font-semibold text-accent hover:underline">{i.number}</a>{" "}
+                    <span className="text-text-2">· {i.customer ?? "?"} · {i.product}</span>
+                  </span>
+                  <span className="text-text-2">
+                    {money(i.amountMinor)} {i.currency}{i.refundedMinor > 0 ? ` (refunded ${money(i.refundedMinor)})` : ""} · {i.status === "succeeded" ? "Paid" : i.status} · {fmt(i.createdAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-muted">No invoices yet.</p>
+          )
+        ) : (
+          <Notice tone="error">Invoices could not be loaded.</Notice>
         )}
       </Panel>
 

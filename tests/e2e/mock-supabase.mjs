@@ -81,6 +81,10 @@ mkUser("nopay@example.com", true); // only the payments table is missing
 const ADMIN_USER = mkUser("admin@example.com", true); // listed in public.admins
 // ---- admin state (public.admins, premium_gifts + events, early_bird_settings + events)
 const adminIds = new Set([ADMIN_USER.id]);
+// One confirmed early-bird payment of the admin account (for invoices).
+const INVOICE_PAYMENT_ID = "eeeeeeee-0000-4000-8000-000000000001";
+const mockPayments = [{ id: INVOICE_PAYMENT_ID, user_id: ADMIN_USER.id, provider: "nowpayments", provider_payment_id: "5599001", product: "PRO_LIFETIME_EARLY", amount_minor: 2999, currency: "USD", status: "succeeded", refunded_minor: 0, asset: "bnbbsc", order_id: null, created_at: "2026-10-18T15:50:00Z", updated_at: "2026-10-18T15:51:00Z" }];
+const paymentsFor = (url, userId) => { const id = (url.searchParams.get("id") || "").replace("eq.", ""); return mockPayments.filter((p) => (!userId || p.user_id === userId) && (!id || p.id === id)); };
 const gifts = []; const giftEvents = []; const ebEvents = [];
 const eb = { enabled: true, cap: 100, alloc: 100, sold: 37, updated_at: new Date().toISOString() };
 const ebStatus = () => ({ state: !eb.enabled ? "off" : eb.sold >= eb.cap ? "sold_out" : "available", enabled: eb.enabled, sold: eb.sold, open_reservations: 0, sales_cap: eb.cap, campaign_allocation: eb.alloc, remaining: Math.max(0, eb.cap - eb.sold), updated_at: eb.updated_at });
@@ -199,7 +203,8 @@ http.createServer(async (req, res) => {
     if (table === "early_bird_events") return send(res, 200, ebEvents);
     if (table === "x_account_bindings") return send(res, 200, [...xbindings.values(), ...releasedBindings].filter((b) => b.user_id === eqId));
     if (table === "x_account_binding_events") return send(res, 200, xEvents.filter((e) => e.user_id === eqId));
-    if (table === "profiles") { const ids = (url.searchParams.get("id") || "").replace(/^in\.\(|\)$/g, "").split(",").filter(Boolean); return send(res, 200, ids.map((id) => ({ id, email: emailOf(id) }))); }
+    if (table === "payments") return send(res, 200, paymentsFor(url, null));
+    if (table === "profiles") { const ids = (url.searchParams.get("id") || "").replace(/^eq\./, "").replace(/^in\.\(|\)$/g, "").split(",").filter(Boolean); return send(res, 200, ids.map((id) => ({ id, email: emailOf(id) }))); }
     return send(res, 200, []); // health-check probes and empty tables
   }
   if (!u) return send(res, 401, { code: "PGRST301", message: "JWT required" });
@@ -209,7 +214,8 @@ http.createServer(async (req, res) => {
   const eqUser = (url.searchParams.get("user_id") || "").replace("eq.", "");
   if (eqUser && eqUser !== u.id) return send(res, 200, []); // RLS
   if (table === "trials") return send(res, 200, trials.has(u.id) ? [trials.get(u.id)] : []);
-  if (["subscriptions", "payments", "checkout_orders", "subscription_details", "account_slot_grants"].includes(table)) return send(res, 200, []);
+  if (table === "payments") return send(res, 200, paymentsFor(url, u.id));
+  if (["subscriptions", "checkout_orders", "subscription_details", "account_slot_grants"].includes(table)) return send(res, 200, []);
   if (table === "premium_gifts") return send(res, 200, gifts.filter((g) => g.user_id === u.id).map(({ status, starts_at, expires_at }) => ({ status, starts_at, expires_at })));
   if (table === "x_account_bindings") {
     if (req.method !== "GET") return send(res, 403, { code: "42501", message: "permission denied for table x_account_bindings" });

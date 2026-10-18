@@ -155,7 +155,7 @@ ok("no data-error banner for a healthy account", !(await p.locator("text=could n
 ok("one page: no Account tab or link, no editable username form", (await p.locator('a[href="/account"]').count()) === 0 && (await p.locator("#x_username").count()) === 0 && !(await p.locator("button:has-text('Save username')").count()));
 {
   const h2 = await p.locator("main h2").allInnerTexts();
-  ok("one page: plan, X accounts, payments and account sections", ["Your plan", "X accounts", "Payments", "Account"].every((t) => h2.some((h) => h.trim() === t)), JSON.stringify(h2));
+  ok("one page: plan, X accounts, payments and account sections", ["Your plan", "X accounts", "Payments & invoices", "Account"].every((t) => h2.some((h) => h.trim() === t)), JSON.stringify(h2));
 }
 ok("empty payments state", (await p.locator("main").innerText()).includes("No payments yet"));
 ok("old /account link lands on the dashboard", (await p.goto(BASE + "/account"), p.url().endsWith("/dashboard")), p.url());
@@ -558,6 +558,22 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const hist = await ap.locator("[aria-label='Inventory history']").innerText();
   ok("early bird: saved, audited with admin, previous/new value and reason", /admin@example\.com/.test(hist) && /remaining 63 → 10/.test(hist) && /Slow down the promo/.test(hist), hist.slice(0, 200));
   ok("early bird: stats show the new remaining count", /remaining\s*10/i.test(await ap.locator("[data-testid=early-bird-stats]").innerText()));
+  // invoices: listed for the admin, linked from the buyer's dashboard, printable, private to the buyer (and admins)
+  ok("admin: invoice history lists confirmed payments", /GX-20261018-EEEEEEEE/.test(await ap.locator("[aria-label='Invoices']").innerText()));
+  await ap.goto(BASE + "/dashboard");
+  await ap.locator("[data-testid=invoice-link]").first().waitFor({ timeout: 10000 });
+  ok("dashboard: paid payment links its invoice", /Invoice GX-20261018-EEEEEEEE/.test(await ap.locator("[data-testid=invoice-link]").first().innerText()));
+  await ap.locator("[data-testid=invoice-link]").first().click();
+  await ap.locator("[data-testid=invoice]").waitFor({ timeout: 10000 });
+  const inv = await ap.locator("[data-testid=invoice]").innerText();
+  await ap.locator("[data-testid=invoice]").screenshot({ path: OUT + "shot-invoice.png" });
+  ok("invoice: number, PAID, seller, bill-to, product, amount, dates, method, refund info, terms, logo",
+    /GX-20261018-EEEEEEEE/.test(inv) && /PAID/.test(inv) && /Shahriar Ahmed/.test(inv) && /Founder, GrowX/i.test(inv) && /Co-founder, Unique Labs/i.test(inv) && /Rajshahi, Bangladesh 6205/i.test(inv) &&
+    /admin@example\.com/.test(inv) && /Premium Lifetime \(Early Bird\)/.test(inv) && /29\.99 USD/.test(inv) && /Paid in full/.test(inv) && /Never \(lifetime\)/.test(inv) &&
+    /NOWPayments \(BNBBSC\)/.test(inv) && /support@growxapp\.org/.test(inv) && /Refunds can be requested within 14 days/.test(inv) && /Terms and conditions/i.test(inv) &&
+    (await ap.locator("[data-testid=invoice] img[alt='GrowX logo']").count()) === 1, inv.slice(0, 300).replace(/\s+/g, " "));
+  const other404 = await up.goto(BASE + "/invoices/eeeeeeee-0000-4000-8000-000000000001");
+  ok("invoice: another (non-admin) user gets 404", other404.status() === 404, String(other404.status()));
   ok("admin pages: no runtime errors", aerrs.length === 0, aerrs.join(" | "));
   await uctx.close(); await actx.close();
 }

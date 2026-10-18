@@ -7,5 +7,5 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   // Only pages that need a session. Public pages stay static; /api/* does its own auth.
-  matcher: ["/dashboard/:path*", "/account/:path*", "/admin/:path*", "/checkout/:path*", "/checkout"],
+  matcher: ["/dashboard/:path*", "/account/:path*", "/admin/:path*", "/invoices/:path*", "/checkout/:path*", "/checkout"],
 };

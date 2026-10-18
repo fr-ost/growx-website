@@ -301,3 +301,13 @@ details[open] .faq-body {
     animation: none !important;
   }
 }
+
+/* Invoices print as a clean document: no site chrome, no buttons. */
+@media print {
+  body > header,
+  body > footer,
+  body > a[href="#main"],
+  .no-print {
+    display: none !important;
+  }
+}
