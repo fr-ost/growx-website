@@ -65,8 +65,9 @@ export interface Invoice {
 
 export const PAYMENT_COLUMNS = "id, user_id, provider, provider_payment_id, product, amount_minor, currency, status, refunded_minor, asset, order_id, created_at, updated_at";
 
-const methodLabel = (provider: string, asset: string | null) =>
-  provider === "nowpayments" ? `Cryptocurrency via NOWPayments${asset ? ` (${asset.toUpperCase()})` : ""}` : provider === "paddle" ? "Card via Paddle" : provider;
+const PROVIDER_NAME: Record<string, string> = { nowpayments: "NOWPayments", paddle: "Paddle", stripe: "Stripe" };
+/** Payment processor and invoice currency only, e.g. "NOWPayments · USD". */
+const methodLabel = (provider: string, currency: string) => `${PROVIDER_NAME[provider] ?? provider} · ${currency.toUpperCase()}`;
 
 /** Builds the invoice for one payment. `client` is user-scoped (RLS: own rows only) or the admin client. */
 export async function loadInvoice(client: SupabaseClient, paymentId: string, customerEmail: string | null): Promise<Invoice | null> {
@@ -119,7 +120,7 @@ export function buildInvoice(pay: PaymentRow, customerEmail: string | null, peri
     refundedMinor: refunded,
     amountDueMinor: 0,
     status,
-    method: methodLabel(pay.provider, pay.asset),
+    method: methodLabel(pay.provider, pay.currency),
     transactionRef: pay.provider_payment_id,
     orderRef: pay.order_id,
     servicePeriod,

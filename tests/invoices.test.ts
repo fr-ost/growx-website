@@ -13,7 +13,7 @@ describe("invoices", () => {
   });
   it("monthly: 30 days prepaid, expiry from the subscription it produced (or payment date + period)", () => {
     const a = buildInvoice(pay(), "c@example.com", 30, "2026-12-01T00:00:00Z");
-    expect(a).toMatchObject({ number: "GX-20261018-1A2B3C4D", customerEmail: "c@example.com", productName: "Premium Monthly", amountMinor: 199, amountDueMinor: 0, status: "paid", expires: "2026-12-01T00:00:00Z", method: "Cryptocurrency via NOWPayments (BNBBSC)", transactionRef: "5512345", orderRef: "o-1" });
+    expect(a).toMatchObject({ number: "GX-20261018-1A2B3C4D", customerEmail: "c@example.com", productName: "Premium Monthly", amountMinor: 199, amountDueMinor: 0, status: "paid", expires: "2026-12-01T00:00:00Z", method: "NOWPayments · USD", transactionRef: "5512345", orderRef: "o-1" });
     expect(a.servicePeriod).toMatch(/30 days of Premium, prepaid/);
     expect(buildInvoice(pay(), null, 30, null).expires).toBe("2026-11-17T15:50:00.000Z");
   });

@@ -45,7 +45,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <PrintButton />
       </div>
 
-      <article className="mx-auto max-w-3xl rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)] sm:p-10 print:max-w-none print:rounded-none print:border-0 print:shadow-none" data-testid="invoice">
+      <article className="invoice-doc mx-auto max-w-3xl rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)] sm:p-10 print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none" data-testid="invoice">
         <header className="flex flex-wrap items-start justify-between gap-6 border-b border-border pb-6">
           <div className="flex items-center gap-3">
             <Image src="/logo.svg" alt="GrowX logo" width={48} height={48} className="rounded-xl" />
@@ -129,7 +129,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             <p className="text-xs font-bold uppercase tracking-wider text-muted">Refunds</p>
             <p className="mt-1.5 text-text-2">
               Refunds can be requested within 14 days of purchase by emailing <strong>{SELLER.email}</strong> from your account email with this invoice number.
-              Crypto refunds are sent manually in the same asset, minus network fees. Full policy: {SELLER.website}/refund-policy
+              Full policy: {SELLER.website}/refund-policy
             </p>
           </div>
         </section>
@@ -139,7 +139,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           <ol className="mt-2 list-decimal space-y-1 pl-5">
             <li>GrowX Premium is a digital service for the GrowX Chrome extension, delivered instantly to the account above once the payment is confirmed.</li>
             <li>Monthly and yearly plans are prepaid for a fixed period and never renew or charge automatically. Lifetime access lasts for as long as GrowX Premium is offered.</li>
-            <li>Prices are in US dollars. Crypto payments are final once confirmed on the network, except for refunds granted under the refund policy.</li>
+            <li>Prices and payments are in US dollars (USD). Payments are final once confirmed, except for refunds granted under the refund policy.</li>
             <li>A full refund or a chargeback ends Premium access for this purchase.</li>
             <li>Use of GrowX is subject to the Terms of Service ({SELLER.website}/terms) and the Privacy Policy ({SELLER.website}/privacy).</li>
           </ol>

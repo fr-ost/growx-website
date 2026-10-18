@@ -311,3 +311,40 @@ details[open] .faq-body {
     display: none !important;
   }
 }
+
+/* Invoice: exactly one A4 page when printed / saved as PDF. */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+  }
+  body > main {
+    display: block !important;
+  }
+  .invoice-doc {
+    font-size: 10.5px;
+    line-height: 1.35;
+    break-inside: avoid;
+  }
+  .invoice-doc section,
+  .invoice-doc header {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  .invoice-doc h1 {
+    font-size: 22px;
+  }
+  .invoice-doc .text-sm {
+    font-size: 10.5px;
+  }
+  .invoice-doc .text-xs {
+    font-size: 9px;
+  }
+  .invoice-doc .text-2xl {
+    font-size: 18px;
+  }
+}

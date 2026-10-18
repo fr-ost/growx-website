@@ -1,7 +1,7 @@
 // End-to-end browser checks against a production build wired to tests/e2e/mock-supabase.mjs.
 // Run with: npm run test:e2e
 import { chromium } from "playwright-core";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 const BASE = process.env.E2E_BASE_URL || "http://localhost:3113";
 const OUT = new URL("./.output/", import.meta.url).pathname;
 mkdirSync(OUT, { recursive: true });
@@ -570,8 +570,12 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("invoice: number, PAID, seller, bill-to, product, amount, dates, method, refund info, terms, logo",
     /GX-20261018-EEEEEEEE/.test(inv) && /PAID/.test(inv) && /Shahriar Ahmed/.test(inv) && /Founder, GrowX/i.test(inv) && /Co-founder, Unique Labs/i.test(inv) && /Rajshahi, Bangladesh 6205/i.test(inv) &&
     /admin@example\.com/.test(inv) && /Premium Lifetime \(Early Bird\)/.test(inv) && /29\.99 USD/.test(inv) && /Paid in full/.test(inv) && /Never \(lifetime\)/.test(inv) &&
-    /NOWPayments \(BNBBSC\)/.test(inv) && /support@growxapp\.org/.test(inv) && /Refunds can be requested within 14 days/.test(inv) && /Terms and conditions/i.test(inv) &&
+    /NOWPayments · USD/.test(inv) && !/crypto/i.test(inv) && /support@growxapp\.org/.test(inv) && /Refunds can be requested within 14 days/.test(inv) && /Terms and conditions/i.test(inv) &&
     (await ap.locator("[data-testid=invoice] img[alt='GrowX logo']").count()) === 1, inv.slice(0, 300).replace(/\s+/g, " "));
+  const pdf = await ap.pdf({ format: "A4", printBackground: true, preferCSSPageSize: true });
+  writeFileSync(OUT + "invoice.pdf", pdf);
+  const pdfPages = (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) || []).length;
+  ok("invoice: Save as PDF gives exactly one A4 page", pdfPages === 1, `${pdfPages} pages`);
   const other404 = await up.goto(BASE + "/invoices/eeeeeeee-0000-4000-8000-000000000001");
   ok("invoice: another (non-admin) user gets 404", other404.status() === 404, String(other404.status()));
   ok("admin pages: no runtime errors", aerrs.length === 0, aerrs.join(" | "));
