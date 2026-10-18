@@ -10,8 +10,8 @@ export const INVOICE_STATUSES = ["succeeded", "refunded", "disputed"] as const;
 
 export const SELLER = {
   name: "GrowX",
-  person: "Shahriar Ahmed",
-  roles: ["Founder, GrowX", "Co-founder, Unique Labs"],
+  person: "Shahriar Ahmed Tushar",
+  roles: ["Founder, GrowX", "Unique Labs"],
   address: "Rajshahi, Bangladesh 6205",
   email: "support@growxapp.org",
   website: "www.growxapp.org",

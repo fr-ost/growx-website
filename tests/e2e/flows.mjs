@@ -568,7 +568,7 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   const inv = await ap.locator("[data-testid=invoice]").innerText();
   await ap.locator("[data-testid=invoice]").screenshot({ path: OUT + "shot-invoice.png" });
   ok("invoice: number, PAID, seller, bill-to, product, amount, dates, method, refund info, terms, logo",
-    /GX-20261018-EEEEEEEE/.test(inv) && /PAID/.test(inv) && /Shahriar Ahmed/.test(inv) && /Founder, GrowX/i.test(inv) && /Co-founder, Unique Labs/i.test(inv) && /Rajshahi, Bangladesh 6205/i.test(inv) &&
+    /GX-20261018-EEEEEEEE/.test(inv) && /PAID/.test(inv) && /Shahriar Ahmed Tushar/.test(inv) && /Founder, GrowX/i.test(inv) && /Unique Labs/.test(inv) && !/Co-founder/i.test(inv) && /GrowX, a Product of Unique Labs\./.test(inv) && /Rajshahi, Bangladesh 6205/i.test(inv) &&
     /admin@example\.com/.test(inv) && /Premium Lifetime \(Early Bird\)/.test(inv) && /29\.99 USD/.test(inv) && /Paid in full/.test(inv) && /Never \(lifetime\)/.test(inv) &&
     /NOWPayments · USD/.test(inv) && !/crypto/i.test(inv) && /support@growxapp\.org/.test(inv) && /Refunds can be requested within 14 days/.test(inv) && /Terms and conditions/i.test(inv) &&
     (await ap.locator("[data-testid=invoice] img[alt='GrowX logo']").count()) === 1, inv.slice(0, 300).replace(/\s+/g, " "));

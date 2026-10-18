@@ -145,6 +145,10 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           </ol>
           <p className="mt-4">Questions about this invoice? Contact {SELLER.email}. Thank you for supporting GrowX!</p>
         </section>
+
+        <footer className="mt-6 border-t border-border pt-4 text-center text-xs font-semibold text-text-2" data-testid="invoice-footer">
+          GrowX, a Product of Unique Labs.
+        </footer>
       </article>
     </div>
   );
