@@ -39,7 +39,7 @@ export default function PrivacyPage() {
       <h2>Service providers</h2>
       <p>
         Supabase (database and authentication) and Vercel (hosting) process data on our behalf. Google processes
-        sign-in data if you use Google sign-in. NOWPayments processes crypto payments; it receives the data needed to take payment and send us only payment status and reference IDs. These providers may process data outside your country.
+        sign-in data if you use Google sign-in, and advertising measurement data through the Google tag (see Cookies). NOWPayments processes crypto payments; it receives the data needed to take payment and send us only payment status and reference IDs. These providers may process data outside your country.
       </p>
       <h2>Retention and your rights</h2>
       <p>
@@ -48,7 +48,14 @@ export default function PrivacyPage() {
         records may be retained where needed for fraud prevention and accounting.
       </p>
       <h2>Cookies</h2>
-      <p>The website uses strictly necessary cookies to keep you signed in. It does not currently use advertising cookies. If that changes we will update this policy.</p>
+      <p>
+        The website uses strictly necessary cookies to keep you signed in. It also uses the Google tag (Google Ads) to
+        measure the results of our advertising, for example whether a visit from an ad led to a sign-up. Google may set
+        advertising cookies and receive technical data such as your IP address, browser and the pages you visit; see{" "}
+        <a href="https://policies.google.com/technologies/partner-sites">how Google uses data from sites that use its services</a>.
+        You can limit ad personalisation at <a href="https://adssettings.google.com">adssettings.google.com</a> or block
+        these cookies in your browser; the website keeps working without them.
+      </p>
       <h2>Changes</h2>
       <p>We will update this policy when our practices change and show the date above.</p>
     </LegalPage>

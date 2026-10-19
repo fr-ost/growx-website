@@ -32,6 +32,8 @@ export const site = {
     trim(process.env.NEXT_PUBLIC_CHROME_STORE_URL) ||
     "https://chromewebstore.google.com/detail/ofiancichfcakbdgekhcahflpoglfgbh",
   supportEmail: trim(process.env.NEXT_PUBLIC_SUPPORT_EMAIL) || "support@growxapp.org",
+  /** Google tag (Google Ads) ID, provided by the owner. Loaded only on the production deployment. */
+  googleTagId: trim(process.env.NEXT_PUBLIC_GOOGLE_TAG_ID) || "AW-18494416712",
   /** Contact channel published by the extension itself (shared/config.js). */
   telegram: [
     { label: "Shahriar Ahmed", href: "https://t.me/igfrostt" },

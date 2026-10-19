@@ -5,6 +5,7 @@ import { site } from "@/config/site";
 import { baseKeywords } from "@/lib/seo";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { GoogleTag } from "@/components/google-tag";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <SiteFooter />
+        <GoogleTag />
       </body>
     </html>
   );
