@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/form";
 import { Notice } from "@/components/ui/primitives";
 import type { AuthState } from "@/app/login/actions";
+import { trackConversion } from "@/lib/google-conversions";
 
 export function Spinner() {
   return <span aria-hidden="true" className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />;
@@ -25,6 +26,11 @@ export function AuthForm({
   const [state, formAction, pending] = useActionState(action, {});
   const [show, setShow] = useState(false);
   const isLogin = mode === "login";
+
+  const created = mode === "signup" && !!state.success;
+  useEffect(() => {
+    if (created) trackConversion("signup");
+  }, [created]);
 
   if (state.success) {
     return (

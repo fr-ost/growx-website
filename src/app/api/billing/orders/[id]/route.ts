@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     }
   }
 
-  const { data: payment } = await supabase.from("payments").select("status, provider_status").eq("order_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: payment } = await supabase.from("payments").select("status, provider_status, amount_minor, currency").eq("order_id", id).order("created_at", { ascending: false }).limit(1).maybeSingle();
   return jsonResponse({
     id: order.id,
     provider: order.provider,
@@ -48,6 +48,8 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
     status: order.status,
     paymentStatus: payment?.status ?? null,
     providerStatus: payment?.provider_status ?? null,
+    amountMinor: payment?.status === "succeeded" ? Number(payment.amount_minor) : null,
+    currency: payment?.status === "succeeded" ? payment.currency : null,
     expiresAt: order.reservation_expires_at,
     crypto: providerPayment
       ? { address: providerPayment.pay_address ?? null, amount: providerPayment.pay_amount ?? null, currency: providerPayment.pay_currency ?? null, actuallyPaid: providerPayment.actually_paid ?? null, network: providerPayment.network ?? null }

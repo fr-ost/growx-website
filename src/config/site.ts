@@ -34,6 +34,11 @@ export const site = {
   supportEmail: trim(process.env.NEXT_PUBLIC_SUPPORT_EMAIL) || "support@growxapp.org",
   /** Google tag (Google Ads) ID, provided by the owner. Loaded only on the production deployment. */
   googleTagId: trim(process.env.NEXT_PUBLIC_GOOGLE_TAG_ID) || "AW-18494416712",
+  /** Google Ads conversion actions ("AW-ID/label"). Sign-up is off until its label is provided. */
+  googleConversions: {
+    purchase: trim(process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE) || "AW-18494416712/XJfkCPCv4aEdEMjO6fJE",
+    signup: trim(process.env.NEXT_PUBLIC_GOOGLE_ADS_SIGNUP),
+  },
   /** Contact channel published by the extension itself (shared/config.js). */
   telegram: [
     { label: "Shahriar Ahmed", href: "https://t.me/igfrostt" },

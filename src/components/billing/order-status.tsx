@@ -5,11 +5,14 @@ import { Spinner } from "@/components/auth-form";
 import { LinkButton } from "@/components/ui/button";
 import { Notice } from "@/components/ui/primitives";
 import { getBillable, isBillableId, isProductId } from "@/lib/billing/catalog";
+import { trackConversion } from "@/lib/google-conversions";
 
 interface OrderView {
   product: string;
   status: "created" | "pending" | "fulfilled" | "expired" | "failed" | "canceled" | "refund_required";
   providerStatus: string | null;
+  amountMinor?: number | null;
+  currency?: string | null;
 }
 
 const DONE = new Set(["fulfilled", "expired", "failed", "canceled", "refund_required"]);
@@ -48,6 +51,12 @@ export function OrderStatus({ orderId, canceled }: { orderId: string; canceled: 
       clearTimeout(timer);
     };
   }, [orderId]);
+
+  const confirmed = order?.status === "fulfilled";
+  useEffect(() => {
+    // Only a payment the SERVER reports as fulfilled counts. The order id dedupes reloads and revisits.
+    if (confirmed && order && order.amountMinor) trackConversion("purchase", { value: order.amountMinor / 100, currency: order.currency ?? "USD", transactionId: orderId });
+  }, [confirmed, order, orderId]);
 
   if (missing) return <Notice tone="error" title="Order not found">This order does not exist or belongs to another account.</Notice>;
   if (!order) return <p className="flex items-center gap-2 text-text-2" role="status"><Spinner /> <span>Loading your order…</span></p>;
