@@ -15,6 +15,18 @@ const cols = [
       { href: "/blog/growx-potential-best-practices-roadmap", label: "Roadmap" },
     ],
   },
+  {
+    title: "Growth guides",
+    links: [
+      { href: "/blog/how-to-grow-on-twitter-x", label: "How to grow on Twitter" },
+      { href: "/blog/first-1000-followers-on-x", label: "First 1,000 followers" },
+      { href: "/blog/bulk-follow-twitter-safely", label: "Bulk follow safely" },
+      { href: "/blog/mass-follow-twitter-limits", label: "Mass follow limits" },
+      { href: "/blog/twitter-follow-back-score-growx", label: "Follow-back score" },
+      { href: "/blog/unfollow-non-followers-twitter", label: "Unfollow non-followers" },
+      { href: "/blog/best-twitter-growth-tools", label: "Best growth tools" },
+    ],
+  },
   { title: "Account", links: [{ href: "/login", label: "Log in" }, { href: "/dashboard", label: "Dashboard" }] },
   { title: "Company", links: [{ href: "/about", label: "About" }, { href: "/contact", label: "Support" }, { href: "/privacy", label: "Privacy policy" }, { href: "/terms", label: "Terms of service" }, { href: "/refund-policy", label: "Refund policy" }] },
 ];
@@ -23,7 +35,7 @@ export function SiteFooter() {
   return (
     <footer className="relative mt-auto border-t border-border bg-surface-2">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" aria-hidden="true" />
-      <Container className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
+      <Container className="grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(5,1fr)]">
         <div>
           <Logo />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">

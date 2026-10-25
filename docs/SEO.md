@@ -13,6 +13,13 @@ What is implemented in code, the keyword strategy, and the steps only the site o
 | `/blog/how-growx-auto-follow-works` | how X auto follow works | Twitter auto follow tool, X follow limits, Twitter follow back tool |
 | `/blog/growx-features-guide-scoring-filters-cleanup` | follow back score | Twitter targeting filters, Twitter unfollow tool, mass unfollow Twitter, find inactive Twitter accounts |
 | `/blog/growx-potential-best-practices-roadmap` | grow X followers | Twitter follower growth, X growth strategy, GrowX roadmap |
+| `/blog/how-to-grow-on-twitter-x` | how to grow on Twitter | how to grow on X, grow Twitter followers, increase X followers |
+| `/blog/first-1000-followers-on-x` | first 1000 followers on Twitter | get 1000 followers on X, grow a new Twitter account |
+| `/blog/bulk-follow-twitter-safely` | bulk follow Twitter | bulk follow on X, Twitter bulk follow tool |
+| `/blog/mass-follow-twitter-limits` | mass follow Twitter | Twitter follow limit, X follow limit per day |
+| `/blog/twitter-follow-back-score-growx` | Twitter follow back score | Twitter growth score, find accounts that follow back |
+| `/blog/unfollow-non-followers-twitter` | unfollow non-followers Twitter | bulk unfollow Twitter, mass unfollow Twitter |
+| `/blog/best-twitter-growth-tools` | best Twitter growth tools | X growth tool, best Twitter auto follow |
 
 Both "X" and "Twitter" are used on purpose: many users still search "Twitter". Keywords are used naturally in titles, H1/H2s, first paragraphs and internal link text; no keyword stuffing, no hidden text.
 

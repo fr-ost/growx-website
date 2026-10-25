@@ -26,7 +26,7 @@ export interface Post {
   /** Meta description, 120-160 chars. */
   description: string;
   excerpt: string;
-  category: "How it works" | "Features" | "Roadmap";
+  category: "How it works" | "Features" | "Roadmap" | "Guides";
   keywords: string[];
   datePublished: string;
   dateModified: string;
@@ -36,7 +36,9 @@ export interface Post {
   related: string[];
 }
 
-export const posts: Post[] = [
+import { growthPosts } from "./posts-growth";
+
+const corePosts: Post[] = [
   {
     slug: "how-growx-auto-follow-works",
     seoTitle: "How X Auto Follow Works: GrowX Engine Explained",
@@ -57,7 +59,7 @@ export const posts: Post[] = [
     datePublished: "2026-10-09",
     dateModified: "2026-10-09",
     readMinutes: 9,
-    related: ["growx-features-guide-scoring-filters-cleanup", "growx-potential-best-practices-roadmap"],
+    related: ["growx-features-guide-scoring-filters-cleanup", "bulk-follow-twitter-safely", "how-to-grow-on-twitter-x"],
     sections: [
       {
         id: "overview",
@@ -222,7 +224,7 @@ export const posts: Post[] = [
     datePublished: "2026-10-09",
     dateModified: "2026-10-09",
     readMinutes: 10,
-    related: ["how-growx-auto-follow-works", "growx-potential-best-practices-roadmap"],
+    related: ["how-growx-auto-follow-works", "twitter-follow-back-score-growx", "unfollow-non-followers-twitter"],
     sections: [
       {
         id: "intro",
@@ -366,7 +368,7 @@ export const posts: Post[] = [
     datePublished: "2026-10-09",
     dateModified: "2026-10-09",
     readMinutes: 8,
-    related: ["how-growx-auto-follow-works", "growx-features-guide-scoring-filters-cleanup"],
+    related: ["how-growx-auto-follow-works", "first-1000-followers-on-x", "best-twitter-growth-tools"],
     sections: [
       {
         id: "potential",
@@ -508,6 +510,8 @@ export const posts: Post[] = [
     ],
   },
 ];
+
+export const posts: Post[] = [...corePosts, ...growthPosts];
 
 export const getPost = (slug: string) => posts.find((p) => p.slug === slug);
 export const latestFirst = () => [...posts].sort((a, b) => b.datePublished.localeCompare(a.datePublished));
