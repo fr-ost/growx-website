@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PostBody, PostCard, TableOfContents, formatPostDate } from "@/components/blog";
 import { CtaBand } from "@/components/home/cta-band";
-import { IconClock } from "@/components/icons";
-import { JsonLd, abs, authorLd, breadcrumbLd } from "@/components/json-ld";
+import { Faq } from "@/components/home/faq";
+import { IconChrome, IconClock } from "@/components/icons";
+import { JsonLd, abs, authorLd, breadcrumbLd, faqLd } from "@/components/json-ld";
+import { ExternalButton, LinkButton } from "@/components/ui/button";
 import { Badge, Container, Eyebrow, Section } from "@/components/ui/primitives";
 import { getPost, posts } from "@/content/posts";
 import { site } from "@/config/site";
@@ -61,13 +63,14 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             author: authorLd,
             publisher: { "@id": `${site.url}/#organization` },
           },
+          ...(post.faq?.length ? [faqLd(post.faq)] : []),
         ]}
       />
       <article>
-        <header className="relative overflow-hidden border-b border-border">
+        <header className="bg-hero relative overflow-hidden border-b border-border">
           <div className="bg-grid absolute inset-0" aria-hidden="true" />
-          <div className="glow -top-24 left-1/2 h-64 w-[36rem] -translate-x-1/2 bg-accent/15" aria-hidden="true" />
-          <Container className="relative max-w-3xl py-14 sm:py-20">
+          <Container className="relative grid max-w-6xl py-14 sm:py-20 lg:grid-cols-[minmax(0,1fr)_17rem] lg:gap-12">
+            <div className="mx-auto w-full max-w-3xl">
             <nav aria-label="Breadcrumb" className="animate-fade-up mb-6 text-sm text-muted">
               <ol className="flex flex-wrap items-center gap-2">
                 <li><Link href="/" className="hover:text-accent">Home</Link></li>
@@ -86,16 +89,42 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <time dateTime={post.datePublished}>{formatPostDate(post.datePublished)}</time>
               {post.dateModified !== post.datePublished ? <> · Updated <time dateTime={post.dateModified}>{formatPostDate(post.dateModified)}</time></> : null}
             </p>
+            </div>
           </Container>
         </header>
 
         <Section className="pt-10 sm:pt-14">
-          <Container className="max-w-3xl">
-            <div className="mb-12"><TableOfContents post={post} /></div>
-            <PostBody post={post} />
-            <div className="mt-14 flex flex-wrap gap-2">
-              {post.keywords.map((k) => <Badge key={k}>{k}</Badge>)}
+          <Container className="grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,1fr)_17rem]">
+            <div className="mx-auto w-full max-w-3xl">
+              <div className="mb-12 lg:hidden"><TableOfContents post={post} /></div>
+              <PostBody post={post} />
+              {post.faq?.length ? (
+                <section id="faq" className="mt-14 scroll-mt-28">
+                  <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Frequently asked questions</h2>
+                  <div className="mt-6"><Faq items={post.faq} /></div>
+                </section>
+              ) : null}
+              <div className="mt-14 flex flex-wrap gap-2">
+                {post.keywords.map((k) => <Badge key={k}>{k}</Badge>)}
+              </div>
             </div>
+            <aside className="hidden lg:block">
+              <div className="sticky top-24 space-y-5">
+                <TableOfContents post={post} />
+                <div className="rounded-3xl bg-ink p-5 text-white">
+                  <p className="font-display text-lg font-extrabold leading-snug">Grow on X with GrowX</p>
+                  <p className="mt-2 text-sm text-white/70">Auto follow, scheduler, AI writer and analytics in one free Chrome extension.</p>
+                  <div className="mt-4 grid gap-2">
+                    {site.chromeStoreUrl ? (
+                      <ExternalButton href={site.chromeStoreUrl} size="sm">
+                        <IconChrome size={16} /> Add to Chrome
+                      </ExternalButton>
+                    ) : null}
+                    <LinkButton href="/signup" variant="white" size="sm">Start free</LinkButton>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </Container>
         </Section>
       </article>
@@ -104,8 +133,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <Section className="bg-surface-2">
           <Container>
             <h2 className="text-2xl font-extrabold tracking-tight">Keep reading</h2>
-            <ul className="mt-8 grid gap-6 md:grid-cols-2">
-              {related.map((p) => <li key={p.slug} className="relative"><PostCard post={p} /></li>)}
+            <ul className="mt-8 grid gap-6 md:grid-cols-3">
+              {related.map((p) => <li key={p.slug} className="relative"><PostCard post={p} headingLevel="h3" /></li>)}
             </ul>
           </Container>
         </Section>

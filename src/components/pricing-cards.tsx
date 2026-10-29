@@ -7,8 +7,8 @@ import { pricingTiers } from "@/config/pricing";
 import type { ProductId } from "@/lib/billing/catalog";
 
 const perks: Record<string, string[]> = {
-  FREE: ["Safe & Balanced autopilot", "Sources, scored queue, core filters", "History, analytics, backup", "Cleanup scan & manual unfollow"],
-  PRO_MONTHLY: ["Everything in Free", "Turbo & X Premium paces", "Advanced filters & bulk import", "High-volume cleanup"],
+  FREE: ["Safe & Balanced auto follow", "Schedule up to 10 posts at a time", "Analytics for your latest 30 posts", "Who unfollowed you (7 days)", "Reply targets & cleanup scan"],
+  PRO_MONTHLY: ["Everything in Free", "GrowX AI writer", "Unlimited scheduling & evergreen", "Turbo pace & smart score", "Full analytics & follower history", "Bulk unfollow & auto cleanup"],
   PRO_YEARLY: ["Everything in Premium", "About $1.25 per month", "One payment for 365 days"],
   PRO_LIFETIME: ["Everything in Premium", "Pay once", "No renewal payments"],
 };
@@ -21,7 +21,7 @@ export function PricingCards() {
         {main.map((t) => (
           <li key={t.id} className="reveal">
             <div
-              className={`card-hover relative flex h-full flex-col rounded-3xl border bg-white p-6 shadow-[var(--shadow-soft)] ${
+              className={`relative flex h-full flex-col rounded-3xl border bg-white p-6 ${
                 t.highlight ? "border-2 border-accent shadow-[0_30px_60px_-30px_rgba(225,29,46,0.55)] lg:-translate-y-3 lg:hover:-translate-y-5" : "border-border"
               }`}
             >

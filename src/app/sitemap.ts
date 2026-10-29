@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { FEATURE_SLUGS } from "@/content/feature-slugs";
 import { posts } from "@/content/posts";
 import { site } from "@/config/site";
 
@@ -9,6 +10,10 @@ const pages: { path: string; priority: number; changeFrequency: "weekly" | "mont
   { path: "/features", priority: 0.9, changeFrequency: "monthly" },
   { path: "/how-it-works", priority: 0.9, changeFrequency: "monthly" },
   { path: "/pricing", priority: 0.9, changeFrequency: "monthly" },
+  ...FEATURE_SLUGS.map((s) => ({ path: `/features/${s}`, priority: 0.9, changeFrequency: "monthly" as const })),
+  { path: "/tools", priority: 0.7, changeFrequency: "monthly" },
+  { path: "/tools/tweet-character-counter", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/tools/twitter-thread-maker", priority: 0.8, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/about", priority: 0.6, changeFrequency: "yearly" },
   { path: "/contact", priority: 0.5, changeFrequency: "yearly" },

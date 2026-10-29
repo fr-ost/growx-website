@@ -1,93 +1,91 @@
 import Link from "next/link";
 import type { ComponentType } from "react";
-import { JsonLd, faqLd, softwareLd } from "@/components/json-ld";
 import { PostCard } from "@/components/blog";
-import { latestFirst } from "@/content/posts";
+import { FeatureIcon } from "@/components/feature-icon";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
-import { HeroPreview } from "@/components/home/hero-preview";
 import {
   IconActivity,
   IconArrowRight,
-  IconBroom,
-  IconChart,
   IconCheck,
   IconChrome,
   IconClock,
-  IconDownload,
-  IconFilter,
   IconGauge,
   IconKeyboard,
   IconLock,
   IconMoon,
   IconShield,
-  IconTarget,
+  IconSparkles,
+  IconTool,
   IconZap,
 } from "@/components/icons";
+import { JsonLd, faqLd, softwareLd } from "@/components/json-ld";
+import { FeatureRow } from "@/components/marketing/feature-row";
+import { Screenshot } from "@/components/marketing/screenshot";
 import { ExternalButton, LinkButton } from "@/components/ui/button";
-import { Badge, Container, Eyebrow, IconBubble, Section, SectionHeading } from "@/components/ui/primitives";
+import { Badge, Container, Eyebrow, Section, SectionHeading } from "@/components/ui/primitives";
+import { featureNav, toolNav } from "@/config/nav";
 import { getTier, TRIAL_DAYS } from "@/config/pricing";
 import { site } from "@/config/site";
+import { latestFirst } from "@/content/posts";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "GrowX: X (Twitter) Auto Follow Chrome Extension",
+  title: "GrowX: The Ultimate X (Twitter) Growth Tool",
   absoluteTitle: true,
-  description: "Free X (Twitter) auto follow Chrome extension. Find people likely to follow back, follow at a human pace with safety limits, track growth and clean up your account.",
+  description:
+    "GrowX is the all-in-one X (Twitter) growth tool for Chrome: smart auto follow, post scheduler, AI writer, analytics and unfollower tracker. Free to start.",
   path: "/",
-  keywords: ["X auto follow Chrome extension", "Twitter auto follow tool", "increase X followers", "follow back score", "Twitter unfollow tool", "X follower growth"],
+  keywords: [
+    "X growth tool",
+    "Twitter growth tool",
+    "how to grow on Twitter",
+    "Twitter auto follow",
+    "Twitter scheduler",
+    "AI tweet writer",
+    "Twitter analytics",
+    "who unfollowed me on Twitter",
+  ],
 });
 
 type Icon = ComponentType<{ size?: number; className?: string }>;
 
-const marquee = [
-  "Follow-back scoring",
-  "Source targeting",
-  "Human-like pacing",
-  "Hourly & daily caps",
-  "Active hours",
-  "Warm-up mode",
-  "Adaptive slow-down",
-  "Follow verification",
-  "Growth analytics",
-  "Cleanup scan",
-  "Backup & restore",
-  "Emergency stop",
-];
+const pillars: Record<string, string> = {
+  "twitter-auto-follow": "Follows the newest followers of accounts in your niche, the people most likely to follow you back.",
+  "twitter-post-scheduler": "Queue posts and threads with images. GrowX posts them at your best times.",
+  "ai-tweet-writer": "Ideas, rewrites, hooks and threads from GrowX AI, running privately on your computer.",
+  "twitter-analytics": "Every post's views, likes and engagement, plus the topics and formats that work for you.",
+  "twitter-unfollower-tracker": "New followers and unfollowers, day by day, with follower quality and top fans.",
+  "twitter-unfollow-tool": "Find accounts that don't follow back or went quiet. Review, then unfollow at a safe pace.",
+  "twitter-reply-targets": "Fresh posts from big accounts in your niche, ranked so you can reply early.",
+};
 
-const steps: { icon: Icon; title: string; body: string }[] = [
-  { icon: IconChrome, title: "Install & sign in to X", body: "GrowX works through your own x.com session in Chrome. It never asks for your X password." },
-  { icon: IconTarget, title: "Add source profiles", body: "Pick accounts in your niche. GrowX reads their newest followers: active people who follow accounts like yours." },
-  { icon: IconGauge, title: "Everyone gets scored", body: "Follow ratio, audience size, recent activity, a real profile and follow-back language. Only likely follow-backers are queued." },
-  { icon: IconZap, title: "Autopilot does the rest", body: "One follow at a time with randomised delays, breaks and caps. It tracks who follows back and which sources work." },
-];
-
-const bento: { icon: Icon; title: string; body: string; wide?: boolean }[] = [
-  { icon: IconTarget, title: "Follow-back scoring", body: "Every candidate gets an estimated 1-99 follow-back score from signals like follow ratio, audience size and recent activity, so your follows go where they are most likely to be returned.", wide: true },
-  { icon: IconFilter, title: "Targeting filters", body: "Audience size, follow ratio, account age, last activity, profile photo, keywords and more." },
-  { icon: IconBroom, title: "Cleanup tools", body: "Scan who you follow, find inactive accounts and people who don't follow back, review, then unfollow." },
-  { icon: IconChart, title: "Growth analytics", body: "Follow-back tracking, source performance, a growth chart and a monthly goal planner." },
-  { icon: IconDownload, title: "Backup & restore", body: "Export settings, sources, never-follow list and history to a file. Import it any time." },
-  { icon: IconLock, title: "Local by design", body: "Settings, queue and history live in your browser storage. GrowX talks only to x.com for your account and does not upload your X data.", wide: true },
+const steps = [
+  { title: "Add GrowX to Chrome", body: "Install the free extension. It works inside your own x.com session and never asks for your X password." },
+  { title: "Add sources, pick a pace", body: "Name a few accounts in your niche, or let GrowX find them. Choose Safe or Balanced and press Start." },
+  { title: "Post, reply and measure", body: "Queue a few posts for your best times, reply early to fresh posts and see what brings followers." },
 ];
 
 const safety: { icon: Icon; t: string }[] = [
-  { icon: IconClock, t: "Randomised delays and regular breaks" },
+  { icon: IconClock, t: "Random delays and regular breaks" },
   { icon: IconGauge, t: "Rolling hourly and daily caps" },
-  { icon: IconMoon, t: "Active hours and day schedule" },
-  { icon: IconZap, t: "Warm-up mode for new accounts" },
-  { icon: IconShield, t: "Automatic slow-down after any X warning" },
-  { icon: IconCheck, t: "Verifies that follows actually stick" },
+  { icon: IconMoon, t: "Optional active hours and warm-up" },
+  { icon: IconShield, t: "Slows down by itself after any X warning" },
+  { icon: IconCheck, t: "Checks that follows really stick" },
+  { icon: IconZap, t: "Posting cap and gap between posts" },
   { icon: IconKeyboard, t: "Emergency stop: Alt + Shift + S" },
-  { icon: IconActivity, t: "Resumes by itself after a Chrome restart" },
+  { icon: IconActivity, t: "Runs in the background, resumes after restarts" },
 ];
 
 const faqs = [
-  { q: "Is GrowX free?", a: "Yes. Core features stay free: the Safe and Balanced autopilot, sources and queue, core filters, history, analytics, backup and the cleanup scan. Premium adds higher volume, advanced filters and bulk tools." },
-  { q: "Do I need to give GrowX my X password?", a: "No. GrowX works through the X session that is already signed in in your Chrome browser. It never sees or stores your X password, and it does not use X OAuth." },
-  { q: "Is it safe for my account?", a: "No tool can promise zero risk; X decides. GrowX is built to behave like a careful person: randomised delays, breaks, hourly and daily caps, active hours, warm-up and an automatic slow-down whenever X shows a warning." },
-  { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, add your X username and start the trial from your dashboard when you are ready. It runs for ${TRIAL_DAYS} days, needs no payment details, and each account can use it once.` },
-  { q: "Can I buy Premium today?", a: "Yes. Premium is available now for $1.99 for 30 days, $14.99 for 365 days or $59.99 lifetime (just $29.99 for the first 100 buyers), paid in cryptocurrency through NOWPayments. You can also try every Premium feature free for 30 days, with no credit card and no commitment." },
+  { q: "What is GrowX?", a: "GrowX is a Chrome extension that brings the main X (Twitter) growth jobs into one place: smart auto follow, a post and thread scheduler, the GrowX AI writer, post analytics, an unfollower tracker, reply targets and cleanup tools." },
+  { q: "Is GrowX free?", a: `Yes. The free plan includes the Safe and Balanced auto follow paces, core filters, scheduling (up to 10 posts waiting), analytics for your latest 30 posts, 7 days of follower history, reply targets and the cleanup scan. You can try every Premium feature free for ${TRIAL_DAYS} days, with no credit card.` },
+  { q: "Do I need to give GrowX my X password?", a: "No. GrowX works through the x.com session that is already signed in to your Chrome browser. It never asks for or stores your X password and does not use X OAuth." },
+  { q: "Is it safe for my X account?", a: "No tool can promise zero risk; X makes its own decisions. GrowX is built to behave like a careful person: random delays, breaks, hourly and daily caps, optional active hours and warm-up, a posting cap, and an automatic slow-down or stop whenever X shows a warning." },
+  { q: "How does the post scheduler work?", a: "Write a post or thread, add images, then post now, pick a time or add it to your queue slots. GrowX posts through your signed-in x.com tab in Chrome, so Chrome needs to be running at the scheduled time." },
+  { q: "Where does GrowX AI run?", a: "On your own computer, using the AI model built into Chrome. Nothing is sent to GrowX and there is no API key. When the model isn't available, the AI buttons fall back to templates." },
+  { q: "Can I see who unfollowed me on Twitter?", a: "Yes. GrowX compares your full follower list once a day and shows who followed and who unfollowed you. The free plan keeps 7 days of history; Premium keeps the full history and adds one-click unfollow back." },
+  { q: "How much is Premium?", a: `$1.99 for 30 days, $14.99 for 365 days or $59.99 lifetime ($29.99 for the first 100 lifetime buyers). Plans are prepaid and never renew automatically. Start with the free ${TRIAL_DAYS}-day trial first.` },
 ];
 
 export default function HomePage() {
@@ -95,166 +93,236 @@ export default function HomePage() {
   return (
     <>
       <JsonLd data={[softwareLd, faqLd(faqs)]} />
+
       {/* HERO */}
-      <section className="relative overflow-hidden">
+      <section className="bg-hero relative overflow-hidden">
         <div className="bg-grid absolute inset-0" aria-hidden="true" />
-        <div className="glow -top-40 left-1/2 h-[28rem] w-[48rem] -translate-x-1/2 bg-accent/12" aria-hidden="true" />
-        <Container className="relative grid items-center gap-14 pb-16 pt-14 sm:pb-24 sm:pt-20 lg:grid-cols-[1.1fr_1fr] lg:gap-10">
-          <div className="text-center lg:text-left">
-            <div className="animate-fade-up">
-              <Eyebrow>X (Twitter) auto follow Chrome extension</Eyebrow>
-            </div>
-            <h1 className="animate-fade-up mt-6 text-[2.6rem] font-extrabold leading-[1.05] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-[4.2rem]">
-              Grow your X audience <span className="text-gradient">on autopilot.</span>
-            </h1>
-            <p className="animate-fade-up mx-auto mt-6 max-w-xl text-lg leading-relaxed text-text-2 [animation-delay:160ms] lg:mx-0">
-              GrowX is a free <strong className="font-semibold text-text">X auto follow</strong> Chrome extension: it finds people likely to
-              follow you back, follows them one at a time at a human pace, and shows you what is working. Safety limits are built in.
-            </p>
-            <div className="animate-fade-up mt-9 flex flex-col justify-center gap-3 [animation-delay:240ms] sm:flex-row lg:justify-start">
-              {site.chromeStoreUrl ? (
-                <ExternalButton href={site.chromeStoreUrl} size="lg">
-                  <IconChrome size={20} /> Add to Chrome, it&apos;s free
-                </ExternalButton>
-              ) : null}
-              <LinkButton href="/signup" variant="secondary" size="lg">
-                Create account <IconArrowRight size={18} />
-              </LinkButton>
-            </div>
-            <ul className="animate-fade-up mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-text-2 [animation-delay:320ms] lg:justify-start">
-              {["Free core features", `${TRIAL_DAYS}-day Premium trial: free, no credit card`, "No X password needed"].map((t) => (
-                <li key={t} className="flex items-center gap-1.5">
-                  <IconCheck size={16} className="text-accent" /> {t}
-                </li>
-              ))}
-            </ul>
+        <Container className="relative pb-10 pt-14 text-center sm:pt-20">
+          <div className="animate-fade-up">
+            <Link href="/blog/growx-potential-best-practices-roadmap" className="group inline-flex items-center gap-2 rounded-full border border-border bg-white/80 py-1 pl-1 pr-3 text-sm font-semibold text-text-2 shadow-sm backdrop-blur transition-colors hover:border-accent/30">
+              <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-bold text-white">New</span>
+              Version 2.4.4: scheduler, AI writer and analytics
+              <IconArrowRight size={15} className="text-accent transition-transform group-hover:translate-x-0.5" />
+            </Link>
           </div>
-          <HeroPreview />
+          <h1 className="animate-fade-up mx-auto mt-7 max-w-4xl text-[2.7rem] font-extrabold leading-[1.02] tracking-tight [animation-delay:80ms] sm:text-6xl lg:text-[5rem]">
+            The ultimate <span className="text-gradient">X (Twitter) growth tool</span>
+          </h1>
+          <p className="animate-fade-up mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-text-2 [animation-delay:160ms] sm:text-xl">
+            GrowX follows the right people, posts at your best times, writes with on-device AI and shows you what works. One simple
+            Chrome extension, free to start.
+          </p>
+          <div className="animate-fade-up mt-9 flex flex-col justify-center gap-3 [animation-delay:240ms] sm:flex-row">
+            {site.chromeStoreUrl ? (
+              <ExternalButton href={site.chromeStoreUrl} size="lg">
+                <IconChrome size={20} /> Add to Chrome, it&apos;s free
+              </ExternalButton>
+            ) : null}
+            <LinkButton href="/signup" variant="secondary" size="lg">
+              Create free account <IconArrowRight size={18} />
+            </LinkButton>
+          </div>
+          <ul className="animate-fade-up mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium text-text-2 [animation-delay:320ms]">
+            {["Free plan forever", `${TRIAL_DAYS}-day Premium trial, no credit card`, "Never asks for your X password"].map((t) => (
+              <li key={t} className="flex items-center gap-1.5">
+                <IconCheck size={16} className="text-accent" /> {t}
+              </li>
+            ))}
+          </ul>
+          <div className="animate-fade-up relative mx-auto mt-14 max-w-5xl [animation-delay:400ms]">
+            <div className="glow -bottom-10 left-1/2 h-40 w-3/4 -translate-x-1/2 bg-accent/25" aria-hidden="true" />
+            <Screenshot
+              src="/screens/overview.webp"
+              alt="GrowX dashboard: today's follows and goals, posts up next on X, this week's numbers and the popup with the Balanced pace running (demo data)"
+              priority
+              sizes="(min-width: 1024px) 1024px, 100vw"
+              className="relative"
+            />
+            <p className="mt-3 text-xs text-muted">Screenshots show demo data.</p>
+          </div>
         </Container>
       </section>
 
-      {/* MARQUEE */}
-      <div className="marquee-pause relative overflow-hidden border-y border-border bg-surface-2 py-4" aria-label="Feature list">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-surface-2 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-surface-2 to-transparent" />
-        <ul className="animate-marquee flex w-max gap-3">
-          {[...marquee, ...marquee].map((m, i) => (
-            <li
-              key={i}
-              aria-hidden={i >= marquee.length ? true : undefined}
-              className="flex items-center gap-2 whitespace-nowrap rounded-full border border-border bg-white px-4 py-1.5 text-sm font-semibold text-text-2"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> {m}
+      {/* PILLARS */}
+      <Section>
+        <Container>
+          <SectionHeading eyebrow="Everything in one extension" title="Seven growth tools. One simple dashboard." center>
+            Stop juggling a follow tool, a scheduler and an analytics app. GrowX does the daily work of growing on X in one place.
+          </SectionHeading>
+          <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featureNav.map((f, i) => (
+              <li key={f.slug} className="reveal">
+                <Link
+                  href={`/features/${f.slug}`}
+                  className={`card-hover group flex h-full flex-col rounded-3xl border p-6 ${
+                    i === 0 ? "bg-brand border-transparent text-white shadow-[var(--shadow-red)]" : "border-border bg-white"
+                  }`}
+                >
+                  <span className={`flex h-11 w-11 items-center justify-center rounded-2xl ${i === 0 ? "bg-white/15 text-white ring-1 ring-white/25" : "bg-accent-soft text-accent"}`}>
+                    <FeatureIcon name={f.icon} size={21} />
+                  </span>
+                  <h3 className={`mt-5 text-lg font-bold ${i === 0 ? "text-white" : ""}`}>{f.label}</h3>
+                  <p className={`mt-2 flex-1 text-sm leading-relaxed ${i === 0 ? "text-white/85" : "text-text-2"}`}>{pillars[f.slug]}</p>
+                  <span className={`mt-5 inline-flex items-center gap-1 text-sm font-semibold ${i === 0 ? "text-white" : "text-accent"}`}>
+                    Learn more <IconArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+            <li className="reveal">
+              <Link href="/features" className="card-hover group flex h-full flex-col justify-between rounded-3xl border border-border bg-surface-2 p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ink text-white">
+                  <IconSparkles size={20} />
+                </span>
+                <div className="mt-5">
+                  <h3 className="text-lg font-bold">And much more</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-text-2">Daily goals and streaks, a workspace per X account, 8 colour themes, dark mode and a command palette.</p>
+                </div>
+                <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+                  All features <IconArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                </span>
+              </Link>
             </li>
-          ))}
-        </ul>
-      </div>
+          </ul>
+        </Container>
+      </Section>
+
+      {/* SHOWCASE */}
+      <Section className="bg-surface-2">
+        <Container>
+          <SectionHeading eyebrow="See it in action" title="Built for the way you actually grow on X." center>
+            Each part of GrowX handles one job well, and they all share what they learn.
+          </SectionHeading>
+          <div className="mt-16 space-y-24">
+            <FeatureRow
+              eyebrow="Grow"
+              title={<>Pick a pace. <span className="text-gradient">Press Start.</span></>}
+              body="GrowX follows the newest followers of accounts in your niche, the people most likely to follow you back, one at a time with breaks and caps. It keeps going in the background until you press Stop."
+              bullets={[
+                "Safe (~150 a day) and Balanced (~280 a day) paces on the free plan",
+                "Follow-back score from 1 to 99 and filters that skip bots and inactive accounts",
+                "Find sources for me: GrowX suggests sources from the accounts you follow",
+              ]}
+              image="/screens/grow.webp"
+              alt="GrowX Grow page: Sources and pace with Safe, Balanced, Turbo, X Premium and Custom presets (demo data)"
+              links={[{ href: "/features/twitter-auto-follow", label: "Smart auto follow" }]}
+            />
+            <FeatureRow
+              reverse
+              eyebrow="Create"
+              title={<>Write once. <span className="text-gradient">Post at your best times.</span></>}
+              body="Posts and threads with images, queue slots and a calendar. GrowX learns your best time to post from your own posts and when your followers are active."
+              bullets={[
+                "Post now, schedule, or add to your queue slots",
+                "52 proven templates and a thread splitter that counts like X does",
+                "GrowX AI writes ideas, hooks and threads on your computer (Premium)",
+              ]}
+              image="/screens/create.webp"
+              alt="GrowX Create page: post composer with AI ideas, best time and queue slots (demo data)"
+              links={[
+                { href: "/features/twitter-post-scheduler", label: "Post scheduler" },
+                { href: "/features/ai-tweet-writer", label: "GrowX AI writer" },
+              ]}
+            />
+            <FeatureRow
+              eyebrow="Insights"
+              title={<>Know which posts <span className="text-gradient">bring followers.</span></>}
+              body="Views, likes, replies, reposts and engagement for every post, a heat map of your best times and the topics and formats that work for your audience."
+              bullets={[
+                "Refreshed every 3 hours while x.com is open",
+                "Topics and formats ranked by engagement",
+                "Weekly report: this week vs last week (Premium)",
+              ]}
+              image="/screens/insights.webp"
+              alt="GrowX Insights page: post numbers, best time to post heat map and what works by format (demo data)"
+              links={[{ href: "/features/twitter-analytics", label: "Analytics" }]}
+            />
+            <FeatureRow
+              reverse
+              eyebrow="Followers"
+              title={<>See who followed <span className="text-gradient">and who unfollowed you.</span></>}
+              body="X doesn't tell you who unfollowed you. GrowX checks your follower list once a day and shows every change, plus how real your audience is and who your biggest fans are."
+              bullets={[
+                "New followers and unfollowers, day by day",
+                "Follower quality: real, inactive, likely bots (Premium)",
+                "Clean up accounts that don't follow back, at a safe pace",
+              ]}
+              image="/screens/followers.webp"
+              alt="GrowX Followers page: new followers, unfollowers, follower quality score and unfollow back (demo data)"
+              links={[
+                { href: "/features/twitter-unfollower-tracker", label: "Unfollower tracker" },
+                { href: "/features/twitter-unfollow-tool", label: "Unfollow tool" },
+              ]}
+            />
+          </div>
+        </Container>
+      </Section>
 
       {/* HOW IT WORKS */}
       <Section>
         <Container>
-          <SectionHeading eyebrow="How it works" title="Four steps. Then it runs by itself." center>
-            Set it up once. GrowX keeps working in the background until you press stop, and survives tab switches and
-            browser restarts.
+          <SectionHeading eyebrow="How it works" title="Set up in five minutes." center>
+            A setup wizard walks you through it. After that, GrowX works in the background.
           </SectionHeading>
-          <ol className="relative mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="absolute left-[12%] right-[12%] top-11 hidden h-px bg-gradient-to-r from-accent/0 via-accent/40 to-accent/0 lg:block" aria-hidden="true" />
+          <ol className="mt-14 grid gap-5 md:grid-cols-3">
             {steps.map((s, i) => (
-              <li key={s.title} className="reveal card-hover relative rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)]">
-                <div className="flex items-center justify-between">
-                  <IconBubble>
-                    <s.icon size={22} />
-                  </IconBubble>
-                  <span className="font-display text-4xl font-extrabold text-accent/10">0{i + 1}</span>
-                </div>
-                <h3 className="mt-5 text-lg font-bold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-text-2">{s.body}</p>
+              <li key={s.title} className="reveal relative rounded-3xl border border-border bg-white p-7">
+                <span className="font-display text-sm font-extrabold text-accent">Step {i + 1}</span>
+                <h3 className="mt-2 text-xl font-bold">{s.title}</h3>
+                <p className="mt-2 leading-relaxed text-text-2">{s.body}</p>
               </li>
             ))}
           </ol>
-        </Container>
-      </Section>
-
-      {/* FEATURES BENTO */}
-      <Section className="bg-tint">
-        <Container>
-          <SectionHeading eyebrow="Features" title={<>Everything you need to grow, <span className="text-gradient">nothing you don&apos;t.</span></>}>
-            All of this is in the GrowX extension today.
-          </SectionHeading>
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {bento.map((b) => (
-              <div
-                key={b.title}
-                className={`reveal card-hover group relative overflow-hidden rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)] ${
-                  b.title === "Local by design" ? "md:col-span-3" : b.wide ? "md:col-span-2" : ""
-                }`}
-              >
-                <div className="glow -right-16 -top-16 h-40 w-40 bg-accent/0 transition-colors duration-500 group-hover:bg-accent/15" aria-hidden="true" />
-                <IconBubble className="transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                  <b.icon size={22} />
-                </IconBubble>
-                <h3 className="mt-5 text-lg font-bold">{b.title}</h3>
-                <p className="mt-2 max-w-lg text-sm leading-relaxed text-text-2">{b.body}</p>
-                {b.wide && b.title === "Follow-back scoring" ? (
-                  <div className="mt-6 grid grid-cols-5 items-end gap-2" aria-hidden="true">
-                    {["<50", "50-59", "60-69", "70-79", "80+"].map((band, i) => (
-                      <div key={band} className="text-center">
-                        <div className="mx-auto flex h-20 items-end">
-                          <div className="bg-brand w-full rounded-t-md opacity-90" style={{ height: `${30 + i * 16}%` }} />
-                        </div>
-                        <p className="mt-1.5 text-[11px] font-semibold text-muted">{band}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-                {b.title === "Local by design" ? (
-                  <ul className="mt-5 flex flex-wrap gap-2 md:absolute md:right-6 md:top-1/2 md:mt-0 md:max-w-[22rem] md:-translate-y-1/2 md:justify-end" aria-label="Data handling">
-                    {["Stored in chrome.storage", "Requests go to x.com only", "Export or delete any time"].map((c) => (
-                      <li key={c} className="flex items-center gap-1.5 rounded-full bg-ok-soft px-3 py-1.5 text-xs font-semibold text-ok">
-                        <IconCheck size={13} /> {c}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-                {b.title === "Targeting filters" ? (
-                  <ul className="mt-5 flex flex-wrap gap-2" aria-label="Example filters">
-                    {["Min followers", "Follow ratio", "Last active", "Account age", "Has photo", "Keywords"].map((c) => (
-                      <li key={c} className="rounded-full border border-border bg-surface-2 px-3 py-1 text-xs font-semibold text-text-2 transition-colors group-hover:border-accent/30 group-hover:text-accent">
-                        {c}
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ))}
-          </div>
           <div className="mt-10 text-center">
-            <LinkButton href="/features" variant="secondary">
-              Explore all features <IconArrowRight size={16} />
+            <LinkButton href="/how-it-works" variant="secondary">
+              See the full walkthrough <IconArrowRight size={16} />
             </LinkButton>
           </div>
         </Container>
       </Section>
 
       {/* SAFETY */}
-      <Section>
-        <Container className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <SectionHeading eyebrow="Safety first" title="Paced like a careful person, not a bot.">
-              GrowX respects every limit X signals. When X shows a warning, it backs off automatically, and it stops
-              completely when your account needs your attention.
-            </SectionHeading>
-            <p className="reveal mt-6 text-sm text-muted">
-              No tool can promise zero risk. Start with the Safe or Balanced pace and use active hours.
+      <section className="relative overflow-hidden bg-ink py-20 text-white sm:py-28">
+        <div className="glow -right-24 top-0 h-96 w-96 bg-accent/30" aria-hidden="true" />
+        <Container className="relative grid items-center gap-12 lg:grid-cols-[1fr_1.15fr]">
+          <div className="reveal">
+            <Eyebrow tone="light">Safety first</Eyebrow>
+            <h2 className="mt-4 text-[2rem] font-extrabold leading-[1.1] sm:text-4xl lg:text-[2.7rem]">Paced like a careful person, not a bot.</h2>
+            <p className="mt-4 text-lg leading-relaxed text-white/70">
+              GrowX respects the limits X signals. When X shows a warning it backs off by itself, and it stops completely when your account
+              needs your attention. It never clicks through a challenge.
             </p>
+            <p className="mt-5 text-sm text-white/50">No tool can promise zero risk. Start with the Safe or Balanced pace.</p>
           </div>
           <ul className="grid gap-3 sm:grid-cols-2">
             {safety.map((s) => (
-              <li key={s.t} className="reveal card-hover flex items-center gap-3 rounded-xl border border-border bg-white p-4 shadow-[var(--shadow-soft)]">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent text-white">
+              <li key={s.t} className="reveal flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
                   <s.icon size={18} />
                 </span>
-                <span className="text-sm font-semibold">{s.t}</span>
+                <span className="text-sm font-semibold text-white/90">{s.t}</span>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </section>
+
+      {/* PRIVATE BY DESIGN */}
+      <Section>
+        <Container>
+          <SectionHeading eyebrow="Private by design" title="Your data stays with you." center />
+          <ul className="mt-12 grid gap-5 md:grid-cols-3">
+            {[
+              { icon: IconLock, t: "No X password", b: "GrowX works in the x.com session already signed in to Chrome. No password, no X OAuth." },
+              { icon: IconShield, t: "Stored in your browser", b: "Your queue, history, posts and analytics live in Chrome's storage on your computer. Export a backup any time." },
+              { icon: IconSparkles, t: "AI on your computer", b: "GrowX AI uses the model built into Chrome. Your drafts are never sent to GrowX, and there is no API key." },
+            ].map((c) => (
+              <li key={c.t} className="reveal rounded-3xl border border-border bg-white p-7">
+                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ok-soft text-ok">
+                  <c.icon size={21} />
+                </span>
+                <h3 className="mt-5 text-lg font-bold">{c.t}</h3>
+                <p className="mt-2 leading-relaxed text-text-2">{c.b}</p>
               </li>
             ))}
           </ul>
@@ -265,16 +333,16 @@ export default function HomePage() {
       <Section className="bg-surface-2">
         <Container>
           <SectionHeading eyebrow="Pricing" title="Free forever. Premium when you want more." center>
-            Start free and try every Premium feature for {TRIAL_DAYS} days. No card needed.
+            Start free and try every Premium feature for {TRIAL_DAYS} days. No credit card needed.
           </SectionHeading>
           <div className="mx-auto mt-12 grid max-w-4xl gap-5 md:grid-cols-2">
-            <div className="reveal card-hover rounded-3xl border border-border bg-white p-8 shadow-[var(--shadow-soft)]">
+            <div className="reveal rounded-3xl border border-border bg-white p-8">
               <h3 className="text-lg font-bold">Free</h3>
               <p className="mt-3">
                 <span className="font-display text-5xl font-extrabold">$0</span> <span className="text-muted">forever</span>
               </p>
               <ul className="mt-6 space-y-3 text-sm text-text-2">
-                {["Safe & Balanced autopilot", "Sources, scored queue, core filters", "History, analytics & backup", "Cleanup scan & manual unfollow"].map((t) => (
+                {["Safe & Balanced auto follow", "Schedule up to 10 posts at a time", "Analytics for your latest 30 posts", "Who unfollowed you (7 days)", "Reply targets and cleanup scan"].map((t) => (
                   <li key={t} className="flex gap-2">
                     <IconCheck size={18} className="shrink-0 text-ok" /> {t}
                   </li>
@@ -284,30 +352,52 @@ export default function HomePage() {
                 Get started free
               </LinkButton>
             </div>
-            <div className="reveal card-hover relative overflow-hidden rounded-3xl border-2 border-accent bg-white p-8 shadow-[0_30px_60px_-30px_rgba(225,29,46,0.5)]">
-              <div className="glow -right-10 -top-10 h-40 w-40 bg-accent/20" aria-hidden="true" />
-              <div className="relative">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold">Premium</h3>
-                  <Badge tone="solid">Best value: yearly</Badge>
-                </div>
-                <p className="mt-3">
-                  <span className="font-display text-5xl font-extrabold">{yearly.priceLabel}</span> <span className="text-muted">/ year</span>
-                </p>
-                <p className="mt-1 text-sm text-muted">or $1.99 / 30 days · lifetime $59.99 ($29.99 early bird)</p>
-                <ul className="mt-6 space-y-3 text-sm text-text-2">
-                  {["Everything in Free", "Turbo & X Premium paces", "Advanced keyword, location & age filters", "Bulk import & high-volume cleanup"].map((t) => (
-                    <li key={t} className="flex gap-2">
-                      <IconCheck size={18} className="shrink-0 text-accent" /> {t}
-                    </li>
-                  ))}
-                </ul>
-                <LinkButton href="/pricing" className="mt-8 w-full">
-                  See plans <IconArrowRight size={16} />
-                </LinkButton>
+            <div className="reveal relative overflow-hidden rounded-3xl border-2 border-accent bg-white p-8 shadow-[0_30px_60px_-30px_rgba(225,29,46,0.5)]">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-bold">Premium</h3>
+                <Badge tone="solid">Best value: yearly</Badge>
               </div>
+              <p className="mt-3">
+                <span className="font-display text-5xl font-extrabold">{yearly.priceLabel}</span> <span className="text-muted">/ year</span>
+              </p>
+              <p className="mt-1 text-sm text-muted">or $1.99 / 30 days · lifetime $59.99 ($29.99 early bird)</p>
+              <ul className="mt-6 space-y-3 text-sm text-text-2">
+                {["Everything in Free", "GrowX AI writer and unlimited scheduling", "Turbo & X Premium paces, smart score", "Full analytics, weekly report, follower quality", "Bulk unfollow and automatic cleanup"].map((t) => (
+                  <li key={t} className="flex gap-2">
+                    <IconCheck size={18} className="shrink-0 text-accent" /> {t}
+                  </li>
+                ))}
+              </ul>
+              <LinkButton href="/pricing" className="mt-8 w-full">
+                See plans <IconArrowRight size={16} />
+              </LinkButton>
             </div>
           </div>
+        </Container>
+      </Section>
+
+      {/* FREE TOOLS */}
+      <Section>
+        <Container className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
+          <SectionHeading eyebrow="Free tools" title="Free X (Twitter) tools, right in your browser.">
+            No sign-up, nothing to install. Count characters exactly like X does, or turn a long draft into a numbered thread.
+          </SectionHeading>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {toolNav.map((t) => (
+              <li key={t.href} className="reveal">
+                <Link href={t.href} className="card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-6">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <IconTool size={20} />
+                  </span>
+                  <h3 className="mt-5 text-lg font-bold">{t.label}</h3>
+                  <p className="mt-2 flex-1 text-sm text-text-2">{t.blurb}</p>
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
+                    Open tool <IconArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </Container>
       </Section>
 
@@ -315,20 +405,20 @@ export default function HomePage() {
       <Section className="bg-surface-2">
         <Container>
           <div className="flex flex-wrap items-end justify-between gap-4">
-            <SectionHeading eyebrow="Learn more" title="Guides from the developer" />
+            <SectionHeading eyebrow="Guides" title="Learn to grow on X" />
             <LinkButton href="/blog" variant="secondary">
               All articles <IconArrowRight size={16} />
             </LinkButton>
           </div>
           <ul className="mt-10 grid gap-6 md:grid-cols-3">
-            {latestFirst().map((p) => (
-              <li key={p.slug} className="relative"><PostCard post={p} /></li>
-            ))}
+            {latestFirst()
+              .slice(0, 3)
+              .map((p) => (
+                <li key={p.slug} className="relative">
+                  <PostCard post={p} />
+                </li>
+              ))}
           </ul>
-          <p className="mt-8 text-center text-text-2">
-            New to GrowX? Start with <Link href="/how-it-works" className="font-semibold text-accent hover:underline">how it works</Link> or{" "}
-            <Link href="/about" className="font-semibold text-accent hover:underline">about the project</Link>.
-          </p>
         </Container>
       </Section>
 

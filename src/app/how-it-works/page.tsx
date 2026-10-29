@@ -1,27 +1,29 @@
 import Link from "next/link";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
-import { IconArrowRight, IconBroom, IconChart, IconChrome, IconFilter, IconGauge, IconShield, IconTarget, IconZap } from "@/components/icons";
+import { IconArrowRight, IconBroom, IconChart, IconChrome, IconMessage, IconPen, IconShield, IconSparkles, IconTarget, IconZap } from "@/components/icons";
 import { JsonLd, abs, breadcrumbLd, faqLd } from "@/components/json-ld";
 import { LinkButton } from "@/components/ui/button";
 import { Container, IconBubble, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "How X Auto Follow Works: Step-by-Step with GrowX",
-  description: "See how the GrowX Chrome extension works: pick source profiles, score followers, follow at a human pace with safety limits, then track follow-backs and clean up.",
+  title: "How GrowX Works: Grow on X (Twitter) Step by Step",
+  description:
+    "How the GrowX Chrome extension works: add sources and auto follow safely, schedule posts for your best times, reply early, read your analytics and clean up.",
   path: "/how-it-works",
-  keywords: ["how X auto follow works", "how to grow followers on X", "Twitter auto follow tutorial", "X follow limits per day", "safe Twitter auto follow"],
+  keywords: ["how to grow on Twitter", "how GrowX works", "Twitter growth routine", "how X auto follow works", "X follow limits per day", "schedule tweets"],
 });
 
 const steps = [
-  { icon: IconChrome, name: "Install GrowX and sign in to X", text: "Install the extension from the Chrome Web Store and make sure you are signed in at x.com. GrowX works through your own browser session, never asks for your X password and does not use X OAuth." },
-  { icon: IconTarget, name: "Add source profiles from your niche", text: "Add accounts your ideal audience already follows. GrowX reads each source's newest followers, because recently active followers are the most relevant and reachable." },
-  { icon: IconFilter, name: "Candidates are filtered and scored", text: "Hard filters remove unsuitable accounts (private, no photo, too new, inactive, too big or small). Survivors get a follow-back score from 1 to 99; only those above your minimum score enter the queue." },
-  { icon: IconGauge, name: "Choose a pace and start the autopilot", text: "Pick Safe or Balanced (Turbo and X Premium pace are available for aged or X Premium accounts), set active hours and optional warm-up, then press Start." },
-  { icon: IconShield, name: "GrowX follows one account at a time, safely", text: "Randomised delays, breaks, rolling hourly and daily caps, follow verification and an automatic slow-down after any X warning keep the activity human-like. It stops completely if X needs your attention." },
-  { icon: IconChart, name: "Track follow-backs and refine", text: "GrowX checks who followed back, rates your sources, charts your growth and tracks a monthly goal, so you can keep what works and drop what does not." },
-  { icon: IconBroom, name: "Clean up when you are ready", text: "Scan your following list for inactive accounts and people who do not follow back, review the results and unfollow the ones you pick at a safe pace." },
+  { icon: IconChrome, name: "Install GrowX and sign in to X", text: "Add the free extension from the Chrome Web Store and make sure you are signed in at x.com. GrowX works through your own browser session: it never asks for your X password and does not use X OAuth." },
+  { icon: IconSparkles, name: "Run the setup wizard", text: "Tell GrowX what your account is about and set simple daily goals for posts, replies and new followers. The wizard points you to the right pages; it takes a few minutes." },
+  { icon: IconTarget, name: "Add sources and pick a pace", text: "Add accounts in your niche, or press Find sources for me. GrowX follows their newest followers first, then ranks everyone else by a follow-back score from 1 to 99. Choose Safe or Balanced and press Start." },
+  { icon: IconShield, name: "GrowX follows at a careful, human pace", text: "One account at a time with random delays, breaks and rolling hourly and daily caps. It slows down by itself after any X warning, checks that follows stick and stops completely if X needs your attention." },
+  { icon: IconPen, name: "Queue posts for your best times", text: "Write posts and threads with images, then post now, schedule or add them to your queue slots. GrowX learns your best time to post from your own posts and when your followers are active." },
+  { icon: IconMessage, name: "Reply early to fresh posts", text: "Reply targets lists fresh posts from big accounts in your niche, ranked by how fast they take off. Reply and like from GrowX; nothing is sent unless you press the button." },
+  { icon: IconChart, name: "Check your insights every week", text: "See every post's numbers, the topics and formats that work, who followed and who unfollowed you, and which sources bring follow-backs. Keep what works and drop the rest." },
+  { icon: IconBroom, name: "Clean up when you are ready", text: "Scan your following list for accounts that don't follow back or went quiet, review the results and unfollow the ones you pick at a safe pace." },
 ];
 
 const presets = [
@@ -32,12 +34,12 @@ const presets = [
 ];
 
 const faqs = [
-  { q: "How many people can GrowX follow per day?", a: "It depends on the pace you choose: about 150 per day on Safe, 280 on Balanced, 390 on Turbo and 800 on the X Premium pace, always limited by rolling hourly and daily caps. X itself allows roughly 400 follows a day on a normal account, so the higher presets are meant for aged accounts or accounts with X Premium." },
-  { q: "Does GrowX work if I close the popup or the X tab?", a: "Yes. The engine runs in the extension's background service worker and keeps going until you press Stop. It can use any open x.com tab or a small pinned one, and it resumes after Chrome restarts unless you turn that off. Keep Chrome open." },
-  { q: "What happens if X shows a warning?", a: "GrowX backs off automatically: it lowers its limits and rests before continuing. If you are signed out, the account is locked or X issues repeated automation warnings, it stops completely and never clicks through a challenge." },
-  { q: "Does GrowX need my X password or API keys?", a: "No. It works through the X session already signed in in your Chrome browser. It does not ask for, see or store your X password and does not use X OAuth or API keys." },
-  { q: "Is my data uploaded anywhere?", a: "Your settings, sources, queue and history are stored in your browser. GrowX talks to x.com for your account and does not upload your X data. Optional anonymous usage counts can be switched off in Settings." },
-  { q: "Can GrowX unfollow people who don't follow me back?", a: "Yes, through the Cleanup tools: scan, review, select the accounts you want and unfollow them at a safe pace. Partial scans are clearly flagged so accounts are never wrongly labelled as non-followers." },
+  { q: "How many people can GrowX follow per day?", a: "It depends on the pace: about 150 a day on Safe, 280 on Balanced, 390 on Turbo and 800 on the X Premium pace, always within rolling hourly and daily caps. X allows roughly 400 follows a day on a normal account, so the higher presets are meant for aged accounts or accounts with X Premium." },
+  { q: "Does GrowX work if I close the popup or the X tab?", a: "Yes. The engine runs in the extension's background service worker and keeps going until you press Stop. It uses an open x.com tab or a small pinned one, and resumes after Chrome restarts. Chrome itself needs to stay open." },
+  { q: "Do scheduled posts go out when my computer is off?", a: "No. GrowX posts through your signed-in x.com tab in Chrome, so Chrome must be running. A post that is more than six hours late is never posted by itself: it waits for you as missed." },
+  { q: "What happens if X shows a warning?", a: "GrowX backs off automatically: it lowers its limits and rests before continuing, and posting pauses too. If you are signed out, the account is locked or X issues repeated automation warnings, it stops completely and never clicks through a challenge." },
+  { q: "Is my data uploaded anywhere?", a: "Your settings, sources, queue, posts, history and analytics are stored in your browser. GrowX talks to x.com for your account and does not upload your X data. GrowX AI runs on your computer. Optional anonymous usage counts can be switched off." },
+  { q: "Does GrowX need my X password or API keys?", a: "No. It works through the X session already signed in to your Chrome browser. It does not ask for, see or store your X password and does not use X OAuth or API keys." },
 ];
 
 export default function HowItWorksPage() {
@@ -49,25 +51,25 @@ export default function HowItWorksPage() {
           {
             "@context": "https://schema.org",
             "@type": "HowTo",
-            name: "How to grow your X (Twitter) audience with GrowX",
-            description: "Set up the GrowX Chrome extension, choose sources, and let the autopilot follow likely follow-backs at a safe pace.",
-            totalTime: "PT5M",
+            name: "How to grow on X (Twitter) with GrowX",
+            description: "Set up the GrowX Chrome extension, auto follow likely follow-backs at a safe pace, schedule posts for your best times, reply early and measure what works.",
+            totalTime: "PT10M",
             tool: [{ "@type": "HowToTool", name: "GrowX Chrome extension" }],
             step: steps.map((s, i) => ({ "@type": "HowToStep", position: i + 1, name: s.name, text: s.text, url: `${abs("/how-it-works")}#step-${i + 1}` })),
           },
           faqLd(faqs),
         ]}
       />
-      <PageHero eyebrow="How it works" title={<>How X auto follow works, <span className="text-gradient">step by step</span>.</>}>
-        From source profiles to follow-back tracking: exactly what the GrowX Chrome extension does, in the order it does it.
+      <PageHero eyebrow="How it works" title={<>How to grow on X with GrowX, <span className="text-gradient">step by step</span>.</>}>
+        <p>From install to your weekly check-in: what the GrowX Chrome extension does for you, and the few minutes a day it leaves to you.</p>
       </PageHero>
 
       <Section>
         <Container className="max-w-4xl">
-          <SectionHeading eyebrow="The pipeline" title="Seven steps from setup to cleanup" />
+          <SectionHeading eyebrow="The routine" title="Eight steps from setup to cleanup" />
           <ol className="mt-12 space-y-5">
             {steps.map((s, i) => (
-              <li key={s.name} id={`step-${i + 1}`} className="reveal card-hover flex scroll-mt-28 gap-5 rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)]">
+              <li key={s.name} id={`step-${i + 1}`} className="reveal flex scroll-mt-28 gap-5 rounded-3xl border border-border bg-white p-6">
                 <div className="flex flex-col items-center gap-2">
                   <IconBubble><s.icon size={22} /></IconBubble>
                   <span className="font-display text-sm font-extrabold text-accent">{String(i + 1).padStart(2, "0")}</span>
@@ -80,19 +82,20 @@ export default function HowItWorksPage() {
             ))}
           </ol>
           <p className="mt-8 text-text-2">
-            Want the full technical walkthrough? Read{" "}
-            <Link href="/blog/how-growx-auto-follow-works" className="font-semibold text-accent hover:underline">How GrowX auto follow works</Link>, or see every{" "}
+            Want the details? Read{" "}
+            <Link href="/blog/how-growx-auto-follow-works" className="font-semibold text-accent hover:underline">how GrowX auto follow works</Link>,{" "}
+            <Link href="/blog/how-to-schedule-tweets" className="font-semibold text-accent hover:underline">how to schedule tweets</Link> or see every{" "}
             <Link href="/features" className="font-semibold text-accent hover:underline">feature</Link>.
           </p>
         </Container>
       </Section>
 
-      <Section className="bg-tint">
+      <Section className="bg-surface-2">
         <Container>
           <SectionHeading eyebrow="Pacing" title="Four paces, one set of safety rules" center>
-            Values below come from the current extension (v2.3.0). Every preset adds occasional longer pauses, rolling caps and automatic slow-down.
+            Values from the current extension (v2.4.4). Every preset adds occasional longer pauses, rolling caps and automatic slow-down.
           </SectionHeading>
-          <div className="reveal mt-10 overflow-x-auto rounded-2xl border border-border bg-white shadow-[var(--shadow-soft)]">
+          <div className="reveal mt-10 overflow-x-auto rounded-3xl border border-border bg-white">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <caption className="sr-only">GrowX pace presets</caption>
               <thead>

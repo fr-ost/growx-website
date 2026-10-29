@@ -7,20 +7,21 @@ import type { Block, Post } from "@/content/posts";
 export const formatPostDate = (iso: string) =>
   new Intl.DateTimeFormat("en", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, headingLevel = "h2" }: { post: Post; headingLevel?: "h2" | "h3" }) {
+  const H = headingLevel;
   return (
-    <article className="reveal card-hover group flex h-full flex-col rounded-2xl border border-border bg-white p-6 shadow-[var(--shadow-soft)]">
+    <article className="reveal card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-6">
       <div className="flex items-center gap-3">
         <Badge tone="accent">{post.category}</Badge>
         <span className="flex items-center gap-1 text-xs text-muted">
           <IconClock size={13} /> {post.readMinutes} min read
         </span>
       </div>
-      <h2 className="mt-4 text-xl font-bold leading-snug tracking-tight">
-        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0 hover:text-accent">
+      <H className="mt-4 text-xl font-bold leading-snug tracking-tight">
+        <Link href={`/blog/${post.slug}`} className="after:absolute after:inset-0 group-hover:text-accent">
           {post.title}
         </Link>
-      </h2>
+      </H>
       <p className="mt-3 flex-1 text-sm leading-relaxed text-text-2">{post.excerpt}</p>
       <div className="mt-5 flex items-center justify-between text-sm">
         <time dateTime={post.datePublished} className="text-muted">{formatPostDate(post.datePublished)}</time>

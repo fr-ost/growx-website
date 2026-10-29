@@ -5,15 +5,15 @@ import { TRIAL_DAYS } from "@/config/pricing";
 import { isSupabaseConfigured } from "@/lib/env";
 
 const perks = [
-  { i: IconZap, t: "Free core features, forever" },
-  { i: IconCheck, t: `${TRIAL_DAYS}-day Premium trial, no card needed` },
+  { i: IconZap, t: "Auto follow, scheduler, AI writer and analytics" },
+  { i: IconCheck, t: `${TRIAL_DAYS}-day Premium trial, no credit card` },
   { i: IconLock, t: "Never asks for your X password" },
   { i: IconShield, t: "Safety limits built into every run" },
 ];
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: ReactNode; children: ReactNode }) {
   return (
-    <section className="relative flex flex-1 overflow-hidden">
+    <section className="bg-hero relative flex flex-1 overflow-hidden">
       <div className="bg-grid absolute inset-0" aria-hidden="true" />
       <div className="relative mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:px-8">
         <div className="animate-fade-up mx-auto w-full max-w-md">
@@ -33,7 +33,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           <div className="glow -right-16 -top-16 h-72 w-72 bg-white/25 animate-drift" aria-hidden="true" />
           <div className="relative">
             <p className="text-sm font-bold uppercase tracking-wider text-white/80">GrowX</p>
-            <h2 className="mt-3 text-3xl font-extrabold leading-tight">Grow your X audience on autopilot, at a human pace.</h2>
+            <h2 className="mt-3 text-3xl font-extrabold leading-tight">Everything you need to grow on X, in one Chrome extension.</h2>
             <ul className="mt-8 space-y-4">
               {perks.map(({ i: I, t }, idx) => (
                 <li key={t} className="animate-row flex items-center gap-3" style={{ animationDelay: `${200 + idx * 120}ms` }}>

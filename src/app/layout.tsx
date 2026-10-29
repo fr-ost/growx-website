@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { JsonLd, organizationLd, websiteLd } from "@/components/json-ld";
 import { site } from "@/config/site";
 import { baseKeywords } from "@/lib/seo";
@@ -10,6 +10,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", weight: ["600", "700", "800"], display: "swap" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -45,7 +46,7 @@ export const viewport: Viewport = { themeColor: "#ffffff", colorScheme: "light" 
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
       <body className="flex min-h-dvh flex-col overflow-x-clip">
         <a
           href="#main"
@@ -60,7 +61,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
         <SiteFooter />
         <GoogleTag />
-        <Analytics />
+        {/* Vercel Web Analytics only exists on Vercel deployments (its script is served by Vercel). */}
+        {process.env.VERCEL ? <Analytics /> : null}
       </body>
     </html>
   );

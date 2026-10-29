@@ -8,6 +8,7 @@ import sitemap from "@/app/sitemap";
 import robots from "@/app/robots";
 import { GET as feed } from "@/app/blog/feed.xml/route";
 import { site } from "@/config/site";
+import { FEATURE_SLUGS } from "@/content/feature-slugs";
 
 const appDir = path.resolve(import.meta.dirname, "../src/app");
 const routeExists = (p: string) => {
@@ -15,6 +16,8 @@ const routeExists = (p: string) => {
   if (clean === "/") return true;
   const blog = clean.match(/^\/blog\/([^/]+)$/);
   if (blog) return !!getPost(blog[1]);
+  const feature = clean.match(/^\/features\/([^/]+)$/);
+  if (feature) return (FEATURE_SLUGS as readonly string[]).includes(feature[1]);
   return existsSync(path.join(appDir, clean, "page.tsx")) || existsSync(path.join(appDir, clean, "route.ts"));
 };
 

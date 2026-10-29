@@ -20,12 +20,12 @@ export const isLocalUrl = isLocal;
 
 export const site = {
   name: "GrowX",
-  tagline: "X (Twitter) Auto Follow Chrome Extension",
+  tagline: "The Ultimate X (Twitter) Growth Tool",
   /** Person shown in copyright, About and structured data. */
   author: "Shahriar Ahmed",
   authorUrl: "https://www.shahriarahmed.net",
   description:
-    "GrowX is a free X (Twitter) auto follow Chrome extension. Find people likely to follow back, follow at a human pace with safety limits, track growth and clean up your account.",
+    "GrowX is the all-in-one X (Twitter) growth tool for Chrome: smart auto follow, a post scheduler, an on-device AI writer, analytics, an unfollower tracker and cleanup.",
   url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL, process.env.VERCEL_ENV ?? process.env.NEXT_PUBLIC_VERCEL_ENV),
   /** Official Chrome Web Store listing (provided by the owner); override with the env var if it changes. */
   chromeStoreUrl:

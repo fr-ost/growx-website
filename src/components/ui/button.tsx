@@ -1,18 +1,19 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 
-type Variant = "primary" | "secondary" | "ghost" | "white";
+type Variant = "primary" | "secondary" | "ghost" | "white" | "dark";
 type Size = "sm" | "md" | "lg";
 
 const base =
-  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-all duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55";
+  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-full font-semibold transition-all duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-55 aria-disabled:pointer-events-none aria-disabled:opacity-55";
 const variants: Record<Variant, string> = {
   primary: "btn-shine bg-accent text-accent-contrast shadow-[var(--shadow-red)] hover:bg-accent-hover hover:-translate-y-0.5",
   secondary: "border border-border-strong bg-white text-text shadow-sm hover:border-text/30 hover:-translate-y-0.5 hover:shadow-md",
   ghost: "text-text-2 hover:bg-surface-2 hover:text-text",
   white: "btn-shine bg-white text-accent shadow-lg hover:-translate-y-0.5",
+  dark: "bg-ink text-white shadow-[0_10px_24px_-12px_rgba(20,16,21,0.6)] hover:bg-ink-2 hover:-translate-y-0.5",
 };
-const sizes: Record<Size, string> = { sm: "h-9 px-3.5 text-sm", md: "h-11 px-5 text-sm", lg: "h-13 px-7 text-base" };
+const sizes: Record<Size, string> = { sm: "h-9 px-4 text-sm", md: "h-11 px-5 text-sm", lg: "h-13 px-7 text-base" };
 
 export function buttonClasses(variant: Variant = "primary", size: Size = "md", extra = "") {
   return `${base} ${variants[variant]} ${sizes[size]} ${extra}`.trim();

@@ -11,7 +11,7 @@ const ok = (name, cond, extra = "") => { results.push(`${cond ? "PASS" : "FAIL"}
 const b = await chromium.launch({ executablePath });
 
 // ---------- public crawl, desktop + mobile
-const pages = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
+const pages = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
 const links = new Set();
 for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile", { width: 375, height: 780 }]]) {
   const ctx = await b.newContext({ viewport: vp });
@@ -42,7 +42,7 @@ for (const l of links) {
 
 // ---------- SEO audit (rendered HTML, as a crawler sees it)
 {
-  const SEO_PAGES = ["/", "/features", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/contact"];
+  const SEO_PAGES = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/best-time-to-post-on-twitter", "/blog/how-to-write-a-twitter-thread", "/blog/ai-tweet-writer-growx-ai", "/blog/who-unfollowed-me-on-twitter", "/blog/twitter-analytics-guide", "/blog/twitter-reply-strategy", "/blog/how-to-increase-twitter-engagement", "/contact"];
   const titles = new Set(), descs = new Set();
   const sp = await b.newPage();
   for (const path of SEO_PAGES) {
@@ -77,6 +77,8 @@ for (const l of links) {
     if (path.startsWith("/blog/") ) ok(`${t}: article has BlogPosting + breadcrumb + 900+ words`, m.ld.includes("BlogPosting") && m.ld.includes("BreadcrumbList") && m.words > 900, `${m.words} words`);
     if (path === "/") ok(`${t}: SoftwareApplication + FAQPage`, m.ld.includes("SoftwareApplication") && m.ld.includes("FAQPage"));
     if (path === "/how-it-works") ok(`${t}: HowTo + FAQPage`, m.ld.includes("HowTo") && m.ld.includes("FAQPage"));
+    if (path.startsWith("/features/")) ok(`${t}: feature page has WebPage + FAQPage + breadcrumb + 700+ words`, m.ld.includes("WebPage") && m.ld.includes("FAQPage") && m.ld.includes("BreadcrumbList") && m.words > 700, `${m.words} words`);
+    if (path.startsWith("/tools/")) ok(`${t}: tool page has WebApplication + FAQPage`, m.ld.includes("WebApplication") && m.ld.includes("FAQPage"));
   }
   const noidx = await b.newPage();
   for (const path of ["/login", "/signup", "/forgot-password"]) {
@@ -87,7 +89,10 @@ for (const l of links) {
   const robots = await txt("/robots.txt");
   ok("robots.txt allows crawling and lists sitemap", /Allow: \//.test(robots) && /Sitemap: https:\/\/www\.growxapp\.org\/sitemap\.xml/.test(robots) && /Disallow: \/dashboard/.test(robots), robots.slice(0, 160));
   const sm = await txt("/sitemap.xml");
-  ok("sitemap.xml lists pages and all posts", ["/how-it-works", "/about", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap"].every((u) => sm.includes("https://www.growxapp.org" + u)) && !sm.includes("/dashboard") && !sm.includes("/login"));
+  ok("sitemap.xml lists pages and all posts", ["/how-it-works", "/about", "/features/twitter-post-scheduler", "/tools/tweet-character-counter", "/blog/how-growx-auto-follow-works", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter"].every((u) => sm.includes("https://www.growxapp.org" + u)) && !sm.includes("/dashboard") && !sm.includes("/login"));
+  const llms = await fetch(BASE + "/llms.txt");
+  const llmsText = await llms.text();
+  ok("llms.txt served as text with features and guides", llms.status === 200 && (llms.headers.get("content-type") ?? "").includes("text/plain") && llmsText.includes("/features/twitter-post-scheduler") && llmsText.includes("/blog/how-to-schedule-tweets"));
   const feed = await fetch(BASE + "/blog/feed.xml");
   ok("RSS feed served as XML", feed.status === 200 && (feed.headers.get("content-type") ?? "").includes("xml"));
   const og = await fetch(BASE + "/blog/how-growx-auto-follow-works/opengraph-image");
@@ -105,11 +110,33 @@ for (const l of links) {
 {
   const p = await b.newPage({ viewport: { width: 375, height: 780 } });
   await p.goto(BASE + "/");
-  await p.click("button[aria-controls]");
+  await p.click("button[data-menu-toggle]");
   ok("mobile menu opens", await p.locator('nav[aria-label="Mobile"]').isVisible());
   await p.click('nav[aria-label="Mobile"] >> text=Pricing');
   await p.waitForURL("**/pricing");
   ok("mobile menu navigates and closes", !(await p.locator('nav[aria-label="Mobile"]').isVisible()));
+  await p.close();
+}
+
+// ---------- features menu + free tools
+{
+  const p = await b.newPage({ viewport: { width: 1366, height: 900 } });
+  await p.goto(BASE + "/");
+  await p.hover('nav[aria-label="Main"] button');
+  ok("features menu opens on hover", await p.locator('nav[aria-label="Main"] a[href="/features/twitter-post-scheduler"]').isVisible());
+  await p.click('nav[aria-label="Main"] a[href="/features/twitter-post-scheduler"]');
+  await p.waitForURL("**/features/twitter-post-scheduler");
+  ok("features menu navigates to a feature page", (await p.locator("h1").innerText()).toLowerCase().includes("scheduler"));
+
+  await p.goto(BASE + "/tools/tweet-character-counter", { waitUntil: "networkidle" });
+  await p.fill("#cc-text", "Hello 😀 https://www.growxapp.org/a/very/long/link/that/counts/as/twenty-three");
+  const cc = await p.locator("main").innerText();
+  ok("character counter counts like X (9 + 23 for the link = 32)", /\b32\s*\/\s*280/.test(cc) && cc.includes("248 characters left"), cc.slice(0, 400));
+
+  await p.goto(BASE + "/tools/twitter-thread-maker", { waitUntil: "networkidle" });
+  await p.fill("#tm-text", "First part\n---\nSecond part");
+  const tm = await p.locator("main").innerText();
+  ok("thread maker splits at --- and numbers posts", tm.includes("First part 1/2") && tm.includes("Second part 2/2") && tm.includes("(2 posts)"), tm.slice(0, 300));
   await p.close();
 }
 

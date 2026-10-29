@@ -3,15 +3,15 @@ import { site } from "@/config/site";
 
 /** Sitewide keyword set; pages add their own on top. */
 export const baseKeywords = [
-  "X auto follow",
-  "Twitter auto follow",
-  "auto follow Chrome extension",
-  "grow X followers",
-  "grow Twitter followers",
+  "GrowX",
   "X growth tool",
   "Twitter growth tool",
-  "follow back tool",
-  "GrowX",
+  "grow on Twitter",
+  "grow X followers",
+  "X auto follow",
+  "Twitter scheduler",
+  "Twitter analytics",
+  "Chrome extension for Twitter",
 ];
 
 export const DEFAULT_OG_IMAGE = "/opengraph-image";
@@ -37,7 +37,7 @@ export interface PageSeo {
 export function pageMetadata(opts: PageSeo): Metadata {
   const fullTitle = opts.absoluteTitle ? opts.title : `${opts.title} | ${site.name}`;
   // A page-level openGraph replaces the root one, so the default image must be repeated here.
-  const images = opts.defaultImage === false ? undefined : [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "GrowX: X (Twitter) auto follow Chrome extension" }];
+  const images = opts.defaultImage === false ? undefined : [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: "GrowX: The Ultimate X (Twitter) Growth Tool" }];
   return {
     title: opts.absoluteTitle ? { absolute: opts.title } : opts.title,
     description: opts.description,

@@ -17,7 +17,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: 72, background: "linear-gradient(135deg, #FF4B5C 0%, #E11D2E 50%, #9F1239 100%)", color: "white" }}>
         <div style={{ display: "flex", fontSize: 34, fontWeight: 800 }}>GrowX · {post?.category ?? "Blog"}</div>
         <div style={{ display: "flex", fontSize: title.length > 80 ? 52 : 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: -1 }}>{title}</div>
-        <div style={{ display: "flex", fontSize: 28, opacity: 0.9 }}>growxapp.org/blog</div>
+        <div style={{ display: "flex", fontSize: 28, opacity: 0.9 }}>growxapp.org · The Ultimate X (Twitter) Growth Tool</div>
       </div>
     ),
     size,

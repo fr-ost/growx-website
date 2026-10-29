@@ -8,7 +8,7 @@ export function Container({ className = "", ...props }: ComponentProps<"div">) {
 }
 
 export function Section({ className = "", ...props }: ComponentProps<"section">) {
-  return <section className={`relative py-16 sm:py-24 ${className}`} {...props} />;
+  return <section className={`relative py-16 sm:py-24 lg:py-28 ${className}`} {...props} />;
 }
 
 export function Card({ className = "", ...props }: ComponentProps<"div">) {
@@ -31,10 +31,14 @@ export function Badge({ tone = "neutral", children, className = "" }: { tone?: B
   );
 }
 
-export function Eyebrow({ children }: { children: ReactNode }) {
+export function Eyebrow({ children, tone = "accent" }: { children: ReactNode; tone?: "accent" | "light" }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-accent/15 bg-accent-soft px-3 py-1 text-xs font-semibold uppercase tracking-wider text-accent">
-      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.12em] ${
+        tone === "light" ? "bg-white/10 text-white ring-1 ring-white/20" : "bg-accent-soft text-accent ring-1 ring-accent/15"
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${tone === "light" ? "bg-white" : "bg-accent"}`} />
       {children}
     </span>
   );
@@ -45,33 +49,37 @@ export function SectionHeading({
   title,
   children,
   center = false,
+  as: Tag = "h2",
+  className = "",
 }: {
   eyebrow?: string;
   title: ReactNode;
   children?: ReactNode;
   center?: boolean;
+  as?: "h1" | "h2";
+  className?: string;
 }) {
   return (
-    <div className={`reveal max-w-2xl ${center ? "mx-auto text-center" : ""}`}>
+    <div className={`reveal max-w-2xl ${center ? "mx-auto text-center" : ""} ${className}`}>
       {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-      <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">{title}</h2>
+      <Tag className="mt-4 text-[2rem] font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-[2.7rem]">{title}</Tag>
       {children ? <p className="mt-4 text-lg leading-relaxed text-text-2">{children}</p> : null}
     </div>
   );
 }
 
 /** Top-of-page hero used by inner pages. */
-export function PageHero({ eyebrow, title, children }: { eyebrow?: string; title: ReactNode; children?: ReactNode }) {
+export function PageHero({ eyebrow, title, children, actions }: { eyebrow?: string; title: ReactNode; children?: ReactNode; actions?: ReactNode }) {
   return (
-    <section className="relative overflow-hidden border-b border-border">
+    <section className="bg-hero relative overflow-hidden border-b border-border">
       <div className="bg-grid absolute inset-0" aria-hidden="true" />
-      <div className="glow -top-24 left-1/2 h-64 w-[36rem] -translate-x-1/2 bg-accent/15" aria-hidden="true" />
-      <Container className="relative py-16 text-center sm:py-20">
+      <Container className="relative py-16 text-center sm:py-24">
         <div className="animate-fade-up">{eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}</div>
-        <h1 className="animate-fade-up mx-auto mt-5 max-w-3xl text-4xl font-extrabold tracking-tight [animation-delay:80ms] sm:text-5xl">{title}</h1>
+        <h1 className="animate-fade-up mx-auto mt-5 max-w-3xl text-[2.4rem] font-extrabold leading-[1.06] tracking-tight [animation-delay:80ms] sm:text-6xl">{title}</h1>
         {children ? (
-          <p className="animate-fade-up mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-text-2 [animation-delay:160ms]">{children}</p>
+          <div className="animate-fade-up mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-text-2 [animation-delay:160ms]">{children}</div>
         ) : null}
+        {actions ? <div className="animate-fade-up mt-8 flex flex-col justify-center gap-3 [animation-delay:240ms] sm:flex-row">{actions}</div> : null}
       </Container>
     </section>
   );
@@ -124,7 +132,7 @@ export function CheckIcon({ className = "h-5 w-5" }: { className?: string }) {
 
 export function IconBubble({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent ring-1 ring-accent/10 ${className}`}>
+    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-accent-soft text-accent ring-1 ring-accent/10 ${className}`}>
       {children}
     </span>
   );

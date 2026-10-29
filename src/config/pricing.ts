@@ -33,7 +33,7 @@ export const pricingTiers: readonly PricingTier[] = [
     interval: null,
     priceLabel: "$0",
     cadence: "forever",
-    blurb: "Useful core features for daily use.",
+    blurb: "Grow, post and track on X. Free forever.",
   },
   {
     id: "PRO_MONTHLY",

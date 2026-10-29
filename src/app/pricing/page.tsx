@@ -13,13 +13,14 @@ export const metadata = pageMetadata({
   title: "GrowX Pricing: Free Plan, Premium & 30-Day Trial",
   description: "GrowX is free forever. Premium from $1.99: 30 days, 365 days or lifetime ($29.99 for the first 100 buyers, then $59.99). Free 30-day trial, no credit card.",
   path: "/pricing",
-  keywords: ["GrowX pricing", "GrowX Premium", "free X auto follow", "Twitter growth tool pricing"],
+  keywords: ["GrowX pricing", "GrowX Premium", "free Twitter growth tool", "free Twitter scheduler", "Twitter growth tool pricing", "free X auto follow"],
 });
 
 const faqs = [
   { q: "How do I pay?", a: "With cryptocurrency through a secure NOWPayments invoice page, where you choose the coin: Ethereum (ETH) and BNB Smart Chain (BEP20) coins. Monthly and yearly plans are prepaid for 30 or 365 days and do not renew automatically; lifetime is a single payment. Premium turns on automatically once your payment is confirmed on the network." },
   { q: `How does the ${TRIAL_DAYS}-day trial work?`, a: `Create a free account, confirm your email, link your X account and start the trial from your dashboard. It lasts ${TRIAL_DAYS} days, is completely free, needs no credit card or payment details, and each account and X account can use it once.` },
-  { q: "Will the free version stay useful?", a: "Yes. Core features stay free: the Safe and Balanced autopilot, sources, queue, core filters, history, analytics, backup, the cleanup scan and manual unfollows." },
+  { q: "Will the free version stay useful?", a: "Yes. The free plan includes the Safe and Balanced auto follow paces, sources and core filters, scheduling with up to 10 posts waiting, best time to post, 52 templates, reply targets, analytics for your latest 30 posts, 7 days of follower history and the cleanup scan." },
+  { q: "What do I get with Premium?", a: "GrowX AI, unlimited scheduling, evergreen recycling and auto-plug, Turbo and X Premium paces, the smart score and more source types, advanced filters and list import, full analytics with the weekly report, full follower history and quality, VIP alerts, bulk unfollow, automatic cleanup and a workspace per X account." },
   { q: "What is the early-bird lifetime price?", a: "Lifetime Premium is $59.99, but the first 100 people who buy it pay only $29.99. The counter on the Lifetime card shows how many early-bird spots are left; a spot is used only when a payment is fully confirmed. After the 100 spots are taken, the regular $59.99 applies." },
   { q: "What happens when my prepaid period ends?", a: "Premium ends on the date shown in your account and you return to the Free plan. Nothing is charged automatically; pay again whenever you want to continue. Lifetime purchases never expire." },
 ];
@@ -52,7 +53,7 @@ export default function PricingPage() {
           <SectionHeading eyebrow="Compare" title="Free vs Premium" center>
             Premium includes everything in Free.
           </SectionHeading>
-          <div className="reveal mt-10 overflow-x-auto rounded-2xl border border-border bg-white shadow-[var(--shadow-soft)]">
+          <div className="reveal mt-10 overflow-x-auto rounded-3xl border border-border bg-white">
             <table className="w-full text-left text-sm sm:min-w-[36rem]">
               <caption className="sr-only">Free and Premium feature comparison</caption>
               <thead>
