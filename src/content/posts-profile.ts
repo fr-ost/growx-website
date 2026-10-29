@@ -50,7 +50,7 @@ export const profilePosts: Post[] = [
         id: "formula",
         heading: "How to write a Twitter bio: a four-part formula",
         blocks: [
-          p("Most bios that work answer four questions. You will not always fit all four, but checking your draft against them shows what is missing."),
+          p("Most bios that work answer four questions. Checking your draft against them shows what is missing."),
           ol(
             "**Who you help, or who it is for.** Name the audience: founders, new runners, junior developers, home cooks. People follow accounts that are clearly meant for them.",
             "**What you post.** Your two or three recurring topics, so visitors know what will appear in their timeline. This is the part most bios leave out.",
@@ -80,7 +80,6 @@ export const profilePosts: Post[] = [
             "**Podcast host**: \"Host of {podcast}: conversations with {guests} about {topic}. New episode every {weekday}. Clips and takeaways here.\"",
             "**Indie game developer**: \"Solo dev making {game}, a {genre} game about {hook}. Devlogs, GIFs and the bugs I'm secretly proud of. Wishlist: {link}\"",
             "**Teacher**: \"{Subject} teacher, {number} years in the classroom. Lesson ideas, free resources and what actually works with {age group}.\"",
-            "**Consultant**: \"I help {industry} teams fix {problem}. Ex-{role} at {company}. Posting the frameworks I use with clients.\"",
           ),
           p("Placeholders change the length once you fill them in, so paste your final version into the free [tweet character counter](/tools/tweet-character-counter) to check it against the 160-character limit. X's profile editor has the last word when you press save."),
         ],
@@ -136,9 +135,9 @@ export const profilePosts: Post[] = [
         id: "follow-backs",
         heading: "Why a complete profile matters for follow-backs",
         blocks: [
-          p("Whenever you follow someone or reply to them, many of them check your profile before deciding whether to follow back. A default avatar, an empty bio and no posts look like a bot or a throwaway account, and plenty of people skip those without a second look. Growth tools that score accounts often make the same judgement."),
+          p("When you follow or reply to someone, many people check your profile before deciding whether to follow back. A default avatar, an empty bio and no posts look like a bot or a throwaway account, and plenty of people skip those. Growth tools that score accounts often make the same judgement."),
           p("GrowX, a Chrome extension for growing on X, is one example. Its filters skip accounts without a profile photo, and its follow-back score counts a photo and a bio among its signals, so an account without a bio scores lower. That is how one tool rates accounts, not a statement about how X itself ranks anyone, but it reflects a common instinct: a complete profile looks like a real person who might follow back. The [follow-back score guide](/blog/twitter-follow-back-score-growx) explains every signal."),
-          p("The practical lesson: finish your profile before you follow people at any scale, whether by hand or with [Twitter auto follow](/features/twitter-auto-follow). Every follow you send is an invitation to look at your profile, so make sure there is something worth seeing when they arrive."),
+          p("The practical lesson: finish your profile before you follow people at any scale, whether by hand or with [Twitter auto follow](/features/twitter-auto-follow). Every follow you send is an invitation to look at your profile."),
         ],
       },
       {
@@ -378,7 +377,7 @@ export const profilePosts: Post[] = [
     ],
     datePublished: DATE,
     dateModified: DATE,
-    readMinutes: 6,
+    readMinutes: 5,
     related: ["twitter-follow-back-score-growx", "unfollow-non-followers-twitter", "twitter-follower-ratio"],
     sections: [
       {
@@ -517,7 +516,7 @@ export const profilePosts: Post[] = [
     ],
     datePublished: DATE,
     dateModified: DATE,
-    readMinutes: 6,
+    readMinutes: 5,
     related: ["unfollow-non-followers-twitter", "mass-follow-twitter-limits", "follow-for-follow-twitter"],
     sections: [
       {
@@ -657,7 +656,7 @@ export const profilePosts: Post[] = [
     ],
     datePublished: DATE,
     dateModified: DATE,
-    readMinutes: 7,
+    readMinutes: 6,
     related: ["twitter-reply-strategy", "how-to-increase-twitter-engagement", "how-growx-auto-follow-works"],
     sections: [
       {
