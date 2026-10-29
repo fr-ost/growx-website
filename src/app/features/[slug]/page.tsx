@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 export default async function FeatureLandingPage({ params }: { params: Promise<{ slug: string }> }) {
   const page = getFeaturePage((await params).slug);
   if (!page) notFound();
-  const posts = page.relatedPosts.map((s) => getPost(s)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, 3);
+  const posts = page.relatedPosts.map((s) => getPost(s)).filter((p): p is NonNullable<typeof p> => !!p).slice(0, 6);
   const related = page.related.map((s) => getFeaturePage(s)).filter((p): p is NonNullable<typeof p> => !!p);
   const path = `/features/${page.slug}`;
 

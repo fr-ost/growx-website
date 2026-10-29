@@ -9,6 +9,7 @@ import { JsonLd, abs, authorLd, breadcrumbLd, faqLd } from "@/components/json-ld
 import { ExternalButton, LinkButton } from "@/components/ui/button";
 import { Badge, Container, Eyebrow, Section } from "@/components/ui/primitives";
 import { getPost, posts } from "@/content/posts";
+import { toolNav } from "@/config/nav";
 import { site } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
 
@@ -123,6 +124,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     <LinkButton href="/signup" variant="white" size="sm">Start free</LinkButton>
                   </div>
                 </div>
+                <nav aria-label="Free tools" className="rounded-3xl border border-border bg-white p-5">
+                  <p className="text-sm font-bold">Free X tools</p>
+                  <ul className="mt-3 space-y-2 text-sm">
+                    {toolNav.map((t) => (
+                      <li key={t.href}>
+                        <Link href={t.href} className="text-text-2 transition-colors hover:text-accent">{t.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
               </div>
             </aside>
           </Container>

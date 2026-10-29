@@ -15,4 +15,7 @@ export const featureNav: { slug: FeatureSlug; label: string; blurb: string; icon
 export const toolNav = [
   { href: "/tools/tweet-character-counter", label: "Tweet character counter", blurb: "Count characters the way X does" },
   { href: "/tools/twitter-thread-maker", label: "Twitter thread maker", blurb: "Split long text into a numbered thread" },
+  { href: "/tools/twitter-engagement-rate-calculator", label: "Engagement rate calculator", blurb: "How well a post landed with its viewers" },
+  { href: "/tools/twitter-follower-ratio-calculator", label: "Follower ratio calculator", blurb: "Your ratio and X's 5,000 follow limit" },
+  { href: "/tools/twitter-bold-text-generator", label: "Bold text generator", blurb: "Bold and italic letters for posts and bios" },
 ] as const;

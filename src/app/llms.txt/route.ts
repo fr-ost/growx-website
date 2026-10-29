@@ -1,5 +1,6 @@
 import { featurePages } from "@/content/feature-pages";
 import { latestFirst } from "@/content/posts";
+import { toolNav } from "@/config/nav";
 import { pricingTiers, TRIAL_DAYS } from "@/config/pricing";
 import { site } from "@/config/site";
 
@@ -23,8 +24,12 @@ export function GET() {
     `- [All features](${site.url}/features)`,
     `- [How it works](${site.url}/how-it-works)`,
     `- [Pricing](${site.url}/pricing)`,
-    `- [Free tools](${site.url}/tools): tweet character counter, Twitter thread maker`,
+    `- [Free tools](${site.url}/tools)`,
+    `- [Press kit](${site.url}/press)`,
     `- [Chrome Web Store](${site.chromeStoreUrl})`,
+    "",
+    "## Free tools (no sign-up)",
+    ...toolNav.map((t) => `- [${t.label}](${site.url}${t.href}): ${t.blurb}`),
     "",
     "## Guides",
     ...latestFirst().map((p) => `- [${p.title}](${site.url}/blog/${p.slug}): ${p.description}`),

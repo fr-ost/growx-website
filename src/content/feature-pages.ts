@@ -149,7 +149,7 @@ export const featurePages: FeaturePage[] = [
         a: "Only if you turn on automatic cleanup (Premium), which unfollows GrowX's own follows that did not follow back after 2, 5 or 7 days. Accounts you followed yourself or imported are never touched.",
       },
     ],
-    relatedPosts: ["how-growx-auto-follow-works", "twitter-follow-back-score-growx", "bulk-follow-twitter-safely", "mass-follow-twitter-limits"],
+    relatedPosts: ["how-growx-auto-follow-works", "twitter-follow-back-score-growx", "bulk-follow-twitter-safely", "follow-for-follow-twitter", "twitter-follower-ratio", "mass-follow-twitter-limits"],
     related: ["twitter-unfollow-tool", "twitter-unfollower-tracker", "twitter-reply-targets"],
   },
   {
@@ -288,7 +288,7 @@ export const featurePages: FeaturePage[] = [
         a: "Each post is published only as the X account it was written for. A separate workspace per X account is a Premium feature, and every GrowX account can link 2 X usernames for free.",
       },
     ],
-    relatedPosts: ["how-to-schedule-tweets", "best-time-to-post-on-twitter", "how-to-write-a-twitter-thread"],
+    relatedPosts: ["how-to-schedule-tweets", "best-time-to-post-on-twitter", "how-often-to-post-on-twitter", "how-to-write-a-twitter-thread", "tweet-ideas", "how-to-go-viral-on-twitter"],
     related: ["ai-tweet-writer", "twitter-analytics", "twitter-reply-targets"],
   },
   {
@@ -434,7 +434,7 @@ export const featurePages: FeaturePage[] = [
         a: "No. It only fills the composer or suggests text. You decide what to post, and replies are only sent when you press the button.",
       },
     ],
-    relatedPosts: ["ai-tweet-writer-growx-ai", "how-to-write-a-twitter-thread", "how-to-increase-twitter-engagement"],
+    relatedPosts: ["ai-tweet-writer-growx-ai", "tweet-ideas", "how-to-write-a-twitter-thread", "twitter-bio-ideas", "how-to-go-viral-on-twitter", "how-to-increase-twitter-engagement"],
     related: ["twitter-post-scheduler", "twitter-reply-targets"],
   },
   {
@@ -571,7 +571,7 @@ export const featurePages: FeaturePage[] = [
         a: "In Chrome's extension storage on your computer. Settings, history, posts and analytics stay there, and you can export a backup file at any time.",
       },
     ],
-    relatedPosts: ["twitter-analytics-guide", "best-time-to-post-on-twitter", "how-to-increase-twitter-engagement"],
+    relatedPosts: ["twitter-analytics-guide", "best-time-to-post-on-twitter", "twitter-algorithm-explained", "how-to-increase-twitter-engagement", "how-often-to-post-on-twitter", "twitter-hashtags-guide"],
     related: ["twitter-post-scheduler", "twitter-unfollower-tracker", "ai-tweet-writer"],
   },
   {
@@ -708,7 +708,7 @@ export const featurePages: FeaturePage[] = [
         a: "Once a day, while Chrome is running with x.com open. Someone who follows and unfollows between two checks will not show up.",
       },
     ],
-    relatedPosts: ["who-unfollowed-me-on-twitter", "unfollow-non-followers-twitter", "twitter-analytics-guide"],
+    relatedPosts: ["who-unfollowed-me-on-twitter", "twitter-follower-ratio", "unfollow-non-followers-twitter", "twitter-shadowban", "twitter-analytics-guide", "follow-for-follow-twitter"],
     related: ["twitter-unfollow-tool", "twitter-analytics", "twitter-auto-follow"],
   },
   {
@@ -843,7 +843,7 @@ export const featurePages: FeaturePage[] = [
         a: "No. Automatic cleanup (Premium) only unfollows accounts GrowX followed for you that did not follow back, never accounts you followed yourself or imported.",
       },
     ],
-    relatedPosts: ["unfollow-non-followers-twitter", "growx-features-guide-scoring-filters-cleanup", "mass-follow-twitter-limits"],
+    relatedPosts: ["unfollow-non-followers-twitter", "twitter-follower-ratio", "follow-for-follow-twitter", "growx-features-guide-scoring-filters-cleanup", "mass-follow-twitter-limits", "twitter-shadowban"],
     related: ["twitter-unfollower-tracker", "twitter-auto-follow"],
   },
   {
@@ -982,7 +982,7 @@ export const featurePages: FeaturePage[] = [
         a: "Yes, with Premium. Mark the account as a VIP in GrowX and VIP alerts will notify you when they post.",
       },
     ],
-    relatedPosts: ["twitter-reply-strategy", "how-to-increase-twitter-engagement", "how-to-grow-on-twitter-x"],
+    relatedPosts: ["twitter-reply-strategy", "twitter-lists-guide", "how-to-increase-twitter-engagement", "twitter-algorithm-explained", "how-to-grow-on-twitter-x", "how-to-go-viral-on-twitter"],
     related: ["ai-tweet-writer", "twitter-auto-follow", "twitter-analytics"],
   },
 ];

@@ -26,7 +26,7 @@ const cols = [
       { href: "/blog/how-to-schedule-tweets", label: "How to schedule tweets" },
       { href: "/blog/best-time-to-post-on-twitter", label: "Best time to post on X" },
       { href: "/blog/who-unfollowed-me-on-twitter", label: "Who unfollowed me?" },
-      { href: "/blog/bulk-follow-twitter-safely", label: "Bulk follow safely" },
+      { href: "/blog/twitter-algorithm-explained", label: "The X algorithm explained" },
       { href: "/blog/best-twitter-growth-tools", label: "Best growth tools" },
       { href: "/blog", label: "All articles" },
     ],
@@ -35,6 +35,7 @@ const cols = [
     title: "Company",
     links: [
       { href: "/about", label: "About" },
+      { href: "/press", label: "Press kit" },
       { href: "/contact", label: "Support" },
       { href: "/login", label: "Log in" },
       { href: "/privacy", label: "Privacy policy" },

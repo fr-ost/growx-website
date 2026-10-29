@@ -378,19 +378,19 @@ export default function HomePage() {
 
       {/* FREE TOOLS */}
       <Section>
-        <Container className="grid items-center gap-10 lg:grid-cols-[1fr_1.2fr]">
-          <SectionHeading eyebrow="Free tools" title="Free X (Twitter) tools, right in your browser.">
-            No sign-up, nothing to install. Count characters exactly like X does, or turn a long draft into a numbered thread.
+        <Container>
+          <SectionHeading eyebrow="Free tools" title="Free X (Twitter) tools, right in your browser." center>
+            No sign-up, nothing to install, nothing you type leaves your computer.
           </SectionHeading>
-          <ul className="grid gap-4 sm:grid-cols-2">
+          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {toolNav.map((t) => (
               <li key={t.href} className="reveal">
-                <Link href={t.href} className="card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-6">
-                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-accent-soft text-accent">
-                    <IconTool size={20} />
+                <Link href={t.href} className="card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-5">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent-soft text-accent">
+                    <IconTool size={19} />
                   </span>
-                  <h3 className="mt-5 text-lg font-bold">{t.label}</h3>
-                  <p className="mt-2 flex-1 text-sm text-text-2">{t.blurb}</p>
+                  <h3 className="mt-4 font-bold leading-snug">{t.label}</h3>
+                  <p className="mt-1.5 flex-1 text-sm text-text-2">{t.blurb}</p>
                   <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-accent">
                     Open tool <IconArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
                   </span>

@@ -11,7 +11,7 @@ const ok = (name, cond, extra = "") => { results.push(`${cond ? "PASS" : "FAIL"}
 const b = await chromium.launch({ executablePath });
 
 // ---------- public crawl, desktop + mobile
-const pages = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
+const pages = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/tools/twitter-engagement-rate-calculator", "/tools/twitter-follower-ratio-calculator", "/tools/twitter-bold-text-generator", "/press", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter", "/blog/twitter-algorithm-explained", "/blog/twitter-bio-ideas", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
 const links = new Set();
 for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile", { width: 375, height: 780 }]]) {
   const ctx = await b.newContext({ viewport: vp });
@@ -42,7 +42,7 @@ for (const l of links) {
 
 // ---------- SEO audit (rendered HTML, as a crawler sees it)
 {
-  const SEO_PAGES = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/best-time-to-post-on-twitter", "/blog/how-to-write-a-twitter-thread", "/blog/ai-tweet-writer-growx-ai", "/blog/who-unfollowed-me-on-twitter", "/blog/twitter-analytics-guide", "/blog/twitter-reply-strategy", "/blog/how-to-increase-twitter-engagement", "/contact"];
+  const SEO_PAGES = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/tools/twitter-engagement-rate-calculator", "/tools/twitter-follower-ratio-calculator", "/tools/twitter-bold-text-generator", "/press", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/best-time-to-post-on-twitter", "/blog/how-to-write-a-twitter-thread", "/blog/ai-tweet-writer-growx-ai", "/blog/who-unfollowed-me-on-twitter", "/blog/twitter-analytics-guide", "/blog/twitter-reply-strategy", "/blog/how-to-increase-twitter-engagement", "/blog/twitter-algorithm-explained", "/blog/how-to-go-viral-on-twitter", "/blog/how-often-to-post-on-twitter", "/blog/tweet-ideas", "/blog/twitter-hashtags-guide", "/blog/twitter-bio-ideas", "/blog/twitter-shadowban", "/blog/follow-for-follow-twitter", "/blog/twitter-follower-ratio", "/blog/twitter-lists-guide", "/contact"];
   const titles = new Set(), descs = new Set();
   const sp = await b.newPage();
   for (const path of SEO_PAGES) {
@@ -89,7 +89,7 @@ for (const l of links) {
   const robots = await txt("/robots.txt");
   ok("robots.txt allows crawling and lists sitemap", /Allow: \//.test(robots) && /Sitemap: https:\/\/www\.growxapp\.org\/sitemap\.xml/.test(robots) && /Disallow: \/dashboard/.test(robots), robots.slice(0, 160));
   const sm = await txt("/sitemap.xml");
-  ok("sitemap.xml lists pages and all posts", ["/how-it-works", "/about", "/features/twitter-post-scheduler", "/tools/tweet-character-counter", "/blog/how-growx-auto-follow-works", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter"].every((u) => sm.includes("https://www.growxapp.org" + u)) && !sm.includes("/dashboard") && !sm.includes("/login"));
+  ok("sitemap.xml lists pages and all posts", ["/how-it-works", "/about", "/press", "/features/twitter-post-scheduler", "/tools/tweet-character-counter", "/tools/twitter-bold-text-generator", "/blog/twitter-shadowban", "/blog/how-growx-auto-follow-works", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter"].every((u) => sm.includes("https://www.growxapp.org" + u)) && !sm.includes("/dashboard") && !sm.includes("/login"));
   const llms = await fetch(BASE + "/llms.txt");
   const llmsText = await llms.text();
   ok("llms.txt served as text with features and guides", llms.status === 200 && (llms.headers.get("content-type") ?? "").includes("text/plain") && llmsText.includes("/features/twitter-post-scheduler") && llmsText.includes("/blog/how-to-schedule-tweets"));
@@ -136,6 +136,21 @@ for (const l of links) {
   await p.goto(BASE + "/tools/twitter-thread-maker", { waitUntil: "networkidle" });
   await p.fill("#tm-text", "First part\n---\nSecond part");
   const tm = await p.locator("main").innerText();
+  await p.goto(BASE + "/tools/twitter-engagement-rate-calculator", { waitUntil: "networkidle" });
+  for (const [id, v] of [["er-views", "2,000"], ["er-likes", "40"], ["er-reposts", "5"], ["er-replies", "3"], ["er-bookmarks", "2"]]) await p.fill(`#${id}`, v);
+  const er = await p.locator("main").innerText();
+  ok("engagement rate calculator: 50 interactions / 2,000 views = 2.50%", er.includes("2.50%") && er.includes("50 interactions per 2,000 views"), er.slice(0, 300));
+
+  await p.goto(BASE + "/tools/twitter-follower-ratio-calculator", { waitUntil: "networkidle" });
+  await p.fill("#fr-followers", "1,000");
+  await p.fill("#fr-following", "1500");
+  const fr = (await p.locator("main").innerText()).replace(/\s+/g, " ");
+  ok("follower ratio calculator: cap 5,000 and 3,500 room left", /Estimated following cap 5,000/i.test(fr) && /Room left to follow 3,500/i.test(fr), fr.slice(0, 400));
+
+  await p.goto(BASE + "/tools/twitter-bold-text-generator", { waitUntil: "networkidle" });
+  await p.fill("#bt-text", "Hi 1");
+  ok("bold text generator shows bold letters and digits", (await p.locator('[data-style="bold"]').innerText()).includes("𝐇𝐢 𝟏"));
+
   ok("thread maker splits at --- and numbers posts", tm.includes("First part 1/2") && tm.includes("Second part 2/2") && tm.includes("(2 posts)"), tm.slice(0, 300));
   await p.close();
 }

@@ -1,38 +1,160 @@
-# Backlink plan
+# Backlink kit
 
-Backlinks are links from OTHER websites to growxapp.org. They cannot be created from the codebase, and buying links or posting fake reviews/spam violates Google's policies and can get the site demoted. This is a list of legitimate sources, with ready-to-use text. Do these yourself (or ask for help drafting each post).
+Backlinks are links from other websites to growxapp.org. They are earned off-site, so nobody can add them from the codebase. This kit gives you
+everything to earn them quickly: what to link to, where to submit, ready-to-paste copy for each platform, outreach emails and a tracker.
 
-## Link text to use
-Vary it naturally: `GrowX`, `GrowX for X (Twitter)`, `growxapp.org`, `GrowX auto follow extension`, and the guide titles below. Do not use the same keyword-rich anchor everywhere.
+Buying links, link farms, private blog networks, fake reviews and comment spam break Google's spam policies and can get the site demoted. Everything
+below is legitimate. Always say you are the developer when you post about GrowX.
 
-## Pages to link to
-| Goal | URL |
+## 1. Linkable assets on the site
+
+| Asset | URL | Why people link to it |
+|---|---|---|
+| Home | https://www.growxapp.org | Brand mentions, directories, store listing |
+| Press kit (logos, screenshots, copy, badge) | https://www.growxapp.org/press | Journalists, directories, list articles |
+| Tweet character counter | https://www.growxapp.org/tools/tweet-character-counter | Free tool, "resources" pages, answers to "how long can a tweet be" |
+| Twitter thread maker | https://www.growxapp.org/tools/twitter-thread-maker | Free tool, writing communities |
+| Engagement rate calculator | https://www.growxapp.org/tools/twitter-engagement-rate-calculator | Marketers, social media courses, agency blogs |
+| Follower ratio calculator | https://www.growxapp.org/tools/twitter-follower-ratio-calculator | "Why can't I follow more people" questions |
+| Bold text generator | https://www.growxapp.org/tools/twitter-bold-text-generator | Bio and formatting questions, creator blogs |
+| Feature pages | https://www.growxapp.org/features/twitter-post-scheduler (and the other 6) | "Best Twitter scheduler / analytics / unfollow tool" lists |
+| Guides (28 posts) | https://www.growxapp.org/blog | Answers on Reddit, Quora, forums; newsletters |
+
+Vary the link text: `GrowX`, `growxapp.org`, `GrowX for X (Twitter)`, a tool's name, or a guide's title. Do not use the same keyword-rich anchor everywhere.
+
+## 2. Do this week (highest value, about 2 hours)
+
+1. **Chrome Web Store**: set the website to https://www.growxapp.org on the listing.
+2. **Your own profiles**: X bio and pinned post, shahriarahmed.net (project page), GitHub profile README, LinkedIn (Featured + About), YouTube About, Telegram channel description.
+3. **Product Hunt** launch (copy in section 4). Launch on a weekday and reply to every comment on launch day.
+4. **AlternativeTo**: add GrowX and mark it as an alternative to the tools people already search for (schedulers, auto follow tools, unfollow tools, X analytics tools).
+5. Submit to 5 directories from section 3.
+
+## 3. Directories and launch sites
+
+Submit once, with the same name and short description everywhere (consistent details help search engines).
+
+| Site | Type | Notes |
+|---|---|---|
+| producthunt.com | Launch | Biggest launch site; prepare gallery images from /press |
+| alternativeto.net | Alternatives | List as alternative to Twitter schedulers, unfollow and analytics tools |
+| saashub.com | Software directory | Free listing; add alternatives and categories |
+| betalist.com | Early products | Free queue or paid fast track |
+| uneed.best | Launch directory | Weekly launches |
+| microlaunch.net | Launch directory | Month-long launches |
+| fazier.com | Launch directory | |
+| peerlist.io (Launchpad) | Launch + profile | |
+| indiehackers.com | Product page + posts | Write a launch or milestone post |
+| sideprojectors.com | Side projects | |
+| launchingnext.com | Startup directory | |
+| crunchbase.com | Company profile | Free organization profile |
+| g2.com, capterra.com | Software reviews | Free vendor listings; ask real users for honest reviews, never incentivised ones |
+| theresanaiforthat.com, futuretools.io, toolify.ai | AI tool directories | List the GrowX AI writer (on-device, no API key) |
+
+## 4. Ready-to-paste copy
+
+**Name:** GrowX
+**Tagline (60 chars):** The all-in-one X (Twitter) growth tool for Chrome
+**Short description (160 chars):** Smart auto follow, a post scheduler, an on-device AI writer, analytics and an unfollower tracker for X (Twitter). Free plan, 30-day Premium trial.
+**Categories:** Social media, Twitter tools, Marketing, Chrome extensions, Productivity, AI writing
+
+**Long description:** use the "Long" text on https://www.growxapp.org/press (copy button).
+
+### Product Hunt maker comment
+> Hi Product Hunt! I'm Shahriar, the developer of GrowX.
+>
+> I built GrowX because growing on X meant juggling an auto follow tool, a scheduler and an analytics app, and most auto follow tools go so fast they put accounts at risk.
+>
+> GrowX does the daily work in one Chrome extension:
+> - Smart auto follow: follows the newest followers of accounts in your niche, scored for follow-back, at a human pace with breaks and caps
+> - Post scheduler with queue slots and your best time to post
+> - GrowX AI writer that runs on your own computer (no API key, drafts never leave your machine)
+> - Analytics, who unfollowed you, and reply targets to reply early
+>
+> It never asks for your X password. Free plan forever, and every Premium feature is free for 30 days with no card.
+>
+> I'd love your feedback, especially on what to build next.
+
+### Show HN
+**Title:** Show HN: GrowX, a Chrome extension for growing on X with on-device AI
+**Text:** focus on the technical parts HN likes: runs in your own x.com session, data stays in chrome.storage, the AI writer uses Chrome's built-in model, the follow-back score and the small logistic regression that learns from your own follow-backs, the pacing and safety rules. Link the home page.
+
+### Reddit (r/SideProject, r/indiehackers, r/chrome_extensions; read each subreddit's rules first)
+**Title:** I built a Chrome extension that schedules posts, tracks unfollowers and auto follows safely on X
+**Body:** 3-4 short paragraphs: the problem, what it does, what is free, one thing you learned building it, and ask for feedback. One link to the home page.
+For general marketing subreddits, do not post the product: answer questions and link a guide or free tool only where it truly answers the question.
+
+### Answers on Reddit, Quora and forums (best long-term links)
+Search for these questions and answer them properly first, then add one relevant link:
+- "how to see who unfollowed me on twitter" -> /blog/who-unfollowed-me-on-twitter
+- "best time to post on twitter" -> /blog/best-time-to-post-on-twitter
+- "how to schedule tweets for free" -> /blog/how-to-schedule-tweets
+- "how many characters in a tweet" / "do links count" -> /tools/tweet-character-counter
+- "why can't I follow more people on twitter" -> /tools/twitter-follower-ratio-calculator
+- "how to write in bold on twitter" -> /tools/twitter-bold-text-generator
+- "what is a good engagement rate on twitter" -> /tools/twitter-engagement-rate-calculator
+- "how to write a twitter thread" -> /tools/twitter-thread-maker
+
+## 5. Republish guides with a canonical link
+
+Republishing on other platforms gives you links and readers without duplicate-content problems, as long as the copy points back to the original.
+
+| Platform | How to set the original |
 |---|---|
-| Brand / install | https://www.growxapp.org |
-| "how to grow on Twitter" | https://www.growxapp.org/blog/how-to-grow-on-twitter-x |
-| "first 1000 followers" | https://www.growxapp.org/blog/first-1000-followers-on-x |
-| "bulk follow Twitter" | https://www.growxapp.org/blog/bulk-follow-twitter-safely |
-| "mass follow Twitter / limits" | https://www.growxapp.org/blog/mass-follow-twitter-limits |
-| "follow back score" | https://www.growxapp.org/blog/twitter-follow-back-score-growx |
-| "unfollow non-followers" | https://www.growxapp.org/blog/unfollow-non-followers-twitter |
-| "best Twitter growth tools" | https://www.growxapp.org/blog/best-twitter-growth-tools |
+| Medium | Use "Import a story" with the growxapp.org URL; Medium adds the canonical link automatically |
+| DEV (dev.to) | Add `canonical_url: https://www.growxapp.org/blog/<slug>` to the front matter |
+| Hashnode | Turn on "Are you republishing?" and paste the original URL |
+| LinkedIn articles | Add "Originally published on growxapp.org" with a link at the top |
 
-## Where to get real links
-1. **Chrome Web Store listing**: set the website field to https://www.growxapp.org (a high-authority link).
-2. **Your own profiles** (free, instant): X bio and pinned post, shahriarahmed.net (link from the project page), GitHub profile/README, LinkedIn, YouTube channel About, Telegram channel/bio.
-3. **Product directories**: Product Hunt, BetaList, AlternativeTo, SaaSHub, Indie Hackers (product page), Uneed, Microlaunch, Crunchbase. Use the same short description everywhere.
-4. **Communities** (follow each rule on self-promotion; answer the question first, link second): Reddit r/socialmedia, r/SideProject, r/indiehackers (only where allowed), Indie Hackers posts, Hacker News "Show HN", relevant Discord/Telegram groups.
-5. **Guest posts and Q&A**: Medium, DEV, Hashnode, LinkedIn articles: republish a shortened version of a guide with a canonical link back to the original, or write a different angle and link to the guide.
-6. **Answers on Quora / Reddit** to "how to grow on Twitter", "how to get first 1000 followers": give a real answer, link a guide where it truly helps.
-7. **Video**: a YouTube walkthrough ("How I use GrowX to ...") with the guide in the description.
-8. **Outreach**: email newsletters, X growth creators and "best tools" list authors with a free Premium trial and a factual description. Offer, never pay for placement without a "sponsored" label.
+Start with: how-to-schedule-tweets, best-time-to-post-on-twitter, who-unfollowed-me-on-twitter, twitter-algorithm-explained, how-to-write-a-twitter-thread.
 
-## Short descriptions (copy and adapt)
-**One line:** GrowX is a free Chrome extension that finds people likely to follow back on X (Twitter), follows them at a human pace with safety limits, and helps you clean up afterwards.
+## 6. Outreach emails
 
-**Longer:** GrowX is a Chrome extension for growing an X (Twitter) account. You pick source profiles in your niche; GrowX filters candidates, gives each a follow-back score from 1 to 99, and follows the best ones one at a time with random delays, caps and automatic stops on warnings. It tracks who followed back, shows source performance and has a cleanup scan for inactive and non-following accounts. Free plan plus a 30-day Premium trial with no credit card.
+### "Best Twitter tools" list authors
+Find articles ranking for "best Twitter tools", "best Twitter scheduler", "Twitter unfollow tools", "Twitter analytics tools".
+
+> Subject: A free Twitter tool for your list
+>
+> Hi {name},
+>
+> I enjoyed your article "{title}". I'm the developer of GrowX, a Chrome extension that combines a post scheduler, an unfollower tracker, analytics and safe auto follow for X. It has a free plan, and the AI writer runs on the user's own computer, which I haven't seen elsewhere.
+>
+> If it fits your next update, everything you need (screenshots, descriptions, logo) is at https://www.growxapp.org/press, and I'm happy to give you Premium to test it.
+>
+> Thanks either way,
+> Shahriar
+
+### Resource pages (for the free tools)
+Search for `"twitter" "resources"`, `"social media tools" "resources"`, course resource pages and university marketing pages.
+
+> Subject: Free X tools for your resources page
+>
+> Hi {name},
+>
+> Your page {url} helped me find {resource}. You may like a few free tools I built for X (Twitter): a character counter that counts exactly like X, a thread maker, an engagement rate calculator and a bold text generator. No sign-up, nothing is saved: https://www.growxapp.org/tools
+>
+> If they're useful to your readers, a mention would mean a lot.
+> Shahriar
+
+### Newsletters and creators
+Keep it short, lead with something useful for their readers (a free tool or a guide), not with the product.
+
+## 7. Quotes and interviews
+
+Sign up as a source on journalist request platforms (for example Qwoted, Featured.com and similar services) and answer questions about social media growth, X (Twitter) and building Chrome extensions. Use the bio from /press.
+
+## 8. Tracker
+
+Copy this table into a spreadsheet and update it weekly.
+
+| Date | Site | URL of the page with the link | Links to | Status (sent / live / declined) | Notes |
+|---|---|---|---|---|---|
+| | | | | | |
+
+Check new links in Google Search Console under Links once a month.
 
 ## Rules
-- No fake reviews, paid link farms, comment spam or private blog networks.
-- Disclose that you built GrowX when you post about it.
-- Do not promise follower counts.
+- No paid links unless the site marks them `rel="sponsored"`; no link farms, private blog networks or link exchanges at scale.
+- No fake reviews and no incentivised reviews.
+- Disclose that you built GrowX whenever you post about it.
+- Never promise follower counts or results.
