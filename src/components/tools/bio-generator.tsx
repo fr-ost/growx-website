@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BorderBeam } from "@/components/motion/border-beam";
 import { CopyButton, inputClass } from "@/components/tools/ui";
 import { BIO_LIMIT, bioLength, generateBios, type BioInput } from "@/lib/bio";
 
@@ -19,7 +20,8 @@ export function BioGenerator() {
   const bios = useMemo(() => generateBios(v), [v]);
   return (
     <div className="grid gap-6 text-left lg:grid-cols-[1fr_1.15fr]">
-      <div className="space-y-3 rounded-3xl border border-border bg-white p-5 shadow-[var(--shadow-lift)] sm:p-7">
+      <div className="group relative space-y-3 rounded-3xl bg-white p-5 shadow-float ring-1 ring-hairline sm:p-7">
+        <BorderBeam mode="focus" />
         {FIELDS.map((f) => (
           <div key={f.k}>
             <label htmlFor={`bio-${f.k}`} className="text-sm font-bold">
@@ -36,19 +38,19 @@ export function BioGenerator() {
           </div>
         ))}
       </div>
-      <div className="rounded-3xl border border-border bg-surface-2 p-5 sm:p-7" aria-live="polite">
+      <div className="rounded-3xl border border-hairline bg-surface-2 p-5 sm:p-7" aria-live="polite">
         <h2 className="text-sm font-bold">
-          Bio ideas <span className="font-semibold text-muted">({bios.length})</span>
+          Bio ideas <span className="font-semibold tabular-nums text-muted">({bios.length})</span>
         </h2>
         {bios.length ? (
           <ol className="mt-4 space-y-3" data-testid="bio-list">
             {bios.map((b) => {
               const n = bioLength(b);
               return (
-                <li key={b} className="rounded-2xl border border-border bg-white p-4">
+                <li key={b} className="rounded-2xl border border-hairline bg-white p-4 shadow-[var(--shadow-hair)]">
                   <p className="whitespace-pre-wrap leading-relaxed">{b}</p>
                   <div className="mt-3 flex items-center justify-between gap-3 text-xs">
-                    <span className={`font-semibold ${n > BIO_LIMIT ? "text-danger" : "text-muted"}`}>
+                    <span className={`font-semibold tabular-nums ${n > BIO_LIMIT ? "text-danger" : "text-muted"}`}>
                       {n} / {BIO_LIMIT} characters{n > BIO_LIMIT ? ": too long, shorten a part" : ""}
                     </span>
                     <CopyButton value={b} />

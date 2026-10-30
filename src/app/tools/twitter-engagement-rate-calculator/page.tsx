@@ -30,7 +30,7 @@ export default function Page() {
       tool={<EngagementCalculator />}
       faqs={faqs}
     >
-      <h2>What engagement rate tells you</h2>
+      <h2 className="h-rule">What engagement rate tells you</h2>
       <p>
         Raw likes reward reach: a post that was shown to more people collects more likes even if fewer of them cared. Engagement rate removes that
         bias by dividing interactions by views. That makes it the fairest way to compare your own posts and learn which topics, formats and hooks
@@ -40,14 +40,14 @@ export default function Page() {
         <li><strong>Engagement rate per view</strong> = (likes + reposts + replies + bookmarks + quotes) / views x 100.</li>
         <li><strong>Engagement rate per follower</strong> = the same interactions / your followers x 100, useful when views are missing.</li>
       </ul>
-      <h2>How to raise your engagement rate</h2>
+      <h2 className="h-rule">How to raise your engagement rate</h2>
       <p>
         Lead with a clear hook, write for replies (ask a real question, take a position), use images and threads where they fit, and post when
         your followers are online. Then measure: repeat what beats your usual rate and drop what does not. Our guides on{" "}
         <Link href="/blog/how-to-increase-twitter-engagement">how to increase Twitter engagement</Link> and{" "}
         <Link href="/blog/twitter-analytics-guide">reading Twitter analytics</Link> go deeper.
       </p>
-      <h2>Let GrowX track it for every post</h2>
+      <h2 className="h-rule">Let GrowX track it for every post</h2>
       <p>
         The GrowX Chrome extension reads your recent posts&apos; views, likes, reposts, replies and bookmarks, shows the engagement rate of each,
         ranks your topics and formats and builds a best-time-to-post heat map from your own numbers. See{" "}

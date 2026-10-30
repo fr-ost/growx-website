@@ -1,0 +1,39 @@
+/* Highlighter stroke behind a key clause. The base state is fully highlighted (the server HTML is
+   the final frame); the text colour never changes. Inside the motion guard and where view()
+   timelines exist, the stroke sweeps in from the left via background-position only. */
+.marker {
+  color: inherit;
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+  border-radius: 0.2em;
+  background-color: transparent;
+  background-image: linear-gradient(90deg, color-mix(in srgb, var(--accent) 16%, var(--accent-soft)) 50%, transparent 50%);
+  background-size: 200% 38%;
+  background-position: 0 92%;
+  background-repeat: no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+@keyframes marker-sweep {
+  from {
+    background-position: 100% 92%;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :where(html:not([data-motion="reduce"])) .marker {
+      animation: marker-sweep linear both;
+      animation-timeline: view();
+      animation-range: entry 70% cover 45%;
+    }
+  }
+}
+
+@media print {
+  .marker {
+    animation: none !important;
+    background-position: 0 92% !important;
+  }
+}

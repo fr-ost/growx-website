@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BorderBeam } from "@/components/motion/border-beam";
 import { NumberField, Stat, fmtNum, parseCount } from "@/components/tools/ui";
 import { BASE_FOLLOWING_CAP, followersNeededFor, ratioReport } from "@/lib/x-math";
 
@@ -15,7 +16,8 @@ export function RatioCalculator() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-      <div className="space-y-4 rounded-3xl border border-border bg-white p-5 shadow-[var(--shadow-lift)] sm:p-7">
+      <div className="group relative space-y-4 rounded-3xl bg-white p-5 shadow-float ring-1 ring-hairline sm:p-7">
+        <BorderBeam mode="focus" />
         <NumberField id="fr-followers" label="Followers" value={followers} onChange={setFollowers} />
         <NumberField id="fr-following" label="Following" value={following} onChange={setFollowing} />
         <NumberField id="fr-target" label="How many accounts do you want to follow? (optional)" value={target} onChange={setTarget} />

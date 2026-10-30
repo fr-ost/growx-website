@@ -1,0 +1,87 @@
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.active {
+  border-color: transparent;
+  color: #fff;
+  background: var(--d-solid);
+}
+.draft {
+  border: 1px solid var(--d-line);
+  border-radius: 10px;
+  padding: 9px 11px;
+  background: var(--d-bg);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--d-fg);
+}
+.line {
+  display: block;
+}
+.w {
+  display: inline-block;
+}
+.ph {
+  display: inline-block;
+  border-radius: 6px;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--d-accent);
+  background: var(--d-accent-bg);
+}
+.caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.18em;
+  background: var(--d-accent);
+}
+.caretWrap {
+  display: inline-block;
+}
+
+@keyframes clear {
+  0%, 100% { opacity: 1; }
+  2%, 18% { opacity: 0; }
+  19% { opacity: 1; }
+}
+@keyframes type {
+  0%, 100% { opacity: 1; translate: 0 0; }
+  1%, 20% { opacity: 0; translate: 0 3px; }
+  21.5% { opacity: 1; translate: 0 0; }
+}
+@keyframes ph {
+  0%, 100% { opacity: 1; scale: 1; }
+  1%, 20% { opacity: 0; scale: 0.7; animation-timing-function: var(--ease-spring); }
+  23% { opacity: 1; scale: 1; }
+}
+@keyframes hideWhileTyping {
+  0%, 100% { opacity: 1; }
+  2%, 36% { opacity: 0; }
+  37% { opacity: 1; }
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .draft {
+    animation: clear var(--d-cyc) var(--ease-glide) 0s var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .w {
+    animation: type var(--d-cyc) var(--ease-glide) calc(var(--k, 0) * 55ms) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .ph {
+    animation-name: ph;
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .caretWrap {
+    animation: hideWhileTyping var(--d-cyc) linear 0s var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .caret {
+    animation: blink 1s step-end 3.4s 5;
+  }
+}

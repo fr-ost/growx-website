@@ -1,6 +1,7 @@
 import { TierBadge } from "@/components/feature-lists";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
+import { TrialTicket } from "@/components/conversion/trial-ticket";
 import { IconCheck, IconInfo } from "@/components/icons";
 import { PricingCards } from "@/components/pricing-cards";
 import { JsonLd, breadcrumbLd, faqLd } from "@/components/json-ld";
@@ -29,20 +30,31 @@ export default function PricingPage() {
   return (
     <>
       <JsonLd data={[breadcrumbLd([{ name: "Home", path: "/" }, { name: "Pricing", path: "/pricing" }]), faqLd(faqs)]} />
-      <PageHero eyebrow="Pricing" title={<>Simple pricing. <span className="text-gradient">Free forever.</span></>}>
+      <PageHero eyebrow="Pricing" title={<>Simple pricing. <span className="text-gradient">Free forever.</span></>} aside={<TrialTicket />}>
         Start free, try Premium for {TRIAL_DAYS} days, upgrade when it makes sense.
         <span className="mt-3 block font-semibold text-text">The {TRIAL_DAYS}-day Premium trial is completely free. No credit card needed.</span>
       </PageHero>
 
       <Section className="pt-14 sm:pt-16">
         <Container className="space-y-6">
-          <div className="reveal mx-auto flex max-w-2xl items-center gap-3 rounded-2xl border border-accent/20 bg-accent-soft px-5 py-3.5 text-sm text-text-2">
-            <IconInfo size={18} className="shrink-0 text-accent" />
-            <p>
-              <strong>Pay with crypto (ETH and BNB Smart Chain / BEP20).</strong> You choose the coin on the payment page. Monthly and yearly plans are prepaid and don&apos;t renew automatically. Premium activates once your payment is confirmed.
-            </p>
+          <div className="reveal mx-auto flex max-w-3xl gap-4 rounded-2xl border border-hairline bg-white px-5 py-4 text-sm text-text-2 shadow-hair sm:items-center">
+            <span className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent-ink ring-1 ring-accent/15 sm:mt-0">
+              <IconInfo size={18} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p>
+                <strong className="text-text">Pay with crypto (ETH and BNB Smart Chain / BEP20).</strong> You choose the coin on the payment page. Monthly and yearly plans are prepaid and don&apos;t renew automatically. Premium activates once your payment is confirmed.
+              </p>
+              <p aria-hidden="true" className="mt-2.5 flex flex-wrap gap-2">
+                {["ETH", "BNB Smart Chain · BEP20"].map((c) => (
+                  <span key={c} className="rounded-md bg-surface-2 px-2 py-0.5 font-mono text-[11px] font-semibold text-text-2 ring-1 ring-hairline-strong">
+                    {c}
+                  </span>
+                ))}
+              </p>
+            </div>
           </div>
-          <div className="pt-6">
+          <div className="pt-8">
             <PricingCards />
           </div>
         </Container>
@@ -53,25 +65,25 @@ export default function PricingPage() {
           <SectionHeading eyebrow="Compare" title="Free vs Premium" center>
             Premium includes everything in Free.
           </SectionHeading>
-          <div className="reveal mt-10 overflow-x-auto rounded-3xl border border-border bg-white">
-            <table className="w-full text-left text-sm sm:min-w-[36rem]">
+          <div className="reveal mt-10 overflow-x-auto rounded-3xl border border-hairline bg-white shadow-hair lg:overflow-visible">
+            <table className="w-full border-separate border-spacing-0 text-left text-sm sm:min-w-[36rem] [&_tbody:last-child_tr:last-child>*:first-child]:rounded-bl-3xl [&_tbody:last-child_tr:last-child>*:last-child]:rounded-br-3xl">
               <caption className="sr-only">Free and Premium feature comparison</caption>
-              <thead>
-                <tr className="border-b border-border bg-surface-2">
-                  <th scope="col" className="px-5 py-4 font-bold">Feature</th>
-                  <th scope="col" className="hidden w-28 px-5 py-4 text-center font-bold sm:table-cell">Free</th>
-                  <th scope="col" className="hidden w-28 px-5 py-4 text-center font-bold text-accent sm:table-cell">Premium</th>
+              <thead className="bg-white lg:sticky lg:top-16 lg:z-10">
+                <tr className="[&>th]:shadow-[inset_0_-1px_0_var(--hairline-strong)]">
+                  <th scope="col" className="rounded-tl-3xl bg-white px-5 py-4 font-bold">Feature</th>
+                  <th scope="col" className="hidden w-28 bg-white px-5 py-4 text-center font-bold sm:table-cell">Free</th>
+                  <th scope="col" className="hidden w-28 rounded-tr-3xl bg-white bg-[linear-gradient(rgb(255_240_241/0.4),rgb(255_240_241/0.4))] px-5 py-4 text-center font-bold text-accent-ink sm:table-cell">Premium</th>
                 </tr>
               </thead>
               {featureGroups.map((g) => (
                 <tbody key={g.id}>
                   <tr className="bg-tint">
-                    <th colSpan={3} scope="colgroup" className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-accent">
+                    <th colSpan={3} scope="colgroup" className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-accent-ink shadow-[inset_3px_0_0_var(--accent)]">
                       {g.title}
                     </th>
                   </tr>
                   {g.features.map((f) => (
-                    <tr key={f.id} className="border-t border-border align-top transition-colors hover:bg-surface-2">
+                    <tr key={f.id} className="align-top hover:bg-surface-2 [&>*]:border-t [&>*]:border-hairline">
                       <th scope="row" className="px-5 py-4 font-semibold">
                         <span className="flex flex-wrap items-center gap-2">
                           {f.title} <span className="sm:hidden"><TierBadge tier={f.tier} /></span>
@@ -91,7 +103,7 @@ export default function PricingPage() {
                           </>
                         )}
                       </td>
-                      <td className="hidden px-5 py-4 text-center sm:table-cell">
+                      <td className="hidden bg-accent-soft/40 px-5 py-4 text-center sm:table-cell">
                         <IconCheck size={20} className="mx-auto text-accent" />
                         <span className="sr-only">Included</span>
                       </td>

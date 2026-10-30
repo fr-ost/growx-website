@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { FeatureIcon } from "@/components/feature-icon";
+import { FeatureLinkCard } from "@/components/features/feature-card";
 import { FeatureGroups } from "@/components/feature-lists";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
-import { IconArrowRight, IconChrome } from "@/components/icons";
+import { IconChrome } from "@/components/icons";
 import { JsonLd, abs, breadcrumbLd, faqLd, softwareLd } from "@/components/json-ld";
+import { demoForGroup } from "@/components/motion/demos/demo-map";
+import { ScrollSpy } from "@/components/motion/scroll-spy";
+import { stagger } from "@/components/motion/stagger";
 import { ExternalButton, LinkButton } from "@/components/ui/button";
 import { Container, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { featureGroups } from "@/config/features";
@@ -12,6 +15,9 @@ import { featureNav } from "@/config/nav";
 import { TRIAL_DAYS } from "@/config/pricing";
 import { site } from "@/config/site";
 import { pageMetadata } from "@/lib/seo";
+
+/** Illustrative demos for the sticky group column (lg only). */
+const groupDemos = Object.fromEntries(featureGroups.map((g) => [g.id, demoForGroup(g.id, { size: "md" })]));
 
 export const metadata = pageMetadata({
   title: "GrowX Features: Auto Follow, Scheduler, AI & Analytics",
@@ -45,7 +51,7 @@ export default function FeaturesPage() {
         actions={
           <>
             {site.chromeStoreUrl ? (
-              <ExternalButton href={site.chromeStoreUrl} size="lg">
+              <ExternalButton href={site.chromeStoreUrl} size="lg" data-magnetic="6">
                 <IconChrome size={20} /> Add to Chrome, free
               </ExternalButton>
             ) : null}
@@ -61,45 +67,54 @@ export default function FeaturesPage() {
         </p>
       </PageHero>
 
-      <Section className="pb-0 sm:pb-0 lg:pb-0">
+      <Section className="pb-12 sm:pb-16 lg:pb-16">
         <Container>
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {featureNav.map((f) => (
-              <li key={f.slug} className="reveal">
-                <Link href={`/features/${f.slug}`} className="card-hover group flex h-full items-start gap-3 rounded-2xl border border-border bg-white p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                    <FeatureIcon name={f.icon} size={19} />
-                  </span>
-                  <span>
-                    <span className="flex items-center gap-1 font-bold">
-                      {f.label} <IconArrowRight size={14} className="text-accent opacity-0 transition-opacity group-hover:opacity-100" />
-                    </span>
-                    <span className="mt-0.5 block text-sm leading-snug text-muted">{f.blurb}</span>
-                  </span>
-                </Link>
+          <ul data-spotlight-group="" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {featureNav.map((f, i) => (
+              <li key={f.slug} className="reveal" style={stagger(i % 4)}>
+                <FeatureLinkCard href={`/features/${f.slug}`} icon={f.icon} label={f.label} blurb={f.blurb} />
               </li>
             ))}
           </ul>
-          <nav aria-label="Feature sections" className="reveal mt-10 flex flex-wrap justify-center gap-2">
-            {featureGroups.map((g) => (
-              <a key={g.id} href={`#${g.id}`} className="rounded-full border border-border bg-surface-2 px-4 py-1.5 text-sm font-semibold text-text-2 transition-colors hover:border-accent/40 hover:text-accent">
-                {g.title.split(":")[0]}
-              </a>
-            ))}
-          </nav>
         </Container>
       </Section>
 
-      <Section>
-        <Container>
-          <FeatureGroups />
-          <p className="mt-20 text-center text-text-2">
-            New here? See <Link href="/how-it-works" className="font-semibold text-accent hover:underline">how it works</Link>, read the{" "}
-            <Link href="/blog/growx-features-guide-scoring-filters-cleanup" className="font-semibold text-accent hover:underline">features guide</Link>, or compare{" "}
-            <Link href="/pricing" className="font-semibold text-accent hover:underline">Free vs Premium</Link>.
-          </p>
-        </Container>
-      </Section>
+      <div className="relative">
+        <nav
+          id="feature-sections"
+          aria-label="Feature sections"
+          className="sticky top-16 z-30 overflow-x-auto overscroll-x-contain border-y border-hairline bg-[rgba(255,252,251,0.94)] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_24px_-20px_rgba(22,13,18,0.35)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <ul className="mx-auto flex w-max gap-2 px-4 py-2.5 sm:px-6 lg:px-8">
+            {featureGroups.map((g) => (
+              <li key={g.id}>
+                <a
+                  href={`#${g.id}`}
+                  className="group relative block whitespace-nowrap rounded-full border border-hairline-strong bg-white px-4 py-1.5 text-sm font-semibold text-text-2 hover:border-text/30 hover:text-text aria-[current=true]:border-ink aria-[current=true]:bg-ink aria-[current=true]:text-white"
+                >
+                  {g.title.split(":")[0]}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-x-4 bottom-[3px] h-0.5 scale-x-0 rounded-full bg-accent-on-ink group-aria-[current=true]:scale-x-100 motion-ok:transition-[scale] motion-ok:duration-200 motion-ok:ease-glide"
+                  />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <ScrollSpy navId="feature-sections" />
+
+        <Section className="pt-14 sm:pt-20 lg:pt-24">
+          <Container>
+            <FeatureGroups demos={groupDemos} />
+            <p className="mt-20 text-center text-text-2">
+              New here? See <Link href="/how-it-works" className="link-draw font-semibold text-accent-ink">how it works</Link>, read the{" "}
+              <Link href="/blog/growx-features-guide-scoring-filters-cleanup" className="link-draw font-semibold text-accent-ink">features guide</Link>, or compare{" "}
+              <Link href="/pricing" className="link-draw font-semibold text-accent-ink">Free vs Premium</Link>.
+            </p>
+          </Container>
+        </Section>
+      </div>
 
       <Section className="bg-surface-2">
         <Container className="max-w-3xl">

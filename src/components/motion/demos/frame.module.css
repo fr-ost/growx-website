@@ -1,0 +1,239 @@
+/* DemoFrame + shared demo atoms. Only :root variables (plus the --d-* set defined here).
+   The base CSS of every demo is its FINAL ("poster") frame; motion lives in each demo's
+   module under the guard and plays only while the body carries [data-demo-play]. */
+.frame {
+  --d-bg: var(--surface);
+  --d-sub: var(--surface-2);
+  --d-line: var(--border);
+  --d-fg: var(--text);
+  --d-fg2: var(--text-2);
+  --d-muted: var(--muted);
+  --d-skel: #ebe5e7;
+  --d-accent: var(--accent-ink);
+  --d-accent-bg: var(--accent-soft);
+  --d-solid: var(--accent-hover);
+  --d-ok: var(--ok);
+  --d-ok-bg: var(--ok-soft);
+  --d-danger: var(--danger);
+  --d-danger-bg: var(--danger-soft);
+  --d-cyc: 9s;
+  --d-iter: 2;
+  position: relative;
+  color: var(--d-fg);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-size: 12px;
+  line-height: 1.3;
+  text-align: left;
+  letter-spacing: normal;
+  word-spacing: normal;
+}
+.frame[data-tone="ink"] {
+  --d-bg: #1c1117;
+  --d-sub: rgba(255, 255, 255, 0.07);
+  --d-line: rgba(255, 255, 255, 0.12);
+  --d-fg: #ffffff;
+  --d-fg2: rgba(255, 255, 255, 0.82);
+  --d-muted: rgba(255, 255, 255, 0.66);
+  --d-skel: rgba(255, 255, 255, 0.16);
+  --d-accent: var(--accent-on-ink);
+  --d-accent-bg: rgba(255, 90, 104, 0.14);
+  --d-ok: #6ee7a0;
+  --d-ok-bg: rgba(110, 231, 160, 0.12);
+  --d-danger: #ff9aa3;
+  --d-danger-bg: rgba(255, 90, 104, 0.14);
+}
+@media (max-width: 639px) {
+  .frame {
+    --d-iter: 1;
+  }
+}
+.framed {
+  overflow: clip;
+  border-radius: 1.25rem;
+  background: var(--d-bg);
+  border: 1px solid var(--hairline-strong);
+  box-shadow:
+    0 2px 4px rgba(22, 13, 18, 0.04),
+    0 24px 48px -24px rgba(22, 13, 18, 0.22);
+}
+.frame[data-tone="ink"].framed {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.6);
+}
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--d-line);
+}
+.dots {
+  display: flex;
+  gap: 5px;
+}
+.dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--d-line);
+}
+.dots i:first-child {
+  background: #ff8a95;
+}
+.title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--d-fg2);
+  background: var(--d-sub);
+}
+.tags {
+  display: flex;
+  flex: none;
+  gap: 4px;
+  margin-left: auto;
+}
+.loose {
+  justify-content: flex-end;
+  margin-bottom: 6px;
+}
+.tag {
+  border: 1px solid var(--d-line);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--d-muted);
+  white-space: nowrap;
+}
+.tagPremium {
+  border-color: transparent;
+  color: var(--d-accent);
+  background: var(--d-accent-bg);
+}
+.body {
+  position: relative;
+  height: 212px;
+  overflow: clip;
+  padding: 12px 14px;
+}
+.frame[data-size="sm"] .body {
+  height: 168px;
+  padding: 10px 12px;
+}
+.frame[data-size="lg"] .body {
+  height: 300px;
+  padding: 16px 18px;
+}
+.frame[data-size] .body.fit {
+  height: auto;
+}
+
+/* ---------------------------------------------------------------- atoms */
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.headTitle {
+  margin-right: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--d-fg);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 27px;
+}
+.avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--d-line);
+  border-radius: 50%;
+  background: var(--d-sub);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--d-fg2);
+}
+.lines {
+  display: grid;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+.skel {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--d-skel);
+}
+.chip {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--d-line);
+  border-radius: 999px;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--d-fg2);
+  background: var(--d-sub);
+}
+.chipAccent {
+  border-color: transparent;
+  color: var(--d-accent);
+  background: var(--d-accent-bg);
+}
+.chipOk {
+  border-color: transparent;
+  color: var(--d-ok);
+  background: var(--d-ok-bg);
+}
+.chipDanger {
+  border-color: transparent;
+  color: var(--d-danger);
+  background: var(--d-danger-bg);
+}
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+.foot {
+  position: absolute;
+  right: 14px;
+  bottom: 9px;
+  left: 14px;
+  font-size: 10.5px;
+  color: var(--d-muted);
+}
+.stack {
+  display: inline-grid;
+  flex: none;
+  justify-items: center;
+}
+.stack > * {
+  grid-area: 1 / 1;
+}
+@media (max-width: 639px) {
+  .hideSm {
+    display: none !important;
+  }
+}
+.frame[data-size="sm"] .hideSm {
+  display: none !important;
+}

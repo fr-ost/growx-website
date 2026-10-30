@@ -30,7 +30,7 @@ export default function Page() {
       tool={<BioGenerator />}
       faqs={faqs}
     >
-      <h2>A simple formula for a bio that gets follows</h2>
+      <h2 className="h-rule">A simple formula for a bio that gets follows</h2>
       <p>
         People decide in seconds whether to follow you. The bio answers three questions: what do you do, what will I get if I follow, and why should I
         believe you. The generator combines your answers in several proven patterns so you can pick the one that sounds most like you, then edit it.
@@ -42,13 +42,13 @@ export default function Page() {
         <li><strong>Proof:</strong> something that earns trust, if you have it.</li>
         <li><strong>Call to action:</strong> where your link goes, if anywhere.</li>
       </ul>
-      <h2>Make the rest of your profile match</h2>
+      <h2 className="h-rule">Make the rest of your profile match</h2>
       <p>
         A bio works together with your photo, header and pinned post. Read our <Link href="/blog/twitter-bio-ideas">Twitter bio ideas</Link> and{" "}
         <Link href="/blog/pinned-tweet-ideas">pinned tweet ideas</Link>, and add a touch of style with the{" "}
         <Link href="/tools/twitter-bold-text-generator">bold text generator</Link>.
       </p>
-      <h2>Turn profile visits into followers</h2>
+      <h2 className="h-rule">Turn profile visits into followers</h2>
       <p>
         A strong profile matters most when the right people see it. GrowX brings relevant people to your profile with{" "}
         <Link href="/features/twitter-auto-follow">smart auto follow</Link> and helps you post consistently with the{" "}

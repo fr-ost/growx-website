@@ -1,0 +1,111 @@
+.list {
+  display: grid;
+}
+.pill {
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.following,
+.follow {
+  border-radius: 999px;
+  padding: 2px 9px;
+  white-space: nowrap;
+}
+.following {
+  border: 1px solid var(--d-line);
+  color: var(--d-fg2);
+  background: var(--d-sub);
+}
+.follow {
+  border: 1px solid transparent;
+  color: #fff;
+  background: var(--d-solid);
+  opacity: 0;
+}
+.score {
+  min-width: 2.4em;
+  justify-content: center;
+  font-weight: 700;
+}
+.dim {
+  opacity: 0.45;
+}
+.skipBadge {
+  position: relative;
+}
+.strike {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  left: 4px;
+  height: 1.5px;
+  border-radius: 1px;
+  background: var(--d-danger);
+}
+.skipped {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--d-muted);
+  white-space: nowrap;
+}
+
+@keyframes rowIn {
+  0%, 100% { opacity: 1; translate: 0 0; }
+  3%, 7% { opacity: 0; translate: 0 6px; }
+  12% { opacity: 1; translate: 0 0; }
+}
+@keyframes flipOn {
+  0%, 100% { opacity: 1; }
+  3%, 20% { opacity: 0; }
+  24% { opacity: 1; }
+}
+@keyframes flipOff {
+  0%, 100% { opacity: 0; }
+  3%, 20% { opacity: 1; }
+  24% { opacity: 0; }
+}
+@keyframes pop {
+  0%, 100% { opacity: 1; scale: 1; }
+  3%, 14% { opacity: 0; scale: 0.6; }
+  14% { animation-timing-function: var(--ease-spring); }
+  19% { opacity: 1; scale: 1; }
+}
+@keyframes dim {
+  0%, 100% { opacity: 0.45; }
+  3%, 26% { opacity: 1; }
+  31% { opacity: 0.45; }
+}
+@keyframes strike {
+  0%, 100% { clip-path: inset(0 0 0 0); }
+  3%, 26% { clip-path: inset(0 100% 0 0); }
+  32% { clip-path: inset(0 0 0 0); }
+}
+@keyframes fadeIn {
+  0%, 100% { opacity: 1; }
+  3%, 32% { opacity: 0; }
+  36% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .row {
+    animation: rowIn var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .following {
+    animation: flipOn var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .follow {
+    animation: flipOff var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .score {
+    animation: pop var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .dim {
+    animation: dim var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .strike {
+    animation: strike var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .skipped {
+    animation: fadeIn var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+}

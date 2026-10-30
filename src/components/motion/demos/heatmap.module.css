@@ -1,0 +1,94 @@
+.sub {
+  font-size: 10.5px;
+  color: var(--d-muted);
+}
+.wrap {
+  position: relative;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 2px;
+}
+.cell {
+  position: relative;
+  height: 15px;
+  border-radius: 3px;
+}
+@media (max-width: 639px) {
+  .grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .cell:nth-child(2n) {
+    display: none;
+  }
+}
+[data-size="sm"] .grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 3px;
+}
+[data-size="sm"] .cell {
+  height: 12px;
+}
+[data-size="sm"] .cell:nth-child(2n) {
+  display: none;
+}
+[data-size="lg"] .cell {
+  height: 26px;
+}
+.l0 { background: rgba(225, 29, 46, 0.06); }
+.l1 { background: rgba(225, 29, 46, 0.16); }
+.l2 { background: rgba(225, 29, 46, 0.32); }
+.l3 { background: rgba(225, 29, 46, 0.56); }
+.l4 { background: rgba(200, 16, 46, 0.86); }
+[data-tone="ink"] .l0 { background: rgba(255, 90, 104, 0.08); }
+[data-tone="ink"] .l1 { background: rgba(255, 90, 104, 0.2); }
+[data-tone="ink"] .l2 { background: rgba(255, 90, 104, 0.38); }
+[data-tone="ink"] .l3 { background: rgba(255, 90, 104, 0.62); }
+[data-tone="ink"] .l4 { background: rgba(255, 90, 104, 0.92); }
+.ring {
+  position: absolute;
+  inset: -3px;
+  border: 2px solid var(--accent-deep);
+  border-radius: 5px;
+  box-shadow: 0 0 0 2px var(--d-bg);
+}
+[data-tone="ink"] .ring {
+  border-color: #fff;
+}
+.sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(100deg, transparent 40%, rgba(255, 255, 255, 0.55) 50%, transparent 60%);
+  background-size: 300% 100%;
+  background-position: 0 0;
+}
+
+@keyframes wipe {
+  0%, 100% { clip-path: polygon(0 0, 220% 0, 0 220%); }
+  3%, 5% { clip-path: polygon(0 0, 0 0, 0 0); }
+  22% { clip-path: polygon(0 0, 220% 0, 0 220%); }
+}
+@keyframes light {
+  0% { background-position: 0 0; animation-timing-function: step-end; }
+  1%, 22% { background-position: 100% 0; }
+  37.5%, 100% { background-position: 0 0; }
+}
+@keyframes ring {
+  0%, 100% { opacity: 1; scale: 1; }
+  3%, 36% { opacity: 0; scale: 0.6; animation-timing-function: var(--ease-spring); }
+  40% { opacity: 1; scale: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .grid {
+    animation: wipe var(--d-cyc) var(--ease-glide) 0s var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .sheen {
+    animation: light var(--d-cyc) linear 0s var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .ring {
+    animation: ring var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+}

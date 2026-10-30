@@ -1,0 +1,54 @@
+/* Perforated ticket: two side notches cut with a radial-gradient mask (each half carries one
+   notch, so the union of both layers is the ticket minus the notches). The notch centres sit on
+   the perforation, 84px above the bottom edge. Static; the only motion is the global
+   .stage-sweep sheen (once) and the fine-pointer tilt from MotionRuntime. */
+.ticket {
+  -webkit-mask:
+    radial-gradient(circle 15px at 0 calc(100% - 84px), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 15px at 100% calc(100% - 84px), #0000 97%, #000) right / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle 15px at 0 calc(100% - 84px), #0000 97%, #000) left / 51% 100% no-repeat,
+    radial-gradient(circle 15px at 100% calc(100% - 84px), #0000 97%, #000) right / 51% 100% no-repeat;
+}
+
+.perf {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 83px;
+  height: 0;
+  border-top: 2px dashed rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.stub {
+  height: 84px;
+}
+
+/* A decorative barcode drawn with stripes (no text, no numbers). */
+.code {
+  width: 88px;
+  height: 34px;
+  background: repeating-linear-gradient(
+    90deg,
+    #fff 0 2px,
+    transparent 2px 4px,
+    #fff 4px 5px,
+    transparent 5px 8px,
+    #fff 8px 11px,
+    transparent 11px 13px
+  );
+  border-radius: 2px;
+}
+
+/* A faint hairline grid inside the ticket body for depth (static). */
+.grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 70% at 85% 0%, #000 20%, transparent 75%);
+}

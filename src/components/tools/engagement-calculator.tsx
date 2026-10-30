@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { BorderBeam } from "@/components/motion/border-beam";
 import { NumberField, Stat, fmtNum, fmtPct, parseCount } from "@/components/tools/ui";
 import { engagementRateByFollowers, engagementRateByViews, totalInteractions } from "@/lib/x-math";
 
@@ -14,7 +15,8 @@ export function EngagementCalculator() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
-      <div className="rounded-3xl border border-border bg-white p-5 shadow-[var(--shadow-lift)] sm:p-7">
+      <div className="group relative rounded-3xl bg-white p-5 shadow-float ring-1 ring-hairline sm:p-7">
+        <BorderBeam mode="focus" />
         <p className="text-sm text-text-2">Copy the numbers from a post&apos;s analytics on X. Write 1.2k or 1,200 as you like.</p>
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <NumberField id="er-views" label="Views (impressions)" value={v.views} onChange={set("views")} />

@@ -1,0 +1,66 @@
+/* Features index: group numerals + premium card ring. Only :root variables.
+   Base CSS is the final frame: the gradient numeral is fully drawn and the ring is static. */
+
+.numeral {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 5.5rem;
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+/* the hairline outline underneath */
+.outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--hairline-strong);
+}
+
+/* the gradient copy stacked on top; fills bottom-up as the numeral scrolls in */
+.fill {
+  position: absolute;
+  inset: 0;
+}
+
+@keyframes fill-up {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    :global(html:not([data-motion="reduce"])) .fill {
+      animation: fill-up linear both;
+      animation-timeline: view();
+      animation-range: entry 25% cover 50%;
+    }
+  }
+}
+
+/* static gradient hairline ring for Premium cards */
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(140deg, rgba(255, 75, 92, 0.75), rgba(225, 29, 46, 0.18) 42%, rgba(225, 29, 46, 0.1) 60%, rgba(159, 18, 57, 0.6));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+}
+
+@media print {
+  .fill {
+    animation: none !important;
+    clip-path: none !important;
+  }
+}

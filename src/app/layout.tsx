@@ -6,6 +6,7 @@ import { baseKeywords } from "@/lib/seo";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { GoogleTag } from "@/components/google-tag";
+import { MotionRuntime } from "@/components/motion/motion-runtime";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
@@ -42,7 +43,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: "#ffffff", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: "#fffcfb", colorScheme: "light" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
         </main>
         <SiteFooter />
+        <MotionRuntime />
         <GoogleTag />
         {/* Vercel Web Analytics only exists on Vercel deployments (its script is served by Vercel). */}
         {process.env.VERCEL ? <Analytics /> : null}

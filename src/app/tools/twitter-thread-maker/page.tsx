@@ -30,26 +30,26 @@ export default function Page() {
       tool={<ThreadMaker />}
       faqs={faqs}
     >
-      <h2>How to use the thread maker</h2>
+      <h2 className="h-rule">How to use the thread maker</h2>
       <ul>
         <li>Paste or write your text in the box. The thread appears on the right as you type.</li>
         <li>Add a line with just <code>---</code> wherever you want a new post to start.</li>
         <li>Keep numbering on to add 1/n to each post, or turn it off for a cleaner look.</li>
         <li>Copy posts one by one, or copy the whole thread at once.</li>
       </ul>
-      <h2>What makes a good Twitter thread</h2>
+      <h2 className="h-rule">What makes a good Twitter thread</h2>
       <p>
         The first post does most of the work: it has to make people want to read the rest. Promise something specific, like a result, a list or a
         lesson. Keep each following post to one idea, so it reads well on its own when someone quotes or reposts it. End with a short summary and an
         invitation to follow you or repost the first post. Read our full guide on{" "}
         <Link href="/blog/how-to-write-a-twitter-thread">how to write a Twitter thread</Link> for hooks and structures that work.
       </p>
-      <h2>Characters are counted the way X counts them</h2>
+      <h2 className="h-rule">Characters are counted the way X counts them</h2>
       <p>
         The thread maker uses the same weighting as X and our <Link href="/tools/tweet-character-counter">tweet character counter</Link>: links count
         as 23 characters and most emoji as 2, so every post really fits.
       </p>
-      <h2>Schedule your thread with GrowX</h2>
+      <h2 className="h-rule">Schedule your thread with GrowX</h2>
       <p>
         The GrowX Chrome extension has this splitter built in (the &quot;Thread it&quot; button), plus images, 52 templates, the GrowX AI writer and a
         queue that posts your thread at your best time, each part as a reply to the one before. See the{" "}

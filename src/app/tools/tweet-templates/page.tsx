@@ -30,12 +30,12 @@ export default function Page() {
       tool={<TemplateLibrary />}
       faqs={faqs}
     >
-      <h2>Why templates work</h2>
+      <h2 className="h-rule">Why templates work</h2>
       <p>
         Most posts that get read share a few structures: a hook that makes a promise, a list that is easy to save, a story with a turning point, a
         question that invites replies. Templates give you that structure, so you can spend your energy on the part only you can add: the insight.
       </p>
-      <h2>Which template to use when</h2>
+      <h2 className="h-rule">Which template to use when</h2>
       <ul>
         <li><strong>Hooks</strong> for the first line of any post or thread.</li>
         <li><strong>Threads and lists</strong> for teaching something step by step.</li>
@@ -44,7 +44,7 @@ export default function Page() {
         <li><strong>Build in public</strong> for progress updates and launches.</li>
         <li><strong>Replies</strong> as starters when you reply to bigger accounts.</li>
       </ul>
-      <h2>Go further</h2>
+      <h2 className="h-rule">Go further</h2>
       <p>
         Need ideas, not just structure? See our <Link href="/blog/tweet-ideas">60 tweet ideas</Link> and{" "}
         <Link href="/blog/how-to-write-a-twitter-thread">how to write a Twitter thread</Link>. In the GrowX extension, these templates sit next to the{" "}

@@ -1,0 +1,70 @@
+.root {
+  --d-cyc: 8.5s;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.name {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.meta {
+  font-size: 10.5px;
+  color: var(--d-muted);
+}
+.strip {
+  position: relative;
+  height: 30px;
+}
+.track {
+  position: absolute;
+  inset: 0 0 12px;
+}
+.track::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--d-line);
+}
+.dot {
+  position: absolute;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  translate: -50% -50%;
+  background: var(--d-skel);
+}
+.lit .dot {
+  background: var(--d-accent);
+}
+.rest {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: grid;
+  place-items: end center;
+  border-inline: 1px dashed var(--d-line);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--d-muted);
+  line-height: 1;
+}
+
+@keyframes reveal {
+  0%, 100% { clip-path: inset(0 0 0 0); }
+  2% { clip-path: inset(0 100% 0 0); animation-timing-function: linear; }
+  72.6% { clip-path: inset(0 0 0 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .lit {
+    animation: reveal var(--d-cyc) var(--ease-glide) 0s var(--d-iter);
+  }
+}

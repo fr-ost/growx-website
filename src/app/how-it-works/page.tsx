@@ -1,10 +1,13 @@
 import Link from "next/link";
 import { CtaBand } from "@/components/home/cta-band";
 import { Faq } from "@/components/home/faq";
-import { IconArrowRight, IconBroom, IconChart, IconChrome, IconMessage, IconPen, IconShield, IconSparkles, IconTarget, IconZap } from "@/components/icons";
+import { PaceCards } from "@/components/conversion/pace-cards";
+import { IconArrowRight, IconBroom, IconChart, IconChrome, IconMessage, IconPen, IconShield, IconSparkles, IconTarget } from "@/components/icons";
 import { JsonLd, abs, breadcrumbLd, faqLd } from "@/components/json-ld";
 import { LinkButton } from "@/components/ui/button";
-import { Container, IconBubble, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
+import { stagger } from "@/components/motion/stagger";
+import { StepRail } from "@/components/motion/step-rail";
+import { Container, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
@@ -65,28 +68,33 @@ export default function HowItWorksPage() {
       </PageHero>
 
       <Section>
-        <Container className="max-w-4xl">
-          <SectionHeading eyebrow="The routine" title="Eight steps from setup to cleanup" />
-          <ol className="mt-12 space-y-5">
-            {steps.map((s, i) => (
-              <li key={s.name} id={`step-${i + 1}`} className="reveal flex scroll-mt-28 gap-5 rounded-3xl border border-border bg-white p-6">
-                <div className="flex flex-col items-center gap-2">
-                  <IconBubble><s.icon size={22} /></IconBubble>
-                  <span className="font-display text-sm font-extrabold text-accent">{String(i + 1).padStart(2, "0")}</span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold">{s.name}</h3>
-                  <p className="mt-2 leading-relaxed text-text-2">{s.text}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p className="mt-8 text-text-2">
-            Want the details? Read{" "}
-            <Link href="/blog/how-growx-auto-follow-works" className="font-semibold text-accent hover:underline">how GrowX auto follow works</Link>,{" "}
-            <Link href="/blog/how-to-schedule-tweets" className="font-semibold text-accent hover:underline">how to schedule tweets</Link> or see every{" "}
-            <Link href="/features" className="font-semibold text-accent hover:underline">feature</Link>.
-          </p>
+        <Container className="grid gap-12 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:gap-16">
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <SectionHeading eyebrow="The routine" title="Eight steps from setup to cleanup" />
+          </div>
+          <div>
+            <StepRail
+              orientation="vertical"
+              steps={steps.map((s, i) => ({
+                key: s.name,
+                id: `step-${i + 1}`,
+                marker: <s.icon size={20} />,
+                content: (
+                  <div className="reveal rounded-3xl border border-hairline bg-white p-6 shadow-hair" style={stagger(0)}>
+                    <span className="font-mono text-xs font-semibold tabular-nums text-accent-ink">{String(i + 1).padStart(2, "0")}</span>
+                    <h3 className="mt-1.5 text-lg font-bold">{s.name}</h3>
+                    <p className="mt-2 leading-relaxed text-text-2">{s.text}</p>
+                  </div>
+                ),
+              }))}
+            />
+            <p className="mt-10 text-text-2">
+              Want the details? Read{" "}
+              <Link href="/blog/how-growx-auto-follow-works" className="link-draw font-semibold text-accent-ink">how GrowX auto follow works</Link>,{" "}
+              <Link href="/blog/how-to-schedule-tweets" className="link-draw font-semibold text-accent-ink">how to schedule tweets</Link> or see every{" "}
+              <Link href="/features" className="link-draw font-semibold text-accent-ink">feature</Link>.
+            </p>
+          </div>
         </Container>
       </Section>
 
@@ -95,11 +103,14 @@ export default function HowItWorksPage() {
           <SectionHeading eyebrow="Pacing" title="Four paces, one set of safety rules" center>
             Values from the current extension (v2.4.4). Every preset adds occasional longer pauses, rolling caps and automatic slow-down.
           </SectionHeading>
-          <div className="reveal mt-10 overflow-x-auto rounded-3xl border border-border bg-white">
+          <div className="mt-12">
+            <PaceCards />
+          </div>
+          <div className="reveal mt-6 overflow-x-auto rounded-3xl border border-hairline bg-white shadow-hair">
             <table className="w-full min-w-[40rem] text-left text-sm">
               <caption className="sr-only">GrowX pace presets</caption>
               <thead>
-                <tr className="border-b border-border bg-surface-2">
+                <tr className="border-b border-hairline bg-surface-2">
                   {["Pace", "Delay between follows", "Break", "Per hour", "Per day", "Best for"].map((h) => (
                     <th key={h} scope="col" className="px-4 py-3 font-bold">{h}</th>
                   ))}
@@ -107,12 +118,12 @@ export default function HowItWorksPage() {
               </thead>
               <tbody>
                 {presets.map((p) => (
-                  <tr key={p.name} className="border-t border-border">
-                    <th scope="row" className="px-4 py-3.5 font-bold text-accent">{p.name}</th>
+                  <tr key={p.name} className="border-t border-hairline">
+                    <th scope="row" className="px-4 py-3.5 font-bold text-accent-ink">{p.name}</th>
                     <td className="px-4 py-3.5">{p.delay}</td>
                     <td className="px-4 py-3.5">{p.rest}</td>
-                    <td className="px-4 py-3.5">{p.hourly}</td>
-                    <td className="px-4 py-3.5">{p.daily}</td>
+                    <td className="px-4 py-3.5 tabular-nums">{p.hourly}</td>
+                    <td className="px-4 py-3.5 tabular-nums">{p.daily}</td>
                     <td className="px-4 py-3.5 text-text-2">{p.who}</td>
                   </tr>
                 ))}
@@ -125,17 +136,19 @@ export default function HowItWorksPage() {
 
       <Section>
         <Container className="grid gap-10 lg:grid-cols-[1fr_1.5fr]">
-          <SectionHeading eyebrow="FAQ" title="How GrowX works: common questions">
-            More questions? <Link href="/contact" className="font-semibold text-accent hover:underline">Contact support</Link>.
-          </SectionHeading>
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <SectionHeading eyebrow="FAQ" title="How GrowX works: common questions">
+              More questions? <Link href="/contact" className="link-draw font-semibold text-accent-ink">Contact support</Link>.
+            </SectionHeading>
+          </div>
           <div className="reveal"><Faq items={faqs} /></div>
         </Container>
       </Section>
 
       <Section className="pt-0">
         <Container className="flex flex-wrap justify-center gap-3">
-          <LinkButton href="/features" variant="secondary">All features <IconArrowRight size={16} /></LinkButton>
-          <LinkButton href="/pricing" variant="secondary">Pricing <IconZap size={16} /></LinkButton>
+          <LinkButton href="/features" variant="secondary">All features <IconArrowRight size={16} className="nudge" /></LinkButton>
+          <LinkButton href="/pricing" variant="secondary">Pricing <IconArrowRight size={16} className="nudge" /></LinkButton>
         </Container>
       </Section>
       <CtaBand />

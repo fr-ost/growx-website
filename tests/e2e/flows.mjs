@@ -10,6 +10,52 @@ const results = [];
 const ok = (name, cond, extra = "") => { results.push(`${cond ? "PASS" : "FAIL"}  ${name}${extra ? "  -- " + extra : ""}`); };
 const b = await chromium.launch({ executablePath });
 
+// ---------- motion helpers (redesign): step-scroll a page, then find text left invisible inside <main>
+const scrollToBottom = async (page) => {
+  await page.evaluate(async () => {
+    const pause = () => new Promise((r) => setTimeout(r, 60));
+    for (let y = 0; y < document.documentElement.scrollHeight - innerHeight; y += innerHeight * 0.8) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await pause();
+    }
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+    await pause();
+  });
+};
+const invisibleText = (page) =>
+  page.evaluate(() => {
+    const main = document.querySelector("main");
+    if (!main) return ["no <main>"];
+    const cache = new Map();
+    const opacityOf = (el) => {
+      if (!el) return 1;
+      if (cache.has(el)) return cache.get(el);
+      const v = parseFloat(getComputedStyle(el).opacity) * opacityOf(el.parentElement);
+      cache.set(el, v);
+      return v;
+    };
+    const srOnly = (el) => {
+      if (el.closest(".sr-only")) return true;
+      const r = el.getBoundingClientRect();
+      return r.width <= 1 && r.height <= 1;
+    };
+    const bad = [];
+    const seen = new Set();
+    const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const el = n.parentElement;
+      if (!el || seen.has(el) || !n.textContent.trim()) continue;
+      seen.add(el);
+      if (el.closest('[aria-hidden="true"], [hidden], script, style, noscript, template')) continue;
+      const closed = el.closest("details:not([open])");
+      if (closed && !el.closest("summary")) continue;
+      if (!el.getClientRects().length || getComputedStyle(el).visibility === "hidden" || srOnly(el)) continue;
+      const o = opacityOf(el);
+      if (o < 0.05) bad.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} "${n.textContent.trim().slice(0, 30)}" (${o.toFixed(2)})`);
+    }
+    return bad;
+  });
+
 // ---------- public crawl, desktop + mobile
 const pages = ["/", "/features", "/features/twitter-auto-follow", "/features/twitter-post-scheduler", "/features/ai-tweet-writer", "/features/twitter-analytics", "/features/twitter-unfollower-tracker", "/features/twitter-unfollow-tool", "/features/twitter-reply-targets", "/tools", "/tools/tweet-character-counter", "/tools/twitter-thread-maker", "/tools/twitter-engagement-rate-calculator", "/tools/twitter-follower-ratio-calculator", "/tools/twitter-bold-text-generator", "/tools/tweet-templates", "/tools/twitter-bio-generator", "/press", "/how-it-works", "/pricing", "/about", "/blog", "/blog/how-growx-auto-follow-works", "/blog/growx-features-guide-scoring-filters-cleanup", "/blog/growx-potential-best-practices-roadmap", "/blog/how-to-schedule-tweets", "/blog/who-unfollowed-me-on-twitter", "/blog/twitter-algorithm-explained", "/blog/twitter-bio-ideas", "/contact", "/privacy", "/terms", "/refund-policy", "/login", "/signup", "/forgot-password", "/does-not-exist"];
 const links = new Set();
@@ -29,6 +75,11 @@ for (const [label, vp] of [["desktop", { width: 1366, height: 900 }], ["mobile",
     ok(`${label} ${path} has exactly one h1`, h1 === 1, String(h1));
     for (const href of await p.$$eval("a[href^='/']", (as) => as.map((a) => a.getAttribute("href")))) links.add(href.split("#")[0]);
     await p.screenshot({ path: OUT + `shot-${label}${path.replaceAll("/", "_") || "_home"}.png`, fullPage: true });
+    // redesign: entrance animations are progressive enhancement; nothing may stay invisible once scrolled
+    await scrollToBottom(p);
+    await p.waitForTimeout(800);
+    const invisible = await invisibleText(p);
+    ok(`${label} ${path} no text left invisible after scrolling`, invisible.length === 0, invisible.slice(0, 4).join(" | "));
   }
   ok(`${label} no console errors on public pages`, errs.filter((e) => !e.includes("404")).length === 0, errs.join(" | ").slice(0, 300));
   await ctx.close();
@@ -636,6 +687,162 @@ ok("no runtime page errors in auth flows", errs.length === 0, errs.join(" | ").s
   ok("invoice: another (non-admin) user gets 404", other404.status() === 404, String(other404.status()));
   ok("admin pages: no runtime errors", aerrs.length === 0, aerrs.join(" | "));
   await uctx.close(); await actx.close();
+}
+
+// ---------- motion and redesign (LCP, reveals, reduced motion, keyboard menu, motion toggle)
+{
+  const opacityProbe = () => {
+    const h1 = document.querySelector("h1");
+    const img = document.querySelector("main img");
+    const ops = (el) => (el ? [el, ...el.querySelectorAll("*")].map((n) => getComputedStyle(n).opacity) : []);
+    return { h1: !!h1, h1Ops: ops(h1), img: img ? getComputedStyle(img).opacity : null };
+  };
+  // 1. hero h1 (+ everything inside) and the first image in <main> are opaque at DOMContentLoaded
+  {
+    const p = await b.newPage({ viewport: { width: 1366, height: 900 } });
+    for (const path of ["/", "/features/twitter-post-scheduler", "/pricing", "/blog/how-to-schedule-tweets", "/login"]) {
+      await p.goto(BASE + path, { waitUntil: "domcontentloaded" });
+      const m = await p.evaluate(opacityProbe);
+      ok(`motion ${path}: h1 and hero image opaque at first paint`, m.h1 && m.h1Ops.every((o) => o === "1") && (m.img === null || m.img === "1"), JSON.stringify({ h1: m.h1Ops.filter((o) => o !== "1"), img: m.img }));
+    }
+    await p.close();
+  }
+  // LCP rule: the home hero h1 is fully opaque within 300 ms of the response (first frames are sampled)
+  {
+    const p = await b.newPage({ viewport: { width: 1366, height: 900 } });
+    await p.addInitScript(() => {
+      const start = performance.now();
+      const tick = () => {
+        const h1 = document.querySelector("h1");
+        if (h1 && document.styleSheets.length) {
+          let o = 1;
+          for (let a = h1; a; a = a.parentElement) o *= parseFloat(getComputedStyle(a).opacity);
+          const inner = [...h1.querySelectorAll("*")].every((n) => getComputedStyle(n).opacity === "1");
+          const w = window;
+          w.__h1First ??= { t: performance.now(), opaque: o === 1 && inner };
+          if (o === 1 && inner) {
+            w.__h1Opaque = performance.now();
+            return;
+          }
+        }
+        if (performance.now() - start < 3000) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await p.goto(BASE + "/", { waitUntil: "load" });
+    await p.waitForTimeout(300);
+    const r = await p.evaluate(() => {
+      const nav = performance.getEntriesByType("navigation")[0];
+      return { first: window.__h1First ?? null, opaqueAt: window.__h1Opaque ?? null, responseStart: nav ? nav.responseStart : 0 };
+    });
+    ok("motion /: home hero h1 has opacity 1 within 300 ms of navigation", !!r.first && r.first.opaque && r.opaqueAt !== null && r.opaqueAt - r.responseStart <= 300, JSON.stringify(r));
+    await p.close();
+  }
+  // 2. nothing stuck invisible after a step-scroll (instant scrolling; smooth scrolling makes it async)
+  {
+    const p = await b.newPage({ viewport: { width: 1366, height: 900 } });
+    for (const path of ["/", "/features/twitter-auto-follow"]) {
+      await p.goto(BASE + path, { waitUntil: "networkidle" });
+      await p.addStyleTag({ content: "html{scroll-behavior:auto!important}" });
+      await scrollToBottom(p);
+      await p.waitForTimeout(1000);
+      const m = await p.evaluate(() => ({
+        stuck: [...document.querySelectorAll(".reveal, .reveal-heading, .reveal-scale, .reveal-clip")].filter((el) => parseFloat(getComputedStyle(el).opacity) < 0.99).length,
+        counts: [...document.querySelectorAll("[data-count]")].filter((el) => el.textContent.trim() !== el.getAttribute("data-count")).map((el) => `${el.textContent}/${el.getAttribute("data-count")}`),
+      }));
+      ok(`motion ${path}: every reveal is opaque after scrolling`, m.stuck === 0, `${m.stuck} stuck`);
+      ok(`motion ${path}: every counter shows its true value after scrolling`, m.counts.length === 0, m.counts.join(","));
+    }
+    await p.close();
+  }
+  // same check without CSS scroll-driven animations (Chromium always ships them, so simulate a browser
+  // without them: MotionRuntime sees no support and the CSS reveal animations are switched off)
+  {
+    const ctx = await b.newContext({ viewport: { width: 1366, height: 900 } });
+    await ctx.addInitScript(() => {
+      const supports = CSS.supports.bind(CSS);
+      CSS.supports = (...a) => (String(a.join(":")).includes("animation-timeline") ? false : supports(...a));
+    });
+    const p = await ctx.newPage();
+    for (const path of ["/", "/features/twitter-auto-follow", "/how-it-works"]) {
+      await p.goto(BASE + path, { waitUntil: "networkidle" });
+      await p.addStyleTag({ content: "html{scroll-behavior:auto!important} .reveal,.reveal-heading,.reveal-scale,.reveal-clip{animation:none!important}" });
+      const pending = await p.locator(".reveal-pending").count();
+      await scrollToBottom(p);
+      await p.waitForTimeout(1000);
+      const invisible = await invisibleText(p);
+      ok(`fallback ${path} no text left invisible after scrolling`, invisible.length === 0, `${pending} pending at load; ` + invisible.slice(0, 4).join(" | "));
+      ok(`fallback ${path}: every pending reveal was revealed`, (await p.locator(".reveal-pending:not(.reveal-in)").count()) === 0, `${pending} pending at load`);
+    }
+    await ctx.close();
+  }
+  // 3. reduced motion: no running animations, every reveal visible without scrolling
+  {
+    const ctx = await b.newContext({ viewport: { width: 1366, height: 900 }, reducedMotion: "reduce" });
+    const p = await ctx.newPage();
+    await p.goto(BASE + "/", { waitUntil: "networkidle" });
+    await p.waitForTimeout(1200);
+    const m = await p.evaluate(() => ({
+      running: document.getAnimations().filter((a) => a.playState === "running").length,
+      hidden: [...document.querySelectorAll(".reveal, .reveal-heading, .reveal-scale, .reveal-clip")].filter((el) => getComputedStyle(el).opacity !== "1").length,
+    }));
+    ok("motion reduced: no running animations on /", m.running === 0, `${m.running} running`);
+    ok("motion reduced: every reveal visible without scrolling on /", m.hidden === 0, `${m.hidden} hidden`);
+    const invisible = await invisibleText(p);
+    ok("reduced / no text left invisible without scrolling", invisible.length === 0, invisible.slice(0, 4).join(" | "));
+    await ctx.close();
+  }
+  // 4. keyboard-operable features menu
+  {
+    const p = await b.newPage({ viewport: { width: 1366, height: 900 } });
+    await p.goto(BASE + "/", { waitUntil: "networkidle" });
+    await p.focus('nav[aria-label="Main"] button');
+    await p.keyboard.press("ArrowDown");
+    await p.waitForTimeout(100);
+    const first = await p.evaluate(() => {
+      const a = document.activeElement;
+      return a && a.matches("a[href^='/features/']") && !!a.closest('nav[aria-label="Main"]') ? a.getAttribute("href") : null;
+    });
+    ok("header: ArrowDown on Features opens the menu and focuses its first link", !!first, String(first));
+    await p.keyboard.press("ArrowDown");
+    const second = await p.evaluate(() => document.activeElement?.getAttribute("href"));
+    ok("header: ArrowDown moves to the next menu link", !!second && second !== first, String(second));
+    await p.keyboard.press("Escape");
+    await p.waitForTimeout(100);
+    const closed = !(await p.locator(`nav[aria-label="Main"] a[href="${first}"]`).isVisible());
+    const focused = await p.evaluate(() => document.activeElement === document.querySelector('nav[aria-label="Main"] button'));
+    ok("header: Escape closes the menu and returns focus to Features", closed && focused, JSON.stringify({ closed, focused }));
+    await p.close();
+  }
+  // mobile sheet: Escape closes it and returns focus to the toggle
+  {
+    const p = await b.newPage({ viewport: { width: 375, height: 780 } });
+    await p.goto(BASE + "/", { waitUntil: "networkidle" });
+    await p.click("button[data-menu-toggle]");
+    await p.keyboard.press("Escape");
+    await p.waitForTimeout(100);
+    const closed = !(await p.locator('nav[aria-label="Mobile"]').isVisible());
+    const focused = await p.evaluate(() => document.activeElement?.hasAttribute("data-menu-toggle") ?? false);
+    ok("header: Escape closes the mobile menu and returns focus to the toggle", closed && focused, JSON.stringify({ closed, focused }));
+    await p.close();
+  }
+  // 5. site-wide Reduce motion toggle (persists across reloads)
+  {
+    const ctx = await b.newContext({ viewport: { width: 1366, height: 900 } });
+    const p = await ctx.newPage();
+    await p.goto(BASE + "/", { waitUntil: "networkidle" });
+    const toggle = p.locator("footer button:has-text('Reduce motion')");
+    await toggle.click();
+    const on = await p.evaluate(() => document.documentElement.dataset.motion);
+    ok("motion toggle: sets html[data-motion=reduce] and aria-pressed", on === "reduce" && (await toggle.getAttribute("aria-pressed")) === "true", String(on));
+    await p.reload({ waitUntil: "networkidle" });
+    const kept = await p.waitForFunction(() => document.documentElement.dataset.motion === "reduce", null, { timeout: 5000 }).then(() => true, () => false);
+    ok("motion toggle: the choice persists across a reload", kept && (await toggle.getAttribute("aria-pressed")) === "true");
+    await toggle.click();
+    const off = await p.evaluate(() => document.documentElement.hasAttribute("data-motion"));
+    ok("motion toggle: clicking again removes the attribute", !off && (await toggle.getAttribute("aria-pressed")) === "false");
+    await ctx.close();
+  }
 }
 
 await b.close();

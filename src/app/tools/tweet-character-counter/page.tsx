@@ -30,7 +30,7 @@ export default function Page() {
       tool={<CharacterCounter />}
       faqs={faqs}
     >
-      <h2>How X counts characters</h2>
+      <h2 className="h-rule">How X counts characters</h2>
       <p>
         X does not simply count letters. Each character has a weight: standard Latin letters, digits and common punctuation count as one, while most
         emoji and Chinese, Japanese and Korean characters count as two. Every link counts as exactly 23 characters, because X wraps links in its own
@@ -42,14 +42,14 @@ export default function Page() {
         <li><strong>23 characters</strong> for any link, however long.</li>
         <li><strong>2 characters</strong> for most emoji, including emoji with skin tones.</li>
       </ul>
-      <h2>Tips for writing within the limit</h2>
+      <h2 className="h-rule">Tips for writing within the limit</h2>
       <p>
         Lead with the point. The first line is what people see in their timeline, so put the hook there and cut warm-up phrases. Replace long words
         with short ones, drop filler like &quot;really&quot; and &quot;just&quot;, and use line breaks instead of long sentences. If an idea needs more
         room, turn it into a thread rather than cramming it: our free <Link href="/tools/twitter-thread-maker">Twitter thread maker</Link> splits
         long text into numbered posts that each fit.
       </p>
-      <h2>Write, count and schedule in one place</h2>
+      <h2 className="h-rule">Write, count and schedule in one place</h2>
       <p>
         The GrowX Chrome extension has the same character counting built into its composer, plus thread splitting, images, 52 post templates and a
         queue that posts at your best times. See the <Link href="/features/twitter-post-scheduler">post scheduler</Link>, or read{" "}

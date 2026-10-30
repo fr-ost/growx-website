@@ -30,19 +30,19 @@ export default function Page() {
       tool={<RatioCalculator />}
       faqs={faqs}
     >
-      <h2>Why your follower ratio matters</h2>
+      <h2 className="h-rule">Why your follower ratio matters</h2>
       <p>
         Your ratio is one of the first things people notice on your profile. A healthy balance between followers and following makes an account look
         credible, and it keeps room under X&apos;s following limit so you can keep following new, relevant people. Read our full guide to the{" "}
         <Link href="/blog/twitter-follower-ratio">Twitter follower ratio</Link>.
       </p>
-      <h2>How the following cap works</h2>
+      <h2 className="h-rule">How the following cap works</h2>
       <ul>
         <li>Up to <strong>5,000</strong> following: open to everyone.</li>
         <li>Above 5,000: the limit grows with your followers. X does not publish the exact rule; GrowX estimates it at about <strong>10% above your follower count</strong>.</li>
         <li>Separately, X limits how many accounts you can follow per day, and following in bursts can trigger temporary limits.</li>
       </ul>
-      <h2>Improve your ratio with GrowX</h2>
+      <h2 className="h-rule">Improve your ratio with GrowX</h2>
       <p>
         GrowX&apos;s <Link href="/features/twitter-unfollow-tool">unfollow tool</Link> finds accounts that don&apos;t follow you back or went quiet so
         you can review and unfollow them at a safe pace, and its <Link href="/features/twitter-auto-follow">smart auto follow</Link> targets people

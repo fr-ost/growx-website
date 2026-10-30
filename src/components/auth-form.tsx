@@ -35,8 +35,10 @@ export function AuthForm({
   if (state.success) {
     return (
       <div className="animate-pop space-y-4 text-center">
-        <div className="bg-brand mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white shadow-[var(--shadow-red)]">✉</div>
-        <h2 className="text-xl font-bold">Check your inbox</h2>
+        <div className="bg-brand-deep mx-auto flex h-14 w-14 items-center justify-center rounded-2xl text-2xl text-white shadow-red" aria-hidden="true">
+          ✉
+        </div>
+        <h2 className="font-display text-xl font-extrabold tracking-tight">Check your inbox</h2>
         <p className="text-text-2">{state.success}</p>
         <p className="text-sm text-muted">Didn&apos;t get it? Check spam, or wait a minute and try signing up again.</p>
       </div>
@@ -104,7 +106,7 @@ export function AuthForm({
           .
         </p>
       ) : null}
-      <p className="border-t border-border pt-4 text-center text-sm text-text-2">
+      <p className="border-t border-hairline pt-4 text-center text-sm text-text-2">
         {isLogin ? (
           <>
             New to GrowX?{" "}

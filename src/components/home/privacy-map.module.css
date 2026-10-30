@@ -1,0 +1,356 @@
+/* Privacy map: where GrowX's data lives. Only :root variables. The base CSS is the final frame
+   (packets resting at their destination); packets travel only at >= 1024px with motion allowed. */
+.wrap {
+  display: grid;
+  gap: 2.5rem;
+}
+
+.map {
+  position: relative;
+  border: 1px solid var(--hairline);
+  border-radius: 1.5rem;
+  padding: 2.75rem 0.75rem 1.25rem;
+  background-color: var(--surface);
+  background-image: radial-gradient(var(--hairline-strong) 1px, transparent 1px);
+  background-size: 20px 20px;
+  box-shadow: var(--shadow-hair);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+.tag {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  padding: 1px 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- layout (stacked) */
+.layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 30rem;
+  margin-inline: auto;
+}
+.boundary {
+  position: relative;
+  display: grid;
+  width: 100%;
+  grid-template-columns: minmax(0, 1fr) 1.25rem minmax(0, 1fr);
+  grid-template-rows: auto 1.5rem auto 1.5rem auto;
+  grid-template-areas:
+    "chrome chrome chrome"
+    "c0 c0 c0"
+    "ext ext ext"
+    "c1 cx c2"
+    "store cx ai";
+  justify-items: center;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 1.25rem;
+  padding: 1.75rem 0.5rem 0.75rem;
+  background: rgb(255 255 255 / 0.7);
+}
+.label {
+  position: absolute;
+  top: 0;
+  left: 1rem;
+  translate: 0 -50%;
+  padding: 0 0.5rem;
+  background: var(--surface);
+  color: var(--muted);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------- nodes */
+.node {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 1rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-hair);
+  text-align: left;
+}
+.chrome {
+  grid-area: chrome;
+}
+.ext {
+  grid-area: ext;
+  width: 72%;
+}
+.store {
+  grid-area: store;
+  width: 100%;
+  min-height: 3.6rem;
+}
+.ai {
+  grid-area: ai;
+  width: 100%;
+  min-height: 3.6rem;
+}
+.brand {
+  border-color: transparent;
+  background: linear-gradient(135deg, #e11d2e 0%, #be123c 55%, #9f1239 100%);
+  color: #fff;
+  box-shadow: 0 14px 28px -14px rgb(159 18 57 / 0.6);
+}
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.6rem;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.brand .icon {
+  background: rgb(255 255 255 / 0.16);
+  color: #fff;
+}
+.text {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
+}
+.title {
+  font-weight: 700;
+}
+.sub {
+  color: var(--text-2);
+  font-size: 11.5px;
+}
+.brand .sub {
+  color: #fff;
+}
+.ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: calc(1rem + 5px);
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 7px rgb(225 29 46 / 0.12);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (max-width: 639px) {
+  .store .icon,
+  .ai .icon {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------- links */
+.link {
+  position: relative;
+  align-self: stretch;
+  justify-self: stretch;
+}
+.link::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--border-strong);
+}
+.data::before {
+  background: rgb(225 29 46 / 0.45);
+}
+.c0 {
+  grid-area: c0;
+}
+.c1 {
+  grid-area: c1;
+}
+.c2 {
+  grid-area: c2;
+}
+.cx {
+  grid-area: cx;
+  margin-bottom: -0.75rem;
+}
+.out {
+  flex: none;
+  align-self: center;
+  width: 1.5rem;
+  height: 2.25rem;
+}
+
+/* packets: resting at their destination (the end of each link) */
+.run {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.packet {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgb(225 29 46 / 0.18);
+  translate: 0 50%;
+}
+
+/* ---------------------------------------------------------------- x.com side */
+.dest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+.no {
+  display: inline-flex;
+  align-items: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: line-through;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.5px;
+}
+
+/* ---------------------------------------------------------------- lg: left to right */
+@media (min-width: 1024px) {
+  .map {
+    padding: 3rem 2rem 2.5rem;
+    font-size: 13px;
+  }
+  .layout {
+    flex-direction: row;
+    max-width: none;
+  }
+  .boundary {
+    flex: 1;
+    width: auto;
+    grid-template-columns: auto 2.5rem minmax(0, 17rem) minmax(2.5rem, 1fr);
+    grid-template-rows: auto 1.75rem auto 1.75rem auto;
+    grid-template-areas:
+      ". . store ."
+      ". . c1 ."
+      "chrome c0 ext cx"
+      ". . c2 ."
+      ". . ai .";
+    justify-items: stretch;
+    align-items: center;
+    padding: 2.25rem 0 2.25rem 1.5rem;
+  }
+  .ext {
+    width: auto;
+  }
+  .c0::before,
+  .cx::before,
+  .out::before {
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: auto;
+    height: 2px;
+    margin: -1px 0 0;
+  }
+  .cx {
+    margin-bottom: 0;
+  }
+  .out {
+    width: 4.5rem;
+    height: 3rem;
+  }
+  .c1 .packet {
+    top: 0;
+    bottom: auto;
+    translate: 0 -50%;
+  }
+  .out .packet {
+    top: 50%;
+    right: 0;
+    bottom: auto;
+    left: auto;
+    margin: -4px 0 0;
+    translate: 50% 0;
+  }
+  .dest {
+    position: relative;
+    flex: none;
+    width: 13.5rem;
+  }
+  .dest .node {
+    width: 100%;
+  }
+  .no {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    left: 50%;
+    translate: -50% 0;
+  }
+}
+
+/* ---------------------------------------------------------------- card <-> node highlight */
+.wrap:has([data-privacy="session"]:is(:hover, :focus-within)) [data-node="session"] > .ring,
+.wrap:has([data-privacy="storage"]:is(:hover, :focus-within)) [data-node="storage"] > .ring,
+.wrap:has([data-privacy="ai"]:is(:hover, :focus-within)) [data-node="ai"] > .ring {
+  opacity: 1;
+}
+
+/* ---------------------------------------------------------------- motion */
+@keyframes up {
+  0% { translate: 0 100%; opacity: 0; }
+  12% { opacity: 1; }
+  38%, 100% { translate: 0 0; opacity: 1; }
+}
+@keyframes down {
+  0% { translate: 0 -100%; opacity: 0; }
+  12% { opacity: 1; }
+  38%, 100% { translate: 0 0; opacity: 1; }
+}
+@keyframes across {
+  0% { translate: -100% 0; opacity: 0; }
+  12% { opacity: 1; }
+  38%, 100% { translate: 0 0; opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) .ring {
+    transition: opacity var(--dur-3) var(--ease-glide);
+  }
+}
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) .c1 .run {
+    animation: up 6s var(--ease-glide) 0.6s 3 both;
+  }
+  :where(html:not([data-motion="reduce"])) .c2 .run {
+    animation: down 6s var(--ease-glide) 0.9s 3 both;
+  }
+  :where(html:not([data-motion="reduce"])) .out .run {
+    animation: across 6s var(--ease-glide) 1.2s 3 both;
+  }
+}

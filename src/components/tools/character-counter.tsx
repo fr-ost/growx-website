@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { IconCopy } from "@/components/icons";
+import { BorderBeam } from "@/components/motion/border-beam";
+import { CopyGlyph, copyButtonClass } from "@/components/tools/ui";
 import { LONG_POST_LIMIT, POST_LIMIT, countLinks, weightedLength } from "@/lib/tweet-text";
 
 function Ring({ used, limit }: { used: number; limit: number }) {
@@ -12,7 +13,7 @@ function Ring({ used, limit }: { used: number; limit: number }) {
   const color = over ? "#b4141f" : limit - used <= 20 ? "#d97706" : "#e11d2e";
   return (
     <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
-      <circle cx="28" cy="28" r={r} fill="none" stroke="#ebe8ea" strokeWidth="5" />
+      <circle cx="28" cy="28" r={r} fill="none" stroke="var(--border)" strokeWidth="5" />
       <circle cx="28" cy="28" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} transform="rotate(-90 28 28)" />
     </svg>
   );
@@ -47,7 +48,8 @@ export function CharacterCounter() {
   };
 
   return (
-    <div className="rounded-3xl border border-border bg-white p-5 shadow-[var(--shadow-lift)] sm:p-7">
+    <div className="group relative rounded-3xl bg-white p-5 shadow-float ring-1 ring-hairline sm:p-7">
+      <BorderBeam mode="focus" />
       <label htmlFor="cc-text" className="text-sm font-bold">
         Your post
       </label>
@@ -57,16 +59,16 @@ export function CharacterCounter() {
         onChange={(e) => setText(e.target.value)}
         rows={7}
         placeholder="Type or paste your tweet here. Links count as 23 characters, most emoji as 2."
-        className="mt-2 w-full resize-y rounded-2xl border border-border-strong bg-white p-4 text-[1.05rem] leading-relaxed focus:border-accent focus:outline-none"
+        className="mt-2 w-full resize-y rounded-2xl border border-border-strong bg-white p-4 text-[1.05rem] leading-relaxed focus:border-accent focus:outline-none focus:ring-4 focus:ring-accent/10"
       />
       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3" aria-live="polite">
           <Ring used={stats.used} limit={limit} />
           <div>
-            <p className={`font-display text-2xl font-extrabold ${over ? "text-danger" : ""}`}>
+            <p className={`font-display text-2xl font-extrabold tabular-nums ${over ? "text-danger" : ""}`}>
               {stats.used.toLocaleString("en")} <span className="text-base font-semibold text-muted">/ {limit.toLocaleString("en")}</span>
             </p>
-            <p className={`text-sm font-semibold ${over ? "text-danger" : "text-text-2"}`}>
+            <p className={`text-sm font-semibold tabular-nums ${over ? "text-danger" : "text-text-2"}`}>
               {over ? `${Math.abs(stats.left).toLocaleString("en")} over the limit` : `${stats.left.toLocaleString("en")} characters left`}
             </p>
           </div>
@@ -76,8 +78,8 @@ export function CharacterCounter() {
             <input type="checkbox" checked={long} onChange={(e) => setLong(e.target.checked)} className="h-4 w-4 accent-[#e11d2e]" />
             X Premium long post (25,000)
           </label>
-          <button type="button" onClick={copy} disabled={!text} className="inline-flex items-center gap-2 rounded-full border border-border-strong px-4 py-2 text-sm font-semibold transition-colors hover:border-accent hover:text-accent disabled:opacity-50">
-            <IconCopy size={15} /> {copied ? "Copied" : "Copy"}
+          <button type="button" onClick={copy} disabled={!text} className={`${copyButtonClass} gap-2 px-4 py-2 text-sm`}>
+            <CopyGlyph copied={copied} size={15} /> {copied ? "Copied" : "Copy"}
           </button>
         </div>
       </div>
@@ -88,9 +90,9 @@ export function CharacterCounter() {
           ["Words", stats.words],
           ["Links", stats.links],
         ].map(([k, v]) => (
-          <div key={k as string} className="rounded-2xl bg-surface-2 px-4 py-3">
+          <div key={k as string} className="rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-hairline">
             <dt className="text-xs font-semibold uppercase tracking-wider text-muted">{k}</dt>
-            <dd className="mt-1 font-display text-xl font-extrabold">{(v as number).toLocaleString("en")}</dd>
+            <dd className="mt-1 font-display text-xl font-extrabold tabular-nums">{(v as number).toLocaleString("en")}</dd>
           </div>
         ))}
       </dl>

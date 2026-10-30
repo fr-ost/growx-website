@@ -1,5 +1,11 @@
 import type { ReactNode } from "react";
+import { TrialTicks } from "@/components/auth/trial-ticks";
 import { IconCheck, IconLock, IconShield, IconZap } from "@/components/icons";
+import { Backdrop } from "@/components/motion/backdrop";
+import { BorderBeam } from "@/components/motion/border-beam";
+import { GrowthLine } from "@/components/motion/growth-line";
+import { InkStage } from "@/components/motion/ink-stage";
+import { stagger } from "@/components/motion/stagger";
 import { Notice } from "@/components/ui/primitives";
 import { TRIAL_DAYS } from "@/config/pricing";
 import { isSupabaseConfigured } from "@/lib/env";
@@ -11,41 +17,57 @@ const perks = [
   { i: IconShield, t: "Safety limits built into every run" },
 ];
 
+/**
+ * Shared layout for log in, sign up and the password pages.
+ * Above the fold, so nothing here ever starts at opacity 0: the h1, subtitle and card settle
+ * with translate (+ a short de-blur on the text), and the aside's perks follow the same settle.
+ */
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: ReactNode; children: ReactNode }) {
   return (
-    <section className="bg-hero relative flex flex-1 overflow-hidden">
-      <div className="bg-grid absolute inset-0" aria-hidden="true" />
-      <div className="relative mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:px-8">
-        <div className="animate-fade-up mx-auto w-full max-w-md">
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{title}</h1>
-          <p className="mt-2 text-text-2">{subtitle}</p>
-          <div className="mt-8 space-y-5 rounded-3xl border border-border bg-white p-6 shadow-[var(--shadow-lift)] sm:p-8">
-            {!isSupabaseConfigured() ? (
-              <Notice tone="warn" title="Sign-in is temporarily unavailable">
-                The account service is not configured on this deployment.
-              </Notice>
-            ) : null}
-            {children}
+    <section className="relative flex flex-1 overflow-clip">
+      <Backdrop variant="page" beams={0} />
+      <div className="relative mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 py-12 sm:px-6 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:px-8">
+        <div className="mx-auto w-full max-w-md">
+          <h1 className="hero-settle font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-[2.75rem]" style={stagger(0)}>
+            {title}
+          </h1>
+          <p className="hero-settle mt-3 leading-relaxed text-text-2" style={stagger(1)}>
+            {subtitle}
+          </p>
+          {/* The card settles by translate only (no blur over form fields). */}
+          <div
+            className="hero-settle-plain group relative mt-8 rounded-3xl border border-hairline bg-white p-6 shadow-float sm:p-8"
+            style={stagger(2)}
+          >
+            <BorderBeam mode="focus" />
+            <div className="relative space-y-5">
+              {!isSupabaseConfigured() ? (
+                <Notice tone="warn" title="Sign-in is temporarily unavailable">
+                  The account service is not configured on this deployment.
+                </Notice>
+              ) : null}
+              {children}
+            </div>
           </div>
         </div>
-        <aside className="bg-brand relative hidden overflow-hidden rounded-[2rem] p-10 text-white shadow-[0_40px_80px_-40px_rgba(159,18,57,0.8)] lg:block">
-          <div className="absolute inset-0 opacity-25 [background-image:radial-gradient(rgba(255,255,255,.6)_1px,transparent_1px)] [background-size:22px_22px]" aria-hidden="true" />
-          <div className="glow -right-16 -top-16 h-72 w-72 bg-white/25 animate-drift" aria-hidden="true" />
-          <div className="relative">
-            <p className="text-sm font-bold uppercase tracking-wider text-white/80">GrowX</p>
-            <h2 className="mt-3 text-3xl font-extrabold leading-tight">Everything you need to grow on X, in one Chrome extension.</h2>
-            <ul className="mt-8 space-y-4">
-              {perks.map(({ i: I, t }, idx) => (
-                <li key={t} className="animate-row flex items-center gap-3" style={{ animationDelay: `${200 + idx * 120}ms` }}>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25">
-                    <I size={18} />
-                  </span>
-                  <span className="font-semibold">{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </aside>
+        <InkStage as="aside" aurora grain className="hidden rounded-[2rem] p-10 shadow-stage lg:block">
+          <GrowthLine variant="rise" mode="once" className="pointer-events-none absolute -right-4 -top-6 size-44 text-white/10" strokeWidth={5} />
+          <p className="font-display text-sm font-bold uppercase tracking-[0.18em] text-white/70">GrowX</p>
+          <h2 className="mt-3 max-w-[22ch] font-display text-3xl font-extrabold leading-tight text-white">
+            Everything you need to grow on X, in one Chrome extension.
+          </h2>
+          <ul className="mt-8 space-y-4">
+            {perks.map(({ i: I, t }, idx) => (
+              <li key={t} className="hero-settle flex items-center gap-3 text-white" style={stagger(3 + idx)}>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
+                  <I size={18} />
+                </span>
+                <span className="font-semibold">{t}</span>
+              </li>
+            ))}
+          </ul>
+          <TrialTicks className="mt-10 border-t border-white/10 pt-6" />
+        </InkStage>
       </div>
     </section>
   );

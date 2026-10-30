@@ -30,19 +30,19 @@ export default function Page() {
       tool={<BoldTextGenerator />}
       faqs={faqs}
     >
-      <h2>How it works</h2>
+      <h2 className="h-rule">How it works</h2>
       <p>
         Unicode includes complete alphabets that look bold, italic or decorative. They were made for maths, but because they are real characters,
         they keep their look when you paste them into X, where normal formatting is not available. The generator swaps each letter (and number,
         where a styled version exists) for its styled twin. Letters with accents, emoji and punctuation stay as they are.
       </p>
-      <h2>Use it sparingly</h2>
+      <h2 className="h-rule">Use it sparingly</h2>
       <ul>
         <li>Styled letters count as <strong>two characters</strong> each on X; check your length with our <Link href="/tools/tweet-character-counter">tweet character counter</Link>.</li>
         <li>Screen readers may not read them properly, so keep them to a word or two.</li>
         <li>They may not match searches, so keep keywords and names in plain text.</li>
       </ul>
-      <h2>Make the words count</h2>
+      <h2 className="h-rule">Make the words count</h2>
       <p>
         Formatting draws the eye; the words do the work. For posts that get read and shared, see our <Link href="/blog/tweet-ideas">tweet ideas</Link>{" "}
         and <Link href="/blog/twitter-bio-ideas">Twitter bio ideas</Link>, or let the <Link href="/features/ai-tweet-writer">GrowX AI writer</Link>{" "}

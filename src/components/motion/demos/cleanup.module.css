@@ -1,0 +1,82 @@
+.root {
+  --d-cyc: 10s;
+}
+.list {
+  display: grid;
+  gap: 5px;
+}
+.box {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border: 1.5px solid var(--d-accent);
+  border-radius: 4px;
+  background: var(--d-bg);
+}
+.check {
+  display: block;
+  width: 10px;
+  height: 10px;
+  color: var(--d-accent);
+}
+.status {
+  justify-items: end;
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.done {
+  color: var(--d-fg2);
+}
+.recheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--d-muted);
+  opacity: 0;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--d-accent);
+}
+.footer {
+  position: absolute;
+  bottom: 9px;
+  left: 14px;
+}
+
+@keyframes draw {
+  0%, 100% { clip-path: inset(0 0 0 0); }
+  3%, 6% { clip-path: inset(0 100% 0 0); }
+  9% { clip-path: inset(0 0 0 0); }
+}
+@keyframes recheck {
+  0%, 9% { opacity: 0; }
+  11%, 29% { opacity: 1; }
+  31%, 100% { opacity: 0; }
+}
+@keyframes done {
+  0%, 100% { opacity: 1; }
+  3%, 30% { opacity: 0; }
+  33% { opacity: 1; }
+}
+@keyframes pulse {
+  50% { opacity: 0.25; scale: 0.7; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .check {
+    animation: draw var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .recheck {
+    animation: recheck var(--d-cyc) linear var(--dl, 0s) var(--d-iter);
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .dot {
+    animation: pulse 1s ease-in-out calc(var(--dl, 0s) + 1.1s) 2;
+  }
+  :where(html:not([data-motion="reduce"])) [data-demo-play] .done {
+    animation: done var(--d-cyc) var(--ease-glide) var(--dl, 0s) var(--d-iter);
+  }
+}

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { CtaBand } from "@/components/home/cta-band";
 import { IconDownload, IconMail } from "@/components/icons";
 import { JsonLd, breadcrumbLd } from "@/components/json-ld";
+import { stagger } from "@/components/motion/stagger";
 import { CopyButton } from "@/components/tools/ui";
 import { Container, PageHero, Section, SectionHeading } from "@/components/ui/primitives";
 import { pricingTiers, TRIAL_DAYS } from "@/config/pricing";
@@ -54,7 +55,7 @@ export default function PressPage() {
       <PageHero eyebrow="Press kit" title={<>Writing about <span className="text-gradient">GrowX</span>?</>}>
         <p>
           Logos, screenshots, descriptions and facts, ready to use. Questions or interview requests:{" "}
-          <a className="font-semibold text-accent hover:underline" href={`mailto:${site.supportEmail}`}>
+          <a className="link-draw font-semibold text-accent-ink" href={`mailto:${site.supportEmail}`}>
             {site.supportEmail}
           </a>
           .
@@ -65,11 +66,11 @@ export default function PressPage() {
         <Container className="grid gap-12 lg:grid-cols-[1fr_1.2fr]">
           <div>
             <SectionHeading eyebrow="Key facts" title="GrowX at a glance" />
-            <dl className="reveal mt-8 divide-y divide-border rounded-3xl border border-border bg-white">
+            <dl className="reveal mt-8 divide-y divide-hairline overflow-clip rounded-3xl border border-hairline bg-white shadow-hair">
               {facts.map(([k, v]) => (
-                <div key={k} className="grid gap-1 px-5 py-3.5 sm:grid-cols-[9rem_1fr]">
-                  <dt className="text-sm font-bold">{k}</dt>
-                  <dd className="text-sm text-text-2">{v}</dd>
+                <div key={k} className="grid gap-1 px-5 py-3.5 sm:grid-cols-[9rem_1fr] sm:items-baseline sm:gap-4">
+                  <dt className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">{k}</dt>
+                  <dd className="text-sm text-text">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -103,26 +104,46 @@ export default function PressPage() {
               { src: "/logo.svg", name: "Logo (SVG)", w: 72, h: 72 },
               { src: "/icon.png", name: "Icon (PNG, 128 x 128)", w: 72, h: 72 },
               { src: "/badges/growx-badge.svg", name: "Badge (SVG)", w: 140, h: 36 },
-            ].map((a) => (
-              <li key={a.src} className="reveal flex items-center gap-5 rounded-3xl border border-border bg-white p-5">
-                <Image src={a.src} alt={`GrowX ${a.name}`} width={a.w} height={a.h} className="rounded-2xl" />
-                <div>
+            ].map((a, i) => (
+              <li key={a.src} className="reveal lift flex items-center gap-5 rounded-3xl border border-hairline bg-white p-5 shadow-hair" style={stagger(i % 3)}>
+                <div
+                  data-tilt="3"
+                  className="grid h-24 w-40 shrink-0 place-items-center rounded-2xl ring-1 ring-hairline-strong [background:repeating-conic-gradient(#f1ecee_0_25%,#fff_0_50%)_0_0/16px_16px]"
+                >
+                  <Image src={a.src} alt={`GrowX ${a.name}`} width={a.w} height={a.h} className="rounded-2xl" />
+                </div>
+                <div className="min-w-0">
                   <p className="font-bold">{a.name}</p>
-                  <a href={a.src} download className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
-                    <IconDownload size={15} /> Download
+                  <a href={a.src} download className="mt-1 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink">
+                    <IconDownload size={15} /> <span className="link-draw">Download</span>
                   </a>
                 </div>
               </li>
             ))}
           </ul>
           <ul className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {shots.map((s) => (
-              <li key={s.src} className="reveal overflow-hidden rounded-3xl border border-border bg-white">
-                <Image src={s.src} alt={`GrowX screenshot: ${s.name} (demo data)`} width={640} height={280} className="h-auto w-full" sizes="(min-width: 1024px) 360px, 100vw" />
+            {shots.map((s, i) => (
+              <li key={s.src} className="reveal lift group overflow-clip rounded-3xl border border-hairline bg-white shadow-hair" style={stagger(i % 3)}>
+                <div className="relative overflow-clip border-b border-hairline bg-surface-2">
+                  <Image
+                    src={s.src}
+                    alt={`GrowX screenshot: ${s.name} (demo data)`}
+                    width={640}
+                    height={280}
+                    className="h-auto w-full fx:transition-[scale] fx:duration-500 fx:ease-glide fx:group-hover:scale-[1.03]"
+                    sizes="(min-width: 1024px) 360px, 100vw"
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-3 top-3 rounded-full bg-white px-2.5 py-0.5 font-mono text-[11px] font-semibold text-text-2 shadow-hair ring-1 ring-hairline-strong"
+                  >
+                    demo data
+                  </span>
+                </div>
                 <div className="flex items-center justify-between gap-3 px-5 py-3.5">
                   <p className="text-sm font-bold">{s.name}</p>
-                  <a href={s.src} download className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline">
-                    <IconDownload size={15} /> WebP
+                  <a href={s.src} download className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-ink">
+                    <IconDownload size={15} /> <span className="link-draw">WebP</span>
                   </a>
                 </div>
               </li>
@@ -142,18 +163,18 @@ export default function PressPage() {
               ["Text link (HTML)", textLink],
               ["Badge (HTML)", badge],
             ].map(([k, v]) => (
-              <div key={k} className="reveal rounded-3xl border border-border bg-white p-5">
+              <div key={k} className="reveal rounded-3xl border border-hairline bg-white p-5 shadow-hair">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-bold">{k}</h3>
                   <CopyButton value={v} label="Copy code" />
                 </div>
-                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-2xl bg-surface-2 p-4 text-xs leading-relaxed text-text-2">{v}</pre>
+                <pre className="mt-3 overflow-x-auto whitespace-pre-wrap break-all rounded-2xl bg-surface-2 p-4 font-mono text-xs leading-relaxed text-text-2 ring-1 ring-hairline">{v}</pre>
               </div>
             ))}
           </div>
           <p className="mt-8 flex flex-wrap items-center justify-center gap-2 text-sm text-text-2">
-            <IconMail size={16} className="text-accent" /> Press and partnerships:{" "}
-            <a className="font-semibold text-accent hover:underline" href={`mailto:${site.supportEmail}`}>
+            <IconMail size={16} className="text-accent-ink" /> Press and partnerships:{" "}
+            <a className="link-draw font-semibold text-accent-ink" href={`mailto:${site.supportEmail}`}>
               {site.supportEmail}
             </a>
           </p>

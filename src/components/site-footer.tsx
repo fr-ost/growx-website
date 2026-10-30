@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { IconChrome, IconMail } from "@/components/icons";
+import { Aurora } from "@/components/motion/aurora";
+import { MotionToggle } from "@/components/motion/motion-toggle";
+import { Wordmark } from "@/components/motion/wordmark";
 import { Container } from "@/components/ui/primitives";
 import { featureNav, toolNav } from "@/config/nav";
 import { site } from "@/config/site";
@@ -48,12 +51,18 @@ const cols = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative mt-auto bg-ink text-white/70">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" aria-hidden="true" />
-      <Container className="grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(5,1fr)]">
+    <footer className="relative mt-auto overflow-clip bg-ink text-white/70 on-ink">
+      <Aurora tone="ink" />
+      <div className="grain pointer-events-none absolute inset-0" aria-hidden="true" data-decor="" />
+      <div
+        className="draw-x absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,#ff5a68,transparent)]"
+        aria-hidden="true"
+        data-decor=""
+      />
+      <Container className="relative grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(5,1fr)]">
         <div>
           <Logo tone="light" />
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">
+          <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
             The all-in-one X (Twitter) growth tool for Chrome: smart auto follow, a post scheduler, an AI writer, analytics and cleanup.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
@@ -62,19 +71,19 @@ export function SiteFooter() {
                 href={site.chromeStoreUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink transition-transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-ink transition-[translate] duration-200 ease-glide hover:-translate-y-0.5"
               >
                 <IconChrome size={16} /> Chrome Web Store
               </a>
             ) : null}
             <a
               href={`mailto:${site.supportEmail}`}
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition-colors hover:border-white/40"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white hover:border-white/40"
             >
               <IconMail size={16} /> Email us
             </a>
           </div>
-          <p className="mt-6 max-w-xs text-xs leading-relaxed text-white/45">GrowX is independent and not affiliated with or endorsed by X Corp.</p>
+          <p className="mt-6 max-w-xs text-xs leading-relaxed text-white/60">GrowX is independent and not affiliated with or endorsed by X Corp.</p>
         </div>
         {cols.map((c) => (
           <nav key={c.title} aria-label={c.title}>
@@ -82,7 +91,7 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2.5">
               {c.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-white/60 transition-colors hover:text-white">
+                  <Link href={l.href} className="link-draw text-sm text-white/60 hover:text-white">
                     {l.label}
                   </Link>
                 </li>
@@ -91,12 +100,17 @@ export function SiteFooter() {
           </nav>
         ))}
       </Container>
-      <div className="border-t border-white/10">
-        <Container className="flex flex-col items-center justify-between gap-2 py-6 text-xs text-white/45 sm:flex-row">
+      <div className="relative border-t border-white/10">
+        <Container className="flex flex-col items-center justify-between gap-3 py-6 text-center text-xs text-white/60 lg:flex-row lg:text-left">
           <p>&copy; {new Date().getFullYear()} GrowX · {site.author}</p>
           <p>Free plan forever · 30-day Premium trial, no credit card · Premium paid in crypto via NOWPayments</p>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-white/15 px-2.5 py-1 font-mono text-[11px] text-white/70">v2.4.4 · Chrome 116+</span>
+            <MotionToggle />
+          </div>
         </Container>
       </div>
+      <Wordmark className="pointer-events-none relative -mb-[0.14em] px-4 text-center" />
     </footer>
   );
 }
