@@ -41,6 +41,7 @@ export interface Post {
 import { createPosts } from "./posts-create";
 import { growthPosts } from "./posts-growth";
 import { insightPosts } from "./posts-insights";
+import { marketingPosts } from "./posts-marketing";
 import { profilePosts } from "./posts-profile";
 import { strategyPosts } from "./posts-strategy";
 
@@ -729,7 +730,7 @@ const corePosts: Post[] = [
   },
 ];
 
-export const posts: Post[] = [...corePosts, ...growthPosts, ...createPosts, ...insightPosts, ...strategyPosts, ...profilePosts];
+export const posts: Post[] = [...corePosts, ...growthPosts, ...createPosts, ...insightPosts, ...strategyPosts, ...profilePosts, ...marketingPosts];
 
 export const getPost = (slug: string) => posts.find((p) => p.slug === slug);
 export const latestFirst = () => [...posts].sort((a, b) => b.datePublished.localeCompare(a.datePublished));
