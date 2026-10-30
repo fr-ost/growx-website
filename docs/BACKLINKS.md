@@ -17,10 +17,20 @@ below is legitimate. Always say you are the developer when you post about GrowX.
 | Engagement rate calculator | https://www.growxapp.org/tools/twitter-engagement-rate-calculator | Marketers, social media courses, agency blogs |
 | Follower ratio calculator | https://www.growxapp.org/tools/twitter-follower-ratio-calculator | "Why can't I follow more people" questions |
 | Bold text generator | https://www.growxapp.org/tools/twitter-bold-text-generator | Bio and formatting questions, creator blogs |
+| 52 tweet templates | https://www.growxapp.org/tools/tweet-templates | "Tweet templates", "thread templates" resource lists, creator courses |
+| Bio generator | https://www.growxapp.org/tools/twitter-bio-generator | "What should I put in my bio" questions, profile guides |
 | Feature pages | https://www.growxapp.org/features/twitter-post-scheduler (and the other 6) | "Best Twitter scheduler / analytics / unfollow tool" lists |
-| Guides (28 posts) | https://www.growxapp.org/blog | Answers on Reddit, Quora, forums; newsletters |
+| Guides (38 posts) | https://www.growxapp.org/blog | Answers on Reddit, Quora, forums; newsletters |
 
 Vary the link text: `GrowX`, `growxapp.org`, `GrowX for X (Twitter)`, a tool's name, or a guide's title. Do not use the same keyword-rich anchor everywhere.
+
+## Ready-made drafts (in `docs/backlinks/`)
+
+| File | What it is | How to use it |
+|---|---|---|
+| `guest-posts.md` | 3 original guest-post drafts (about 950 words each) with title options, author bio and a pitch email | Pitch each draft to one blog at a time; edit the first-person draft so every line matches your experience |
+| `answer-bank.md` | 15 helpful answers to common X (Twitter) questions, each with one link and a disclosure line | Use only where the question is really asked; adapt each answer to the thread, never paste the same text twice |
+| `directory-copy.md` | Copy sized for directory forms: taglines, 160/300/1,000-character descriptions, feature bullets, tags, pricing, FAQ | Paste into the directories in section 3; check prices on /pricing first |
 
 ## 2. Do this week (highest value, about 2 hours)
 
