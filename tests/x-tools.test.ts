@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MARKS, STYLES, markText, styleText } from "@/lib/unicode-text";
+import { bioLength, generateBios } from "@/lib/bio";
+import { TEMPLATE_CATEGORIES, TWEET_TEMPLATES, fieldLabel, fillTemplate, templateFields } from "@/content/tweet-templates";
 import { weightedLength } from "@/lib/tweet-text";
 import { engagementRateByFollowers, engagementRateByViews, estimatedFollowingCap, followersNeededFor, parseCount, ratioReport, totalInteractions } from "@/lib/x-math";
 
@@ -56,5 +58,34 @@ describe("parseCount", () => {
     expect(parseCount("")).toBe(0);
     expect(parseCount("abc")).toBe(0);
     expect(parseCount("-5")).toBe(0);
+  });
+});
+
+describe("bio generator", () => {
+  const empty = { role: "", audience: "", benefit: "", topics: "", proof: "", personal: "", cta: "" };
+  it("returns nothing without input", () => expect(generateBios(empty)).toEqual([]));
+  it("builds distinct bios from the parts given", () => {
+    const bios = generateBios({ ...empty, role: "Founder of Acme", audience: "indie hackers", benefit: "ship faster", topics: "SaaS, marketing, design", proof: "Built 3 products" });
+    expect(bios.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(bios).size).toBe(bios.length);
+    expect(bios[0]).toBe("Founder of Acme, helping indie hackers ship faster.");
+    expect(bios.some((b) => b.includes("I post about SaaS, marketing and design."))).toBe(true);
+    for (const b of bios) expect(b).not.toMatch(/\s{2,}|\.\./);
+  });
+  it("counts characters by code point", () => expect(bioLength("Hi 😀")).toBe(4));
+});
+
+describe("tweet templates", () => {
+  it("has the extension's 52 templates with unique ids in known categories", () => {
+    expect(TWEET_TEMPLATES).toHaveLength(52);
+    expect(new Set(TWEET_TEMPLATES.map((t) => t.id)).size).toBe(52);
+    const cats = new Set(TEMPLATE_CATEGORIES.map((c) => c.id));
+    expect(TWEET_TEMPLATES.every((t) => cats.has(t.cat))).toBe(true);
+  });
+  it("lists fields once and fills only what is given", () => {
+    expect(templateFields("{a} and {b} and {a}")).toEqual(["a", "b"]);
+    expect(fillTemplate("{a} and {b}", { a: "x", b: " " })).toBe("x and {b}");
+    expect(fieldLabel("low_point")).toBe("Low point");
+    expect(fieldLabel("step1")).toBe("Step 1");
   });
 });

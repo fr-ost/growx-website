@@ -7,10 +7,10 @@ import { featureNav, toolNav } from "@/config/nav";
 import { pageMetadata } from "@/lib/seo";
 
 export const metadata = pageMetadata({
-  title: "Free X (Twitter) Tools: Counters, Calculators & More",
-  description: "Free X (Twitter) tools from GrowX: tweet character counter, thread maker, engagement rate and follower ratio calculators, bold text generator. No sign-up.",
+  title: "Free X (Twitter) Tools: Templates, Counters & More",
+  description: "7 free X (Twitter) tools from GrowX: tweet templates, bio generator, character counter, thread maker, engagement and ratio calculators, bold text. No sign-up.",
   path: "/tools",
-  keywords: ["free Twitter tools", "free X tools", "tweet character counter", "Twitter thread maker", "Twitter engagement rate calculator", "Twitter bold text generator", "Twitter tools online"],
+  keywords: ["free Twitter tools", "free X tools", "tweet character counter", "Twitter thread maker", "Twitter engagement rate calculator", "Twitter bold text generator", "tweet templates", "Twitter bio generator", "Twitter tools online"],
 });
 
 export default function ToolsPage() {
@@ -22,7 +22,7 @@ export default function ToolsPage() {
       </PageHero>
       <Section>
         <Container>
-          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {toolNav.map((t) => (
               <li key={t.href}>
                 <Link href={t.href} className="card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-7">

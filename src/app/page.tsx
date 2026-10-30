@@ -382,7 +382,7 @@ export default function HomePage() {
           <SectionHeading eyebrow="Free tools" title="Free X (Twitter) tools, right in your browser." center>
             No sign-up, nothing to install, nothing you type leaves your computer.
           </SectionHeading>
-          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {toolNav.map((t) => (
               <li key={t.href} className="reveal">
                 <Link href={t.href} className="card-hover group flex h-full flex-col rounded-3xl border border-border bg-white p-5">
@@ -397,6 +397,14 @@ export default function HomePage() {
                 </Link>
               </li>
             ))}
+            <li className="reveal">
+              <Link href="/tools" className="card-hover group flex h-full flex-col justify-between rounded-3xl border border-border bg-surface-2 p-5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ink text-white">
+                  <IconArrowRight size={18} />
+                </span>
+                <span className="mt-4 font-bold">All free tools</span>
+              </Link>
+            </li>
           </ul>
         </Container>
       </Section>

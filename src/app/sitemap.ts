@@ -17,6 +17,8 @@ const pages: { path: string; priority: number; changeFrequency: "weekly" | "mont
   { path: "/tools/twitter-engagement-rate-calculator", priority: 0.8, changeFrequency: "monthly" },
   { path: "/tools/twitter-follower-ratio-calculator", priority: 0.8, changeFrequency: "monthly" },
   { path: "/tools/twitter-bold-text-generator", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/tools/tweet-templates", priority: 0.8, changeFrequency: "monthly" },
+  { path: "/tools/twitter-bio-generator", priority: 0.8, changeFrequency: "monthly" },
   { path: "/blog", priority: 0.8, changeFrequency: "weekly" },
   { path: "/about", priority: 0.6, changeFrequency: "yearly" },
   { path: "/press", priority: 0.4, changeFrequency: "yearly" },

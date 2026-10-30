@@ -13,10 +13,11 @@ const cols = [
       { href: "/how-it-works", label: "How it works" },
       { href: "/pricing", label: "Pricing" },
       { href: "/tools", label: "Free tools" },
-      ...toolNav.map((t) => ({ href: t.href, label: t.label })),
+      { href: "/blog", label: "Blog" },
       { href: "/signup", label: "Start free" },
     ],
   },
+  { title: "Free tools", links: toolNav.map((t) => ({ href: t.href, label: t.label })) },
   { title: "Features", links: featureNav.map((f) => ({ href: `/features/${f.slug}`, label: f.label })) },
   {
     title: "Guides",
@@ -49,7 +50,7 @@ export function SiteFooter() {
   return (
     <footer className="relative mt-auto bg-ink text-white/70">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" aria-hidden="true" />
-      <Container className="grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
+      <Container className="grid gap-10 py-16 sm:grid-cols-2 lg:grid-cols-[1.3fr_repeat(5,1fr)]">
         <div>
           <Logo tone="light" />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/60">

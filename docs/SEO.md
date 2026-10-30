@@ -21,6 +21,8 @@ Positioning since extension v2.4.4: **GrowX: The Ultimate X (Twitter) Growth Too
 | `/tools/twitter-engagement-rate-calculator` | Twitter engagement rate calculator | X engagement rate, tweet engagement rate |
 | `/tools/twitter-follower-ratio-calculator` | Twitter follower ratio calculator | following to followers ratio, Twitter follow limit 5000 |
 | `/tools/twitter-bold-text-generator` | Twitter bold text generator | bold text for Twitter, italic text Twitter, Twitter font generator |
+| `/tools/tweet-templates` | tweet templates | Twitter templates, thread templates, tweet hooks |
+| `/tools/twitter-bio-generator` | Twitter bio generator | X bio generator, Twitter bio ideas |
 | `/press` | GrowX press kit | GrowX logo, GrowX screenshots |
 | `/how-it-works` | how to grow on Twitter with GrowX | Twitter growth routine, X follow limits per day |
 | `/pricing` | GrowX pricing | free Twitter growth tool, free Twitter scheduler |
@@ -32,7 +34,7 @@ Both "X" and "Twitter" are used on purpose: many users still search "Twitter". K
 ## Implemented
 - **Metadata** (`src/lib/seo.ts`): unique title (<=65 chars with suffix) and description (110-165 chars) per page, keywords, canonical URL, Open Graph (with image), Twitter `summary_large_image`, robots with large-snippet/image hints. Private pages (`/login`, `/signup`, `/forgot-password`, `/reset-password`, `/dashboard`, `/account`) are `noindex`.
 - **Structured data** (JSON-LD, `src/components/json-ld.tsx`): `Organization` + `WebSite` (sitewide), `SoftwareApplication` (home, free offer only, **no fabricated ratings or review counts**), `FAQPage` (home, pricing, features, how-it-works), `HowTo` (how-it-works), `BreadcrumbList` (inner pages), `Blog` + `BlogPosting` with author (blog), `AboutPage` + `Person` (about).
-- **Pages**: `/features` plus 7 feature landing pages (`/features/<slug>`, content in `src/content/feature-pages.ts`, WebPage + FAQPage + Breadcrumb JSON-LD), 5 free web tools (`/tools/...`, WebApplication JSON-LD) that attract links, a press kit (`/press`), `/how-it-works` (8 steps + pace table + FAQ), `/about`, `/blog` with 28 long-form articles (1,000+ words each, FAQPage when a post has `faq`), contact, and `/llms.txt` (a plain-text site map for AI assistants).
+- **Pages**: `/features` plus 7 feature landing pages (`/features/<slug>`, content in `src/content/feature-pages.ts`, WebPage + FAQPage + Breadcrumb JSON-LD), 7 free web tools (`/tools/...`, WebApplication JSON-LD) that attract links, a press kit (`/press`), `/how-it-works` (8 steps + pace table + FAQ), `/about`, `/blog` with 28 long-form articles (1,000+ words each, FAQPage when a post has `faq`), contact, and `/llms.txt` (a plain-text site map for AI assistants).
 - **Technical**: `sitemap.xml` (all public pages + posts, per-post `lastModified`), `robots.txt` (blocks private areas, points at the sitemap), RSS feed `/blog/feed.xml`, web manifest, per-post Open Graph images (`/blog/<slug>/opengraph-image`), default social card, `lang="en"`, semantic headings (one H1 per page), breadcrumbs, internal linking between related pages, static prerendering (fast TTFB), security headers, `www` as canonical host.
 - **Tests**: unit tests (`tests/seo.test.ts`) and a browser audit (`npm run test:e2e`) check every public page for title/description length, canonical, Open Graph/Twitter tags, valid JSON-LD, one H1, image alt text, noindex on private pages, sitemap/robots/feed, and per-post social images.
 

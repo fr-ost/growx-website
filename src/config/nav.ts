@@ -18,4 +18,6 @@ export const toolNav = [
   { href: "/tools/twitter-engagement-rate-calculator", label: "Engagement rate calculator", blurb: "How well a post landed with its viewers" },
   { href: "/tools/twitter-follower-ratio-calculator", label: "Follower ratio calculator", blurb: "Your ratio and X's 5,000 follow limit" },
   { href: "/tools/twitter-bold-text-generator", label: "Bold text generator", blurb: "Bold and italic letters for posts and bios" },
+  { href: "/tools/tweet-templates", label: "52 tweet templates", blurb: "Fill-in formats for hooks, threads and more" },
+  { href: "/tools/twitter-bio-generator", label: "Bio generator", blurb: "X bio ideas that fit 160 characters" },
 ] as const;
