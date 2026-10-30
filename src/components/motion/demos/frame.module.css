@@ -61,6 +61,7 @@
   box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.6);
 }
 .chrome {
+  container-type: inline-size;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -94,7 +95,11 @@
 .tags {
   display: flex;
   flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 4px;
+  /* leave room for the dots, the gaps and a truncated title; wrap rather than clip */
+  max-width: calc(100% - 68px);
   margin-left: auto;
 }
 .loose {
@@ -111,6 +116,22 @@
   text-transform: uppercase;
   color: var(--d-muted);
   white-space: nowrap;
+}
+/* Narrow frames: the title shrinks first, then extra factual tags and the decorative dots and
+   title give way. "Premium" and "Illustration" always stay; they wrap rather than clip. */
+@container (max-width: 380px) {
+  .tagExtra {
+    display: none;
+  }
+}
+@container (max-width: 240px) {
+  .dots,
+  .title {
+    display: none;
+  }
+  .tags {
+    max-width: 100%;
+  }
 }
 .tagPremium {
   border-color: transparent;

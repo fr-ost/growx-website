@@ -36,7 +36,7 @@ export function DemoFrame({
   const tagList = (
     <span className={`${f.tags} ${framed ? "" : f.loose}`}>
       {tags.map((t) => (
-        <span key={t} className={f.tag}>
+        <span key={t} className={`${f.tag} ${f.tagExtra}`}>
           {t}
         </span>
       ))}
