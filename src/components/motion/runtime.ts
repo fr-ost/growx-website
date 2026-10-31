@@ -1,6 +1,6 @@
 /**
  * The only global motion JS. Pure DOM, delegated over data attributes; no React, no rAF loop.
- * (a) reveal fallback where view() timelines are unsupported (only below the fold)
+ * (a) in-view reveals: below-the-fold reveals and decorative one-shots play once when they enter
  * (b) [data-ambient] gets data-paused while off-screen
  * (c) [data-demo] gets data-demo-play while >= 35% visible (removed when fully out)
  * (d) [data-count] count-ups (real facts only; the true value is already in the HTML)
@@ -9,6 +9,9 @@
 import { readStoredReduce } from "./motion-prefs";
 
 const REVEALS = ".reveal,.reveal-heading,.reveal-scale,.reveal-clip";
+/** Decorative effects that play once on entry (start state: .inview-pending, played: .inview). */
+const ONE_SHOTS =
+  ".draw-x,.rail-fill-x,.rail-fill-y,.fill-x,.fill-y,.wordmark,.rise-in,.rail-node-lit,.h-rule,.stage-3d--inline,.ink-stage__bg[data-curtain],.key-press,.border-beam[data-mode='scroll']";
 const POINTER_VARS = ["--mx", "--my", "--tilt-x", "--tilt-y", "--mag-x", "--mag-y"] as const;
 
 /** Apply the stored "Reduce motion" choice. Only writes when the value differs (avoids observer loops). */
@@ -24,7 +27,7 @@ export function motionAllowed(): boolean {
   return !matchMedia("(prefers-reduced-motion: reduce)").matches && document.documentElement.dataset.motion !== "reduce";
 }
 
-export function initMotion(opts: { forceFallback?: boolean } = {}): () => void {
+export function initMotion(): () => void {
   const root = document.documentElement;
   const motionOK = motionAllowed();
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -41,11 +44,18 @@ export function initMotion(opts: { forceFallback?: boolean } = {}): () => void {
     settleTimer = window.setTimeout(() => settled.forEach((f) => f()), 160);
   };
 
-  // (a) reveal fallback
-  const supportsView = !opts.forceFallback && typeof CSS !== "undefined" && CSS.supports("animation-timeline: view()");
-  if (motionOK && !supportsView) {
-    const pending = [...document.querySelectorAll<HTMLElement>(REVEALS)].filter(below);
-    const show = (el: Element) => el.classList.add("reveal-in");
+  // (a) in-view reveals. Time-based and one-shot on purpose: a scroll-linked (view()) animation never
+  // finishes, so every element using one stays a separate compositor layer for the whole visit, which
+  // is what made scrolling stutter. Only elements starting below the fold are hidden, so nothing above
+  // the fold (or anything without JS) ever waits for this.
+  if (motionOK) {
+    const pick = (sel: string, pending: string, done: string) =>
+      [...document.querySelectorAll<HTMLElement>(sel)].filter(below).map((el) => ({ el, pending, done }));
+    const items = [...pick(REVEALS, "reveal-pending", "reveal-in"), ...pick(ONE_SHOTS, "inview-pending", "inview")];
+    // one element can carry both a reveal and a one-shot (e.g. .reveal-heading.h-rule): play every one
+    const done = new Map<Element, string[]>();
+    for (const it of items) done.set(it.el, [...(done.get(it.el) ?? []), it.done]);
+    const show = (el: Element) => el.classList.add(...(done.get(el) ?? []));
     const io = new IntersectionObserver(
       (es) => {
         for (const e of es)
@@ -56,17 +66,16 @@ export function initMotion(opts: { forceFallback?: boolean } = {}): () => void {
       },
       { rootMargin: "0px 0px -6% 0px" },
     );
-    for (const el of pending) {
-      el.classList.add("reveal-pending");
-      io.observe(el);
-    }
+    for (const it of items) it.el.classList.add(it.pending);
+    for (const el of done.keys()) io.observe(el);
+    // an element scrolled past too quickly for the observer still reveals once scrolling settles
     settled.push(() => {
-      for (const el of pending) if (el.getBoundingClientRect().top < innerHeight) show(el);
+      for (const it of items) if (it.el.getBoundingClientRect().top < innerHeight) show(it.el);
     });
-    on(window, "beforeprint", () => pending.forEach(show));
+    on(window, "beforeprint", () => items.forEach((it) => show(it.el)));
     cleanups.push(() => {
       io.disconnect();
-      for (const el of pending) el.classList.remove("reveal-pending", "reveal-in");
+      for (const it of items) it.el.classList.remove(it.pending, it.done);
     });
   }
 

@@ -237,9 +237,9 @@ h3 { letter-spacing: -0.012em; }
 }
 
 /* ============================================================ keyframes */
-@keyframes settle { from { translate: 0 0.32em; filter: blur(8px); } }
+@keyframes settle { from { translate: 0 0.32em; } }
 @keyframes settle-plain { from { translate: 0 0.32em; } }
-@keyframes settle-sm { from { translate: 0 14px; filter: blur(4px); } }
+@keyframes settle-sm { from { translate: 0 14px; } }
 @keyframes reveal-up { from { opacity: 0; translate: 0 var(--rise); } }
 @keyframes reveal-blur { from { opacity: 0; translate: 0 var(--rise); filter: blur(6px); } }
 @keyframes reveal-scale { from { opacity: 0; scale: 0.96; } }
@@ -338,44 +338,29 @@ details[open] .faq-chevron { rotate: 180deg; }
     & .group:focus-within .border-beam[data-mode="focus"] > i { animation: beam-spin 3.5s linear infinite; }
     & [data-paused],
     & [data-paused] * { animation-play-state: paused !important; }
-    /* scroll-driven */
+    /* endless background loops drop their animation (and GPU layer) entirely while off-screen;
+       restarting from the first frame is invisible there */
+    & [data-paused] :is(.aurora > i, .beam, .border-beam > i, .marquee-track),
+    & :is(.aurora, .border-beam)[data-paused] > i,
+    & .marquee[data-paused] .marquee-track { animation: none !important; }
+    /* scroll-driven: only a few elements (progress bar, hero and side stages). Everything that just
+       enters the viewport plays ONCE on a time-based transition (see "in-view reveals" below), so its
+       compositor layer is released when it finishes instead of staying active for the whole visit. */
     @supports (animation-timeline: view()) {
-      & .reveal,
-      & .reveal-heading,
-      & .reveal-scale,
-      & .reveal-clip { animation: reveal-up linear both; animation-timeline: view(); animation-range: entry calc(min(var(--i, 0), 4) * 7%) entry calc(42% + min(var(--i, 0), 4) * 7%); }
-      & .reveal-scale { animation-name: reveal-scale; }
-      & .reveal-clip { animation-name: reveal-clip; }
-      @media (min-width: 640px) {
-        & .reveal-heading { animation-name: reveal-blur; }
-      }
-      & .ink-stage__bg[data-curtain] { animation: curtain linear both; animation-timeline: view(); animation-range: entry 0% entry 60%; }
-      & .wordmark { animation: rise-in linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
-      & .rail-fill-x { animation: fill-x linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; }
-      & .rail-fill-y { animation: fill-y linear both; animation-timeline: view(); animation-range: cover 20% cover 75%; }
-      & .rail-node-lit { animation: reveal-scale linear both; animation-timeline: view(); animation-range: entry 100% cover 50%; }
-      & .border-beam[data-mode="scroll"] > i { animation: beam-spin linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
-      & .h-rule::before { animation: draw-x linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
-      & .draw-x { animation: draw-x linear both; animation-timeline: view(); animation-range: entry 10% cover 50%; }
-      & .fill-x,
-      & .fill-y { animation: fill-x linear both; animation-timeline: view(); animation-range: entry 30% cover 55%; }
-      & .fill-y { animation-name: fill-y; }
-      & .rise-in { animation: rise-in linear both; animation-timeline: view(); animation-range: entry 0% cover 40%; }
-      & .key-press { animation: key-press linear both; animation-timeline: view(); animation-range: entry calc(60% + var(--i, 0) * 8%) entry calc(75% + var(--i, 0) * 8%); }
       & .scroll-progress { display: block; animation: progress-x linear both; animation-timeline: scroll(root); }
       @media (min-width: 768px) {
         & .stage-3d--hero { animation: straighten linear both; animation-timeline: scroll(root); animation-range: 0 70vh; }
       }
       @media (min-width: 1024px) {
         & .stage-3d--side { animation: turn-in linear both; animation-timeline: scroll(root); animation-range: 0 60vh; }
-        & .stage-3d--inline { animation: turn-in linear both; animation-timeline: view(); animation-range: entry 10% cover 45%; }
       }
     }
   }
 }
-:root:has([data-progress-article]) { timeline-scope: --article; }
+/* No :root:has() here: it made every text change on the page restyle the whole document. */
+:root { timeline-scope: --article; }
 [data-progress-article] { view-timeline: --article block; }
-:root:has([data-progress-article]) .scroll-progress { animation-timeline: --article; animation-range: contain 0% contain 100%; }
+.scroll-progress[data-article] { animation-timeline: --article; animation-range: contain 0% contain 100%; }
 
 
 /* ===================================================== ScrollStory layout
@@ -421,10 +406,29 @@ details[open] .faq-chevron { rotate: 180deg; }
   }
 }
 
-/* IntersectionObserver fallback (only added by MotionRuntime, only below the fold,
-   only where animation-timeline: view() is unsupported) */
-.reveal-pending { opacity: 0; translate: 0 var(--rise); }
-.reveal-pending.reveal-in { opacity: 1; translate: none; transition: opacity var(--dur-4) var(--ease-glide), translate var(--dur-4) var(--ease-glide); transition-delay: calc(min(var(--i, 0), 6) * var(--stagger)); }
+/* In-view reveals. MotionRuntime marks elements that start below the fold .reveal-pending (hidden
+   start state) and adds .reveal-in once when they scroll into view; the transition then runs once and
+   ends. Server HTML never carries these classes, so content is visible without JS, with motion off and
+   in print. Only transform, opacity and (small) clip-path move. */
+.reveal-pending:not(.reveal-in) { opacity: 0; translate: 0 var(--rise); }
+.reveal-scale.reveal-pending:not(.reveal-in) { translate: none; scale: 0.96; }
+.reveal-clip.reveal-pending:not(.reveal-in) { opacity: 1; clip-path: inset(18% 0 0 0 round 1.5rem); }
+.reveal-pending.reveal-in { transition: opacity var(--dur-4) var(--ease-glide), translate var(--dur-4) var(--ease-glide), scale var(--dur-4) var(--ease-glide), clip-path var(--dur-4) var(--ease-glide); transition-delay: calc(min(var(--i, 0), 6) * var(--stagger)); }
+/* decorative one-shots: .inview-pending holds the start state until .inview is added */
+.inview-pending:not(.inview):is(.rail-fill-x, .fill-x) { scale: 0 1; }
+.inview-pending:not(.inview).draw-x { clip-path: inset(0 100% 0 0); }
+.inview-pending:not(.inview):is(.rail-fill-y, .fill-y) { scale: 1 0; }
+.inview-pending:not(.inview):is(.wordmark, .rise-in) { translate: 0 35%; }
+.inview-pending:not(.inview).rail-node-lit { opacity: 0; scale: 0.96; }
+.inview-pending:not(.inview).h-rule::before { scale: 0 1; }
+.inview-pending:not(.inview).stage-3d--inline { transform: perspective(1600px) rotateY(-10deg) rotateX(4deg) scale(0.94); }
+.inview-pending:not(.inview).ink-stage__bg[data-curtain] { scale: 0.97 1; }
+.inview-pending:is(.rail-fill-x, .fill-x, .rail-fill-y, .fill-y) { transform-origin: 0 0; }
+.inview-pending.h-rule::before { transform-origin: 0 50%; }
+.inview-pending.inview,
+.inview-pending.inview.h-rule::before { transition: opacity var(--dur-5) var(--ease-expo), scale var(--dur-5) var(--ease-expo), translate var(--dur-5) var(--ease-expo), transform var(--dur-5) var(--ease-expo), clip-path var(--dur-5) var(--ease-expo); transition-delay: calc(min(var(--i, 0), 6) * var(--stagger)); }
+.inview-pending.inview.key-press { animation: key-press 360ms var(--ease-glide) calc(200ms + var(--i, 0) * 120ms) 1 both; }
+.border-beam.inview-pending.inview > i { animation: beam-spin 1.6s var(--ease-expo) 1 both; }
 
 /* ================================================ reduced motion + toggle */
 @media (prefers-reduced-motion: reduce) {

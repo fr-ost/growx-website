@@ -153,7 +153,7 @@ export default function HomePage() {
       <JsonLd data={[softwareLd, faqLd(faqs)]} />
 
       {/* HERO: settles in (never fades), then the stage straightens with scroll */}
-      <section className="relative overflow-clip" data-ambient="">
+      <section className="relative overflow-clip">
         <Backdrop variant="hero" beams={2} travel={1100} />
         <Container className="relative pb-12 pt-14 text-center sm:pt-20">
           <div className="hero-settle" style={stagger(0)}>

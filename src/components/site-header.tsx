@@ -38,6 +38,9 @@ const navLink = (on: boolean) =>
       : "text-text-2 hover:text-text"
   }`;
 
+/** Pages whose header progress bar follows the article ([data-progress-article]) rather than the whole page. */
+const isArticle = (path: string) => /^\/blog\/[^/]+$/.test(path) || ["/privacy", "/terms", "/refund-policy"].includes(path);
+
 export function SiteHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
@@ -166,11 +169,11 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 isolate">
-      {/* Glass lives on child layers: a backdrop-filter on <header> would trap the fixed mobile sheet. */}
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-white/70 backdrop-blur-[14px] backdrop-saturate-150" />
+      {/* No backdrop-filter: a blurred sticky header is re-blurred on every scroll frame, a common cause of scroll stutter. */}
+      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-white/80" />
       <div
         aria-hidden="true"
-        className={`absolute inset-0 -z-10 border-b border-hairline bg-white/85 shadow-[var(--shadow-hair)] motion-ok:transition-opacity motion-ok:duration-200 ${solid ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 -z-10 border-b border-hairline bg-white/95 shadow-[var(--shadow-hair)] motion-ok:transition-opacity motion-ok:duration-200 ${solid ? "opacity-100" : "opacity-0"}`}
       />
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Logo />
@@ -192,7 +195,7 @@ export function SiteHeader() {
             <div id={menuId} hidden={!menu} className="absolute left-1/2 top-full w-[46rem] -translate-x-1/2 pt-3" onKeyDown={onMenuKey}>
               <div
                 ref={menuPanelRef}
-                className="grid grid-cols-[minmax(0,1fr)_13rem] gap-2 rounded-3xl border border-hairline bg-white/95 p-2.5 shadow-[var(--shadow-float)] backdrop-blur-xl motion-ok:transition-[opacity,translate,scale] motion-ok:duration-200 motion-ok:ease-glide motion-ok:starting:-translate-y-1.5 motion-ok:starting:scale-[.985] motion-ok:starting:opacity-0"
+                className="grid grid-cols-[minmax(0,1fr)_13rem] gap-2 rounded-3xl border border-hairline bg-white p-2.5 shadow-[var(--shadow-float)] motion-ok:transition-[opacity,translate,scale] motion-ok:duration-200 motion-ok:ease-glide motion-ok:starting:-translate-y-1.5 motion-ok:starting:scale-[.985] motion-ok:starting:opacity-0"
               >
                 <ul className="grid grid-cols-2 gap-1">
                   {featureNav.map((f, i) => (
@@ -297,7 +300,7 @@ export function SiteHeader() {
           </span>
         </button>
       </div>
-      <ScrollProgress />
+      <ScrollProgress article={isArticle(pathname)} />
       <div
         id={panelId}
         hidden={!open}
